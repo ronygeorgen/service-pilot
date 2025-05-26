@@ -1,5 +1,5 @@
 import React from 'react'
-import WindowCleaningQuote from '../../components/reviewPageComponent/window-cleaning-quote'
+import WindowCleaningQuote from '../../components/user/window-cleaning-quote'
 
 function WindowCleaningQuotePage() {
   return (
