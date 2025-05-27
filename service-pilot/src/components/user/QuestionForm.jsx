@@ -97,7 +97,7 @@ const QuestionForm = ({ questions, serviceId }) => {
           </div>
         </div>
       )
-    } else if (question.type === "select") {
+    } else if (question.type === "select" || question.type === "choice") {
       return (
         <div className="space-y-2">
           <select
@@ -129,7 +129,7 @@ const QuestionForm = ({ questions, serviceId }) => {
         })
       } else if (question.type === "boolean") {
         return values[question.id] === "Yes" || values[question.id] === "No"
-      } else if (question.type === "select") {
+      } else if (question.type === "select" || question.type === "choice") {
         return values[question.id] && values[question.id] !== ""
       }
       return false

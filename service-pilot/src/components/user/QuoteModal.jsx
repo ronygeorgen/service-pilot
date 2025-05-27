@@ -1,53 +1,94 @@
 "use client"
+
+import { useEffect } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import { fetchServices } from "../../features/user/servicesSlice"
+import { clearSearchResults, clearSelectedContact } from "../../features/user/contactsSlice"
 import { X } from "lucide-react"
+import ContactSelectionModal from "./ContactSelectionModal"
 import { useQuote } from "../../context/QuoteContext"
 import ServiceSelection from "./ServiceSelection"
 import QuestionForm from "./QuestionForm"
 import PricingOptions from "./PricingOptions"
 
+
+
 const QuoteModal = ({ isOpen, onClose, primaryColor = "#2563EB" }) => {
-  const { state, dispatch } = useQuote()
+  const dispatch = useDispatch()
+  const { services } = useSelector((state) => state.services)
+  const { selectedContact } = useSelector((state) => state.contacts)
+  const { state, dispatch: quoteDispatch } = useQuote()
+
+  useEffect(() => {
+    if (isOpen && services.length === 0) {
+      dispatch(fetchServices())
+    }
+  }, [isOpen, services.length, dispatch])
 
   if (!isOpen) return null
 
   const handleClose = () => {
-    dispatch({ type: "RESET" })
+    quoteDispatch({ type: "RESET" })
+    dispatch(clearSearchResults())
+    dispatch(clearSelectedContact())
     onClose()
   }
 
+  const handleContactSelected = (contact) => {
+    // Contact is already set in Redux, we can proceed to service selection
+    console.log("Contact selected:", contact)
+  }
+
   const renderContent = () => {
+    // Step 1: Contact Selection
+    if (!selectedContact) {
+      return <ContactSelectionModal onContactSelected={handleContactSelected} />
+    }
+
+    // Step 2: Show Pricing (after answering questions)
     if (state.showPricing) {
       return <PricingOptions />
     }
 
+    // Step 3: Question Form (after selecting service)
     if (state.currentService) {
       return <QuestionForm questions={state.currentService.questions} serviceId={state.currentService.id} />
     }
 
-    return <ServiceSelection />
+    // Step 4: Service Selection (after selecting contact)
+    return <ServiceSelection services={services} />
   }
 
   const getProgressWidth = () => {
+    if (!selectedContact) return 25
     if (state.showPricing) return 100
-    if (state.currentService) return 50
-    return 0
+    if (state.currentService) return 75
+    return 50
+  }
+
+  const getTitle = () => {
+    if (!selectedContact) return "Select Contact"
+    if (state.showPricing) return "Choose Your Plan"
+    if (state.currentService) return state.currentService.name
+    return "Select a Service"
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity">
       <div
-        className="bg-white w-full max-w-md rounded-xl shadow-2xl relative overflow-hidden"
+        className="bg-white w-full max-w-2xl rounded-xl shadow-2xl relative overflow-hidden"
         style={{ maxHeight: "90vh" }}
       >
         {/* Header */}
         <div className="py-4 px-6 flex justify-between items-center" style={{ backgroundColor: primaryColor }}>
-          <h2 className="text-xl font-bold text-white">
-            {state.showPricing
-              ? "Choose Your Plan"
-              : state.currentService
-                ? state.currentService.name
-                : "Select a Service"}
-          </h2>
+          <div>
+            <h2 className="text-xl font-bold text-white">{getTitle()}</h2>
+            {selectedContact && (
+              <p className="text-white text-opacity-80 text-sm">
+                {selectedContact.first_name} {selectedContact.last_name} - {selectedContact.email}
+              </p>
+            )}
+          </div>
           <button onClick={handleClose} className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-1">
             <X size={24} />
           </button>
@@ -65,7 +106,7 @@ const QuoteModal = ({ isOpen, onClose, primaryColor = "#2563EB" }) => {
         </div>
 
         {/* Content */}
-        <div className="py-6 px-6 overflow-y-auto" style={{ maxHeight: "calc(90vh - 65px)" }}>
+        <div className="py-6 px-6 overflow-y-auto" style={{ maxHeight: "calc(90vh - 80px)" }}>
           {renderContent()}
         </div>
       </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useReducer } from "react"
+import React, { createContext, useState, useContext, useReducer } from "react"
 import { calculatePrice } from "../utils/calculations"
 import { defaultSettings2 } from "../data/defaultSettings2"
 
@@ -10,6 +10,7 @@ const initialState = {
   currentService: null,
   showPricing: false,
   selectedPricingOption: null,
+  answers: {},
 }
 
 const QuoteContext = createContext(undefined)
@@ -25,10 +26,21 @@ const quoteReducer = (state, action) => {
     case "SET_ANSWERS": {
       if (!state.currentService) return state
 
-      const price = calculatePrice(state.currentService, action.payload, settingsState)
+      const newState = {
+        ...state,
+        answers: action.payload,
+      }
+
+      return newState
+    }
+    case "SHOW_PRICING": {
+      if (!state.currentService || !state.answers) return state
+
+      // Calculate price when showing pricing
+      const price = calculatePrice(state.currentService, state.answers, defaultSettings2)
       const selectedService = {
         service: state.currentService,
-        answers: action.payload,
+        answers: state.answers,
         calculatedPrice: price,
       }
 
@@ -38,11 +50,6 @@ const quoteReducer = (state, action) => {
         showPricing: true,
       }
     }
-    case "SHOW_PRICING":
-      return {
-        ...state,
-        showPricing: true,
-      }
     case "SELECT_PRICING_OPTION":
       return {
         ...state,
@@ -53,6 +60,8 @@ const quoteReducer = (state, action) => {
         ...state,
         currentService: null,
         showPricing: false,
+        selectedPricingOption: null,
+        answers: {},
       }
     case "RESET":
       return initialState
@@ -61,32 +70,17 @@ const quoteReducer = (state, action) => {
   }
 }
 
-// Settings state management
-let settingsState = defaultSettings2
-
 export const QuoteProvider = ({ children }) => {
   const [state, dispatch] = useReducer(quoteReducer, initialState)
+  const [settings, setSettings] = useState(defaultSettings2)
 
   const updateSettings = (newSettings) => {
-    settingsState = newSettings
-    localStorage.setItem("quoteWidgetSettings", JSON.stringify(newSettings))
+    setSettings(newSettings)
   }
-
-  React.useEffect(() => {
-    const savedSettings = localStorage.getItem("quoteWidgetSettings")
-    if (savedSettings) {
-      try {
-        const parsedSettings = JSON.parse(savedSettings)
-        settingsState = parsedSettings
-      } catch (e) {
-        console.error("Failed to parse saved settings:", e)
-      }
-    }
-  }, [])
 
   const value = {
     state,
-    settings: settingsState,
+    settings,
     dispatch,
     updateSettings,
   }

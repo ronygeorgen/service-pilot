@@ -1,7 +1,7 @@
 import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { addPricing, addQuestion, deletePricing, deleteQuestion, updatePricing, updateQuestion, updateService } from '../../features/admin/adminSlice';
-import { Plus, Trash } from 'lucide-react';
+import { addFeature, addPricing, addQuestion, deletePricing, deleteQuestion, removeFeature, toggleFeature, updatePricing, updateQuestion, updateQuestionOptionPrice, updateService } from '../../features/admin/adminSlice';
+import { CircleMinus, Plus, Trash } from 'lucide-react';
 
 function UpdateService() {
    const selectedService = useSelector(state=>state.admin.selectedService)
@@ -24,6 +24,28 @@ function UpdateService() {
     dispatch(updatePricing({optionId, updates}));
   };
 
+  const handleUpdateOptionPrice = (questionId, option, value)=>{
+   console.log(questionId, option, value)
+   dispatch(updateQuestionOptionPrice({questionId, value: { [option]: value }}))
+  }
+
+  console.log(selectedService, 'selected service');
+
+  const handleAddFeature = () => {
+  const name = prompt("Enter new feature name:");
+  if (!name) return;
+  const newFeature = { id: Date.now(), name };
+  dispatch(addFeature(newFeature));
+};
+
+const handleToggleFeature = (optionId, featureId) => {
+  dispatch(toggleFeature({optionId, featureId}));
+};
+
+const handleRemoveFeature = (featureId) => {
+  dispatch(removeFeature(featureId));
+};
+  
   return (
    <>
       <div>
@@ -94,12 +116,11 @@ function UpdateService() {
                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                            <option value="number">Number</option>
-                           <option value="select">Select (Dropdown)</option>
                            <option value="boolean">Yes/No</option>
                         </select>
                      </div>
                      
-                     {(question.type === 'number' || question.type === 'select') && (
+                     {(question.type === 'choice' || question.type === 'select') && (
                      <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                         Options (comma separated)
@@ -112,7 +133,7 @@ function UpdateService() {
                               { options: e.target.value.split(',').map(o => o.trim()) }
                         )}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder={question.type === 'number' ? "Small, Medium, Large" : "Option 1, Option 2"}
+                        placeholder={question.type === 'choice' ? "Small, Medium, Large" : "Option 1, Option 2"}
                         />
                      </div>
                      )}
@@ -124,10 +145,10 @@ function UpdateService() {
                         </label>
                         <input
                         type="number"
-                        value={question.unitPrice || null}
+                        value={question.unit_price || null}
                         onChange={(e) => handleUpdateQuestion(
                               question.id,
-                              { unitPrice: Number(e.target.value) }
+                              { unit_price: Number(e.target.value) }
                         )}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
@@ -138,7 +159,7 @@ function UpdateService() {
                      
                      )}
                      
-                     {(question.type === 'number' || question.type === 'select') && question.options && (
+                     {(question.type === 'choice' || question.type === 'select') && question.options && (
                      <div>
                         <label className="block text-sm font-medium text-gray-700 mb-3">
                         Option Prices
@@ -173,61 +194,111 @@ function UpdateService() {
             ))}
          </div>
          <div>
+            {/* Heading and Add Feature Button */}
             <div className="flex justify-between items-center my-6">
                <h2 className="text-lg font-semibold text-gray-800">Pricing Options</h2>
                <button
-               onClick={handleAddPricingOption}
-               className="flex items-center justify-center w-1/5 gap-1 text-sm py-1.5 px-3 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                  onClick={handleAddPricingOption}
+                  className="flex items-center justify-center w-1/5 gap-1 text-sm py-1.5 px-3 bg-blue-500 text-white rounded-md hover:bg-blue-600"
                >
-               <Plus size={16} />
-               Add Option
+                  <Plus size={16} />
+                  Add Option
                </button>
             </div>
-            
-            <div className="space-y-4">
-               {selectedService.pricingOptions?.map(option => (
-               <div key={option.id} className="flex gap-4 items-center border border-gray-200 rounded-lg p-4">
-                  <div className="flex-1">
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                           Option Name
-                     </label>
-                     <input
-                           type="text"
-                           value={option.name}
-                           onChange={(e) => handleUpdatePricingOption(
-                              option.id,
-                              { name: e.target.value }
-                           )}
-                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                     />
-                  </div>
-                  
-                  <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Discount (%)
-                  </label>
-                     <input
-                           type="number"
-                           min="0"
-                           max="100"
-                           value={option.discount}
-                           onChange={(e) => handleUpdatePricingOption(
-                              option.id,
-                              { discount: Number(e.target.value) }
-                           )}
-                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                     />
-                  </div>
-                  
-                  <div className="flex items-end h-full pb-1">
-                     <button className="text-red-500 hover:bg-red-50 p-2 rounded" 
-                        onClick={()=>dispatch(deletePricing({optionId:option.id}))}>
-                        <Trash size={18} />
+
+            {/* Feature Input Area */}
+            <div className="mb-4 flex gap-3">
+               
+               {selectedService.availableFeatures?.length>0?
+               selectedService.availableFeatures?.map((feature) => (
+                  <div key={feature.id} className=" bg-gray-200 px-2 py-1 rounded flex items-center gap-1">
+                     <p className="text-sm text-gray-700">{feature.name}</p>
+                     <button
+                        onClick={() => handleRemoveFeature(feature.id)}
+                        className="text-red-500 hover:text-red-700 font-bold"
+                        >
+                           <CircleMinus size={12} />
                      </button>
                   </div>
-               </div>
+               )):<p className='flex items-center'>Add some features for pricing options</p>
+               }
+               <button
+                  onClick={handleAddFeature}
+                  className="flex items-center ml-auto justify-center w-1/5 gap-1 text-sm py-1.5 px-3 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+               >
+                  <Plus size={16} />
+                  Add Feature
+               </button>
+            </div>
+
+            {/* Pricing Options */}
+            <div className="space-y-6">
+               {selectedService.pricingOptions?.map((option) => (
+                  <div
+                     key={option.id}
+                     className="border border-gray-200 rounded-lg p-4 space-y-4"
+                  >
+                     {/* Option Inputs */}
+                     <div className="flex gap-4 items-end">
+                        <div className="flex-1">
+                           <label className="block text-sm font-medium text-gray-700 mb-1">Option Name</label>
+                           <input
+                              type="text"
+                              value={option.name}
+                              onChange={(e) =>
+                              handleUpdatePricingOption(option.id, { name: e.target.value })
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                           />
+                        </div>
+
+                        <div className="flex-1">
+                           <label className="block text-sm font-medium text-gray-700 mb-1">Discount (%)</label>
+                           <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              value={option.discount}
+                              onChange={(e) =>
+                              handleUpdatePricingOption(option.id, {
+                                 discount: Number(e.target.value),
+                              })
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                           />
+                        </div>
+                        <div className="flex items-end h-full pb-1">
+                           <button className="text-red-500 hover:bg-red-50 p-2 rounded" 
+                              onClick={()=>dispatch(deletePricing({optionId:option.id}))}>
+                              <Trash size={18} />
+                           </button>
+                        </div>
+                     </div>
+
+                     {/* Feature Checkboxes */}
+                     <div className="mt-2">
+                     <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Features
+                     </label>
+                     <div className="flex flex-wrap gap-4">
+                        {selectedService.availableFeatures?.map((feature) => (
+                           <label key={feature.id} className="flex items-center gap-2 text-sm text-gray-700">
+                           <input
+                              type="checkbox"
+                              checked={option.selectedFeatures?.includes(feature.id)}
+                              onChange={() =>
+                                 handleToggleFeature(option.id, feature.id)
+                              }
+                           />
+                           {feature.name}
+                           </label>
+                        ))}
+                     </div>
+                     </div>
+                  </div>
                ))}
             </div>
+
          </div>
       </div>
    </>

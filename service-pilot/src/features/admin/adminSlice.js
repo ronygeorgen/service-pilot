@@ -1,10 +1,11 @@
 import { createSlice } from "@reduxjs/toolkit";
 import defaultSettings from "../../data/defaultSettings";
+import { createService, editServiceAction, serviceListAction } from "./adminActions";
 
 const initialState = {
     selectedService: null,
     showPricing: false,
-    settings: defaultSettings,
+    settings: {services:null},
     isEdited:false
 }
 
@@ -12,6 +13,9 @@ const adminSlice = createSlice({
     name:'admin',
     initialState: initialState,
     reducers:{
+        setMinimumPrice:(state,action)=>{
+            state.settings = {...state.settings, minimumPrice:action.payload};
+        },
         setIsEdited:(state, action)=>{
             state.isEdited = action.payload;
         },
@@ -22,10 +26,11 @@ const adminSlice = createSlice({
             const newService = {
                 id: `service-${Date.now()}`,
                 name: 'New Service',
+                isNew: true,
                 questions: [],
                 };
             state.settings = ({
-                ...state.settings.services, services:[...state.settings.services, newService]
+                ...state.settings, services:[...state.settings.services, newService]
             })
             state.selectedService=newService
         },
@@ -46,8 +51,8 @@ const adminSlice = createSlice({
             const newQuestion = {
                 id: `question-${Date.now()}`,
                 text: 'New Question',
-                type: 'number',
-                unitPrice: 0,
+                type: 'choice',
+                unit_price: 0,
             };
             state.selectedService = ({
                 ...state.selectedService,
@@ -56,16 +61,48 @@ const adminSlice = createSlice({
             state.isEdited=true;
         },
         updateQuestion: (state, action)=>{
+            const type = action.payload?.updates.type
+            console.log('type', type, action.payload)
+            
             state.selectedService = ({
                 ...state.selectedService,
                 questions:state.selectedService.questions.map(question=>{
                 if (question.id == action.payload.questionId){
-                    return {...question, ...action.payload.updates}
+                    let updatedQuestion = { ...question, ...action.payload.updates };   
+                    if (type && type !== question.type){
+                        if(type=='choice'){
+                            delete updatedQuestion.unit_price;
+                            // delete updatedQuestion.options;
+                        }else{
+                            delete updatedQuestion.options;
+                            delete updatedQuestion.optionPrices;
+                        }
+                        updatedQuestion.type = type;
+                    }
+                    return updatedQuestion
                 }
                 return question            
                 })
             })
             state.isEdited=true;
+        },
+        updateQuestionOptionPrice: (state, action) => {
+            state.selectedService = {
+                ...state.selectedService,
+                questions: state.selectedService.questions.map(question => {
+                if (question.id === action.payload.questionId) {
+                    // Return a new question object with updated optionPrices
+                    return {
+                    ...question,
+                    optionPrices: {
+                        ...question.optionPrices,
+                        ...action.payload.value,
+                    },
+                    };
+                }
+                return question; // Return unchanged question
+                }),
+            };
         },
         deleteQuestion:(state, action)=>{
             state.selectedService = ({
@@ -94,9 +131,65 @@ const adminSlice = createSlice({
                 ...state.selectedService,
                 pricingOptions: state.selectedService.pricingOptions.filter(q=>q.id!==action.payload.optionId)
             });
+        },
+        addFeature:(state, action)=>{
+            state.selectedService = ({
+                ...state.selectedService,
+                availableFeatures: [...(state.selectedService.availableFeatures || []), action.payload]
+            })
+        },
+        removeFeature:(state, action)=>{
+            const featureId = action.payload;
+            state.selectedService = ({
+                ...state.selectedService,
+                availableFeatures: state.selectedService.availableFeatures.filter(f => f.id !== featureId),
+                pricingOptions: state.selectedService.pricingOptions.map(option => ({
+                    ...option,
+                    selectedFeatures: option.selectedFeatures?.filter(id => id !== featureId)
+                }))
+            })
+        },
+        toggleFeature:(state, action)=>{
+            const {optionId, featureId} = action.payload;
+            console.log(optionId, featureId, 'feat', action.payload);
+            
+            state.selectedService = {
+                ...state.selectedService,
+                pricingOptions: state.selectedService.pricingOptions.map(opt => {
+                if (opt.id !== optionId) return opt;
+                    const alreadySelected = opt.selectedFeatures?.includes(featureId);
+                    return {
+                        ...opt,
+                        selectedFeatures: alreadySelected
+                        ? opt.selectedFeatures.filter(id => id !== featureId)
+                        : [...(opt.selectedFeatures || []), featureId]
+                    };
+                })
+            }
         }
     },
+    extraReducers(builder){
+        builder
+        .addCase(createService.fulfilled, (state, action)=>{
+            const createdService = action.payload[0];
+            const tempId = action.meta.arg.id;
+            state.settings.services = state.settings.services.map(service =>
+                service.id === tempId ? { ...createdService } : service
+            );
+            state.selectedService=null
+        })
+        .addCase(serviceListAction.fulfilled, (state, action)=>{
+            state.settings = {...state.settings, services:action.payload};
+        })
+        .addCase(editServiceAction.fulfilled, (state, action)=>{
+            const id = action.meta.arg.id
+            state.settings = {...state.settings, services:state.settings.map(s=>{s.id==id?action.payload:s})};
+        })
+        
+    }
 })
 
-export const {setIsEdited, setSelectedService, addService, updateService, deleteService, addQuestion, updateQuestion, deleteQuestion, addPricing, updatePricing, deletePricing} = adminSlice.actions;
+export const {setMinimumPrice, setIsEdited, setSelectedService, addService, updateService, deleteService, addQuestion, updateQuestion, updateQuestionOptionPrice, deleteQuestion, addPricing, updatePricing, deletePricing,
+    addFeature, removeFeature, toggleFeature
+} = adminSlice.actions;
 export default  adminSlice.reducer;
