@@ -45,7 +45,7 @@ function UpdateService() {
             <h3 className="text-lg font-semibold text-gray-800">Questions</h3>
             <button
                onClick={() => dispatch(addQuestion())}
-               className="flex items-center gap-1 text-sm py-1 px-3 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+               className="flex items-center justify-center w-1/5 gap-1 text-sm py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600"
             >
                <Plus size={16} />
                Add Question
@@ -177,7 +177,7 @@ function UpdateService() {
                <h2 className="text-lg font-semibold text-gray-800">Pricing Options</h2>
                <button
                onClick={handleAddPricingOption}
-               className="flex items-center gap-1 text-sm py-1 px-3 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+               className="flex items-center justify-center w-1/5 gap-1 text-sm py-1.5 px-3 bg-blue-500 text-white rounded-md hover:bg-blue-600"
                >
                <Plus size={16} />
                Add Option

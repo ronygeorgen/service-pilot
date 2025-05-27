@@ -11,7 +11,7 @@ const defaultSettings = {
         {
           id: 'monthly',
           name: 'Monthly',
-          discount: 25
+          discount: 25,
         },
         {
           id: 'quarterly',

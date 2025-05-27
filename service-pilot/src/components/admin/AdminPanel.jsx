@@ -3,7 +3,7 @@ import {useDispatch, useSelector} from 'react-redux'
 import { Save, Plus, Trash } from 'lucide-react';
 import Service from './Service';
 import UpdateService from './UpdateService';
-import { addService } from '../../features/admin/adminSlice';
+import { addService, setIsEdited } from '../../features/admin/adminSlice';
 
 function AdminPanel() {
     const settings = useSelector(state=>state.admin.settings)
@@ -27,6 +27,11 @@ function AdminPanel() {
   // };
 
   const handleAddService = () => {
+    if (isEdited) {
+      const confirmed = window.confirm('Your data will be lost. Do you want to continue?');
+      if (!confirmed) return;
+    }
+    dispatch(setIsEdited(false))
     dispatch(addService())
   }
 
