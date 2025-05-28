@@ -2,28 +2,47 @@
 
 import { useState, useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { Search, ChevronLeft, ChevronRight, User } from "lucide-react"
-import { searchContacts, setSearchTerm, setCurrentPage, selectContact } from "../../features/user/contactsSlice"
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  User
+} from "lucide-react"
+import {
+  searchContacts,
+  setSearchTerm,
+  setCurrentPage,
+  selectContact
+} from "../../features/user/contactsSlice"
 
 const ContactSelectionModal = ({ onContactSelected }) => {
   const dispatch = useDispatch()
-  const { searchResults, loading, error, currentPage, searchTerm } = useSelector((state) => state.contacts)
+  const { searchResults, loading, error, currentPage, searchTerm } = useSelector(
+    (state) => state.contacts
+  )
   const [localSearchTerm, setLocalSearchTerm] = useState("")
 
+  // Set local input from global state when modal opens
   useEffect(() => {
     if (searchTerm) {
       setLocalSearchTerm(searchTerm)
     }
   }, [searchTerm])
 
-  const handleSearch = (e) => {
-    e.preventDefault()
-    if (localSearchTerm.trim()) {
-      dispatch(setSearchTerm(localSearchTerm.trim()))
+  // Debounce search effect
+  useEffect(() => {
+    const trimmedTerm = localSearchTerm.trim()
+
+    if (!trimmedTerm) return
+
+    const delayDebounce = setTimeout(() => {
+      dispatch(setSearchTerm(trimmedTerm))
       dispatch(setCurrentPage(1))
-      dispatch(searchContacts({ search: localSearchTerm.trim(), page: 1 }))
-    }
-  }
+      dispatch(searchContacts({ search: trimmedTerm, page: 1 }))
+    }, 500) // 500ms debounce
+
+    return () => clearTimeout(delayDebounce)
+  }, [localSearchTerm, dispatch])
 
   const handlePageChange = (page) => {
     dispatch(setCurrentPage(page))
@@ -38,8 +57,7 @@ const ContactSelectionModal = ({ onContactSelected }) => {
   const getCurrentPageNumber = () => {
     if (!searchResults.previous && !searchResults.next) return 1
     if (!searchResults.previous) return 1
-    
-    // Extract page number from URL
+
     const urlParams = new URLSearchParams(searchResults.previous.split('?')[1])
     return parseInt(urlParams.get('page') || '1') + 1
   }
@@ -54,8 +72,8 @@ const ContactSelectionModal = ({ onContactSelected }) => {
         <p className="text-gray-600">Search and select a contact to create a quote</p>
       </div>
 
-      {/* Search Form */}
-      <form onSubmit={handleSearch} className="flex gap-2">
+      {/* Search Field */}
+      <div className="flex gap-2">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
@@ -66,18 +84,7 @@ const ContactSelectionModal = ({ onContactSelected }) => {
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <button
-          type="submit"
-          disabled={!localSearchTerm.trim() || loading}
-          className={`px-4 py-2 rounded-md text-white font-medium ${
-            !localSearchTerm.trim() || loading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-500 hover:bg-blue-600"
-          }`}
-        >
-          {loading ? "Searching..." : "Search"}
-        </button>
-      </form>
+      </div>
 
       {/* Error Message */}
       {error && (
@@ -93,8 +100,8 @@ const ContactSelectionModal = ({ onContactSelected }) => {
             <p className="text-sm text-gray-600">
               Found {searchResults.count} contact{searchResults.count !== 1 ? 's' : ''}
             </p>
-            
-            {/* Pagination Controls */}
+
+            {/* Pagination */}
             {(searchResults.previous || searchResults.next) && (
               <div className="flex items-center space-x-2">
                 <button
@@ -111,11 +118,11 @@ const ContactSelectionModal = ({ onContactSelected }) => {
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                
+
                 <span className="text-sm text-gray-600 px-2">
                   Page {getCurrentPageNumber()}
                 </span>
-                
+
                 <button
                   onClick={() => {
                     const nextPage = getCurrentPageNumber() + 1
@@ -134,7 +141,7 @@ const ContactSelectionModal = ({ onContactSelected }) => {
             )}
           </div>
 
-          {/* Contacts List */}
+          {/* Contact List */}
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {searchResults.results.map((contact) => (
               <div
@@ -169,7 +176,7 @@ const ContactSelectionModal = ({ onContactSelected }) => {
         </div>
       )}
 
-      {/* No Results Message */}
+      {/* No Results */}
       {searchTerm && searchResults.results.length === 0 && !loading && !error && (
         <div className="text-center py-8">
           <p className="text-gray-500">No contacts found for "{searchTerm}"</p>
@@ -177,7 +184,7 @@ const ContactSelectionModal = ({ onContactSelected }) => {
         </div>
       )}
 
-      {/* Initial State Message */}
+      {/* Initial State */}
       {!searchTerm && searchResults.results.length === 0 && !loading && (
         <div className="text-center py-8">
           <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />

@@ -156,14 +156,14 @@ const ServiceCard = ({ service }) => {
           </div>
         )}
 
-        <div className="flex space-x-2">
+        {/* <div className="flex space-x-2">
           <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium">
             Learn More
           </button>
           <button className="flex-1 border border-blue-600 text-blue-600 py-2 px-4 rounded-md hover:bg-blue-50 transition-colors text-sm font-medium">
             Get Quote
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   )
