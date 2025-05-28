@@ -13,7 +13,7 @@ export default function WindowCleaningQuote() {
   const [activeTab, setActiveTab] = useState("about")
   const { state } = useQuote()
   const location = useLocation()
-  const { totalPrice : tt, totalSavings, selectedServices } = location.state || {}
+  const { totalPrice: tt, totalSavings, selectedServices } = location.state || {}
   console.log('finalized quote ================================', totalSavings, selectedServices);
 
   const [expandedSections, setExpandedSections] = useState({
@@ -32,46 +32,46 @@ export default function WindowCleaningQuote() {
 
   // Calculate the total price for each pricing option
   const calculatePlanPrice = (pricingOption, optionPrices, booleanPrices) => {
-  // Calculate total from option prices (choice/number questions)
-  const optionsTotal = optionPrices.reduce((sum, option) => sum + option.total, 0)
-  
-  // Calculate total from boolean questions
-  const booleanTotal = booleanPrices.reduce((sum, boolPrice) => sum + boolPrice.price, 0)
-  
-  // Combine both totals
-  const baseTotal = optionsTotal + booleanTotal
-  
-  const discount = pricingOption.discount || 0
-  const discountedPrice = baseTotal * (1 - discount / 100)
-  
-  return {
-    basePrice: baseTotal,
-    discountedPrice: discountedPrice,
-    savings: baseTotal - discountedPrice
-  }
-}
-
-  // Generate plans for a service
-const generatePlans = (service) => {
-  if (!service.service?.pricingOptions) return []
-  
-  const optionPrices = service.calculatedPrice?.breakdown?.optionPrices || []
-  const booleanPrices = service.calculatedPrice?.breakdown?.booleanPrices || []
-  
-  return service.service.pricingOptions.map(option => {
-    const priceInfo = calculatePlanPrice(option, optionPrices, booleanPrices)
+    // Calculate total from option prices (choice/number questions)
+    const optionsTotal = optionPrices.reduce((sum, option) => sum + option.total, 0)
+    
+    // Calculate total from boolean questions
+    const booleanTotal = booleanPrices.reduce((sum, boolPrice) => sum + boolPrice.price, 0)
+    
+    // Combine both totals
+    const baseTotal = optionsTotal + booleanTotal
+    
+    const discount = pricingOption.discount || 0
+    const discountedPrice = baseTotal * (1 - discount / 100)
     
     return {
-      id: option.id.toString(),
-      name: option.name.charAt(0).toUpperCase() + option.name.slice(1),
-      basePrice: priceInfo.basePrice,
-      price: priceInfo.discountedPrice,
-      savings: priceInfo.savings,
-      discount: option.discount,
-      features: option.selectedFeatures || []
+      basePrice: baseTotal,
+      discountedPrice: discountedPrice,
+      savings: baseTotal - discountedPrice
     }
-  })
-}
+  }
+
+  // Generate plans for a service
+  const generatePlans = (service) => {
+    if (!service.service?.pricingOptions) return []
+    
+    const optionPrices = service.calculatedPrice?.breakdown?.optionPrices || []
+    const booleanPrices = service.calculatedPrice?.breakdown?.booleanPrices || []
+    
+    return service.service.pricingOptions.map(option => {
+      const priceInfo = calculatePlanPrice(option, optionPrices, booleanPrices)
+      
+      return {
+        id: option.id.toString(),
+        name: option.name.charAt(0).toUpperCase() + option.name.slice(1),
+        basePrice: priceInfo.basePrice,
+        price: priceInfo.discountedPrice,
+        savings: priceInfo.savings,
+        discount: option.discount,
+        features: option.selectedFeatures || []
+      }
+    })
+  }
 
   // Initialize selected plans
   useEffect(() => {
@@ -413,7 +413,52 @@ const generatePlans = (service) => {
           <div className="mt-8">
             <h4 className="text-lg font-semibold mb-3">Disclaimer</h4>
             <div className="text-xs text-gray-600 space-y-3">
-              {/* Disclaimer content remains the same */}
+              <div>
+                <p className="font-medium">Terms and Conditions</p>
+                <p>
+                  "We" or "our" or "TWC" refers to Trushine Window Cleaning Ltd. "You", "your" or "the client" refers to
+                  the customer receiving the service(s) detailed.
+                </p>
+              </div>
+
+              <p>
+                – Any special accommodation has to be reviewed and accepted by management staff prior accepting the
+                proposal.
+              </p>
+              <p>
+                – Quotations are valid for 30 days, and accepted only in writing by signature and will subject to the
+                Terms and Conditions herein on the day of services.
+              </p>
+              <p>
+                – All work shall be completed in workmanship like manner, and if applicable, in compliance with all
+                building codes and other applicable laws.
+              </p>
+              <p>
+                – TWC warrants that it is adequately insured for injury to its employees and other incurring loss of
+                injury as a result of the acts of its employees.
+              </p>
+              <p>
+                – TWC reserves the right to change these terms and conditions at any time without prior notice. In the
+                event that any changes are made, the revised terms and conditions shall be posted on the website
+                immediately.
+              </p>
+
+              <div className="mt-4">
+                <p className="font-medium">SELECTED SERVICES:</p>
+                {selectedServices?.length > 0 ? (
+                  selectedServices.map((service, index) => {
+                    const serviceDetails = service?.service || {};
+                    return (
+                      <div key={index} className="mb-3">
+                        <p className="font-medium">{serviceDetails.name?.toUpperCase()}:</p>
+                        <p>{serviceDetails.description || "No description available"}</p>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p>– No services selected</p>
+                )}
+              </div>
             </div>
           </div>
         </div>
