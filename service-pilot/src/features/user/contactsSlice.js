@@ -6,7 +6,7 @@ export const searchContacts = createAsyncThunk(
   'contacts/searchContacts',
   async ({ search, page = 1 }, { rejectWithValue }) => {
     try {
-      const url = `/contacts/search/?search=${encodeURIComponent(search)}&page=${page}`;
+      const url = `/data/contacts/search/?search=${encodeURIComponent(search)}&page=${page}`;
       const response = await axiosInstance.get(url);
       return response.data;
     } catch (error) {

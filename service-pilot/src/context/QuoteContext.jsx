@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useState, useContext, useReducer } from "react"
-import { calculatePrice } from "../utils/calculations"
+import { calculateServicePrice as calculatePrice } from "../utils/calculations"
 import { defaultSettings2 } from "../data/defaultSettings2"
 
 // Initial state
@@ -11,49 +11,85 @@ const initialState = {
   showPricing: false,
   selectedPricingOption: null,
   answers: {},
+  showSummary: false,
 }
 
 const QuoteContext = createContext(undefined)
 
 const quoteReducer = (state, action) => {
+  console.log('Reducer action:', action.type, action.payload)
+  
   switch (action.type) {
     case "SELECT_SERVICE":
       return {
         ...state,
         currentService: action.payload,
         showPricing: false,
+        showSummary: false,
+        answers: {}, // Reset answers when selecting new service
+        selectedPricingOption: null, // Reset pricing option
       }
-    case "SET_ANSWERS": {
-      if (!state.currentService) return state
-
-      const newState = {
+    case "SET_ANSWERS":
+      return {
         ...state,
         answers: action.payload,
-      }
+      };
 
-      return newState
-    }
     case "SHOW_PRICING": {
-      if (!state.currentService || !state.answers) return state
+      if (!state.currentService || !state.answers) return state;
 
-      // Calculate price when showing pricing
-      const price = calculatePrice(state.currentService, state.answers, defaultSettings2)
-      const selectedService = {
+      const priceData = calculatePrice(state.currentService, state.answers, defaultSettings2);
+      
+      // Check if this service already exists in selectedServices
+      const existingServiceIndex = state.selectedServices.findIndex(
+        service => service.service.id === state.currentService.id
+      );
+
+      const newService = {
         service: state.currentService,
-        answers: state.answers,
-        calculatedPrice: price,
+        answers: { ...state.answers },
+        calculatedPrice: priceData,
+        selectedPricingOption: null,
+      };
+
+      let updatedSelectedServices;
+      if (existingServiceIndex >= 0) {
+        // Update existing service
+        updatedSelectedServices = [...state.selectedServices];
+        updatedSelectedServices[existingServiceIndex] = newService;
+      } else {
+        // Add new service
+        updatedSelectedServices = [...state.selectedServices, newService];
       }
 
       return {
         ...state,
-        selectedServices: [...state.selectedServices, selectedService],
+        selectedServices: updatedSelectedServices,
         showPricing: true,
-      }
+        showSummary: false,
+      };
     }
-    case "SELECT_PRICING_OPTION":
+    case "SELECT_PRICING_OPTION": {
+      // Find the index of the current service (last one in the array)
+      const currentIndex = state.selectedServices.length - 1;
+      if (currentIndex < 0) return state;
+      
       return {
         ...state,
+        selectedServices: state.selectedServices.map((service, index) => 
+          index === currentIndex 
+            ? { ...service, selectedPricingOption: action.payload }
+            : service
+        ),
         selectedPricingOption: action.payload,
+      };
+    }
+    case "SHOW_SUMMARY":
+      return { 
+        ...state, 
+        showSummary: true,
+        showPricing: false,
+        currentService: null,
       }
     case "ADD_MORE_SERVICES":
       return {
@@ -62,6 +98,16 @@ const quoteReducer = (state, action) => {
         showPricing: false,
         selectedPricingOption: null,
         answers: {},
+        showSummary: false,
+      }
+    case "GO_BACK_TO_QUESTIONS":
+      return { 
+        ...state, 
+        showPricing: false,
+        showSummary: false,
+        selectedPricingOption: null,
+        // Remove the last selected service since we're going back
+        selectedServices: state.selectedServices.slice(0, -1),
       }
     case "RESET":
       return initialState

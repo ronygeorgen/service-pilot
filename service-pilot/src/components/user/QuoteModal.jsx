@@ -10,7 +10,7 @@ import { useQuote } from "../../context/QuoteContext"
 import ServiceSelection from "./ServiceSelection"
 import QuestionForm from "./QuestionForm"
 import PricingOptions from "./PricingOptions"
-
+import Summary from "./Summary"
 
 
 const QuoteModal = ({ isOpen, onClose, primaryColor = "#2563EB" }) => {
@@ -45,6 +45,10 @@ const QuoteModal = ({ isOpen, onClose, primaryColor = "#2563EB" }) => {
       return <ContactSelectionModal onContactSelected={handleContactSelected} />
     }
 
+    if (state.showSummary) {
+      return <Summary />
+    }
+
     // Step 2: Show Pricing (after answering questions)
     if (state.showPricing) {
       return <PricingOptions />
@@ -55,16 +59,19 @@ const QuoteModal = ({ isOpen, onClose, primaryColor = "#2563EB" }) => {
       return <QuestionForm questions={state.currentService.questions} serviceId={state.currentService.id} />
     }
 
+    
+
     // Step 4: Service Selection (after selecting contact)
     return <ServiceSelection services={services} />
   }
 
-  const getProgressWidth = () => {
-    if (!selectedContact) return 25
-    if (state.showPricing) return 100
-    if (state.currentService) return 75
-    return 50
-  }
+const getProgressWidth = () => {
+  if (state.showSummary) return 100
+  if (state.showPricing) return 75
+  if (state.currentService && !state.showPricing && !state.showSummary) return 50
+  if (selectedContact && !state.currentService) return 25
+  return 0
+}
 
   const getTitle = () => {
     if (!selectedContact) return "Select Contact"
