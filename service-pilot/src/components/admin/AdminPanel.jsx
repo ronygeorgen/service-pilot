@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {useDispatch, useSelector} from 'react-redux'
 import { Save, Plus, Trash } from 'lucide-react';
 import Service from './Service';
 import UpdateService from './UpdateService';
-import { addService } from '../../features/admin/adminSlice';
+import { addService, setIsEdited, setMinimumPrice } from '../../features/admin/adminSlice';
+import { createService, editServiceAction, serviceListAction } from '../../features/admin/adminActions';
 
 function AdminPanel() {
     const settings = useSelector(state=>state.admin.settings)
@@ -11,22 +12,34 @@ function AdminPanel() {
 
     const dispatch = useDispatch();
 
+    useEffect(()=>{
+      dispatch(serviceListAction());
+    },[])
+
   //   const handleSaveSettings = () => {
   //   updateSettings(localSettings);
   //   alert('Settings saved successfully!');
   // };
 
-  // const handleChangeMinimumPrice = (value) => {
-  //   const price = Number(value);
-  //   if (!isNaN(price)) {
-  //     setLocalSettings({
-  //       ...localSettings,
-  //       minimumPrice: price,
-  //     });
-  //   }
-  // };
+  const handleChangeMinimumPrice = (value) => {
+    const price = Number(value);
+    dispatch(setMinimumPrice(price))
+  }; 
+  const handleSave = ()=>{
+    if (selectedService?.isNew){
+      dispatch(createService({minimumPrice:Number(settings?.minimumPrice), services: [selectedService]}));
+    }else{
+      console.log('edit service');
+      dispatch(editServiceAction({minimumPrice:Number(settings?.minimumPrice), services: [selectedService]}))
+    }
+  }
 
   const handleAddService = () => {
+    if (isEdited) {
+      const confirmed = window.confirm('Your data will be lost. Do you want to continue?');
+      if (!confirmed) return;
+    }
+    dispatch(setIsEdited(false))
     dispatch(addService())
   }
 
@@ -59,7 +72,7 @@ function AdminPanel() {
               
               <div className="space-y-2">
                 {settings?.services?.length > 0 ? (
-                  settings.services.map((service) => (
+                  settings?.services.map((service) => (
                     <Service key={service.id} service={service} />
                   ))
                 ) : (
@@ -73,8 +86,8 @@ function AdminPanel() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Minimum Price ($)
                   </label>
-                  <input type="number" value={settings.minimumPrice}
-                  //   onChange={(e) => handleChangeMinimumPrice(e.target.value)}
+                  <input type="number" value={settings?.minimumPrice}
+                    onChange={(e) => handleChangeMinimumPrice(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <p className="text-xs text-gray-500 mt-1">
@@ -90,7 +103,9 @@ function AdminPanel() {
                 <>
                 {isEdited&&
                   <div className='w-full flex justify-end'>
-                    <button className="flex items-center gap-1 py-2 px-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600">
+                    <button className="flex items-center gap-1 py-2 px-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600"
+                    onClick={handleSave}
+                    >
                       <Save size={16} />
                       Save Changes
                     </button>

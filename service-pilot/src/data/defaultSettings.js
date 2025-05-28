@@ -11,7 +11,7 @@ const defaultSettings = {
         {
           id: 'monthly',
           name: 'Monthly',
-          discount: 25
+          discount: 25,
         },
         {
           id: 'quarterly',
@@ -37,7 +37,7 @@ const defaultSettings = {
         {
           id: 'gutter-feet',
           text: 'How many linear feet of gutter do you want us to clean?',
-          type: 'number',
+          type: 'choice',
           options: ['Linear feet of gutter', 'Number of Downspouts'],
           optionPrices: {
             'Linear feet of gutter': 2,
@@ -47,7 +47,7 @@ const defaultSettings = {
         {
           id: 'gutter-size',
           text: 'What is the size of the gutter?',
-          type: 'select',
+          type: 'choice',
           options: ['5inch', '6inch'],
           optionPrices: {
             '5inch': 0,
