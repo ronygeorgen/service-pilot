@@ -3,19 +3,49 @@
 import React from "react"
 import { useQuote } from "../../context/QuoteContext"
 import { formatCurrency, applyPricingOption, calculateSavings } from "../../utils/calculations"
+import { useNavigate } from 'react-router-dom'
 
 const Summary = () => {
   const { state, settings, dispatch } = useQuote()
+  const navigate = useNavigate()
 
   const handleAddMoreServices = () => {
     dispatch({ type: "ADD_MORE_SERVICES" })
   }
 
-  const handleFinalize = () => {
-    // Handle finalizing the quote (e.g., send to API, show confirmation, etc.)
-    console.log("Finalizing quote:", state)
-    // You can add your finalization logic here
-  }
+const handleFinalize = async () => {
+  const baseTotal = state.selectedServices.reduce((total, service) => total + getServiceBasePrice(service), 0)
+  const totalPrice = calculateTotalPrice()
+  const totalSavings = baseTotal - totalPrice
+
+  // Prepare questions with their text
+  const questionsWithText = {};
+  state.selectedServices.forEach(service => {
+    if (service.questions) {
+      service.questions.forEach(question => {
+        if (question.type === "boolean") {
+          questionsWithText[question.id] = question.text;
+        } else if (question.type === "number" || question.type === "choice") {
+          question.options.forEach(option => {
+            const label = Object.keys(option)[0];
+            questionsWithText[`${question.id}-${label}`] = `${question.text} - ${label}`;
+          });
+        }
+      });
+    }
+  });
+
+  navigate('/user/review/', {
+    state: {
+      totalPrice,
+      totalSavings,
+      baseTotal,
+      selectedServices: state.selectedServices,
+      questionsWithText, // Add this
+    }
+  })
+}
+
 
   // Get pricing option for a specific service
   const getPricingOptionForService = (service, selectedPricingOptionId) => {
