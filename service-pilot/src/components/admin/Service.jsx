@@ -2,6 +2,7 @@ import React from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { deleteService, setIsEdited, setSelectedService } from '../../features/admin/adminSlice';
 import { Trash } from 'lucide-react';
+import { deleteServiceAction } from '../../features/admin/adminActions';
 
 function Service({service}) {
     const dispatch = useDispatch();
@@ -30,6 +31,7 @@ function Service({service}) {
             onClick={(e) => {
             e.stopPropagation();
             dispatch(deleteService({serviceId:service.id}));
+            dispatch(deleteServiceAction(service.id));
             }}
             className="text-red-500 hover:bg-red-50 p-1 rounded"
         >
