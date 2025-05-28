@@ -115,6 +115,7 @@ const adminSlice = createSlice({
                 return question;
                 }),
             };
+            state.isEdited=true;
         },
 
         deleteQuestion:(state, action)=>{
@@ -122,6 +123,7 @@ const adminSlice = createSlice({
                 ...state.selectedService,
                 questions: state.selectedService.questions.filter(q=>q.id!==action.payload.questionId)
             });
+            state.isEdited=true;
         },
         addPricing: (state, action)=>{
             const newOption = {
@@ -144,6 +146,7 @@ const adminSlice = createSlice({
                 ...state.selectedService,
                 pricingOptions: state.selectedService.pricingOptions.filter(q=>q.id!==action.payload.optionId)
             });
+            state.isEdited=true;
         },
         addFeature:(state, action)=>{
             const newFeature = action.payload;
@@ -151,13 +154,14 @@ const adminSlice = createSlice({
                 ...state.selectedService,
                 features: [...(state.selectedService.features || []), newFeature]
             })
-            state.selectedService.pricingOptions = state.selectedService.pricingOptions.map(opt => ({
+            state.selectedService.pricingOptions = state.selectedService?.pricingOptions?.map(opt => ({
                 ...opt,
                 selectedFeatures: [
                 ...(opt.selectedFeatures || []),
                 { id: newFeature.id, is_included: false }
                 ]
             }));
+            state.isEdited=true;
         },
         removeFeature:(state, action)=>{
             const featureId = action.payload;
@@ -169,6 +173,7 @@ const adminSlice = createSlice({
                     selectedFeatures: option.selectedFeatures?.filter(id => id !== featureId)
                 }))
             })
+            state.isEdited=true;
         },
         toggleFeature:(state, action)=>{
             const {optionId, featureId} = action.payload;
@@ -190,17 +195,20 @@ const adminSlice = createSlice({
                     };
                 })
             }
+            state.isEdited=true;
         }
     },
     extraReducers(builder){
         builder
         .addCase(createService.fulfilled, (state, action)=>{
             const createdService = action.payload[0];
-            const tempId = action.meta.arg.id;
+            const tempId = action.meta.arg.services?.[0]?.id;
+            console.log(tempId, 'remm', createService, 'ddd')
             state.settings.services = state.settings.services.map(service =>
                 service.id === tempId ? { ...createdService } : service
             );
             state.selectedService=null
+            state.isEdited=false
         })
         .addCase(serviceListAction.fulfilled, (state, action)=>{
             state.settings = {...state.settings, services:action.payload};
