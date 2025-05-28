@@ -31,20 +31,20 @@ const Summary = () => {
   }
 
   // Calculate total price with all service pricing options applied
-  const calculateTotalPrice = () => {
-    return state.selectedServices.reduce((total, serviceItem) => {
-      const pricingOption = getPricingOptionForService(serviceItem.service, serviceItem.selectedPricingOption)
-      const serviceBasePrice = typeof serviceItem.calculatedPrice === 'object' 
-        ? serviceItem.calculatedPrice.total 
-        : serviceItem.calculatedPrice
-      
-      if (pricingOption && pricingOption.discount > 0) {
-        return total + applyPricingOption(serviceBasePrice, pricingOption.discount)
-      }
-      
-      return total + serviceBasePrice
-    }, 0)
-  }
+const calculateTotalPrice = () => {
+  return state.selectedServices.reduce((total, serviceItem) => {
+    const pricingOption = getPricingOptionForService(serviceItem.service, serviceItem.selectedPricingOption);
+    const serviceBasePrice = typeof serviceItem.calculatedPrice === 'object' 
+      ? serviceItem.calculatedPrice.total 
+      : serviceItem.calculatedPrice || 0;
+    
+    if (pricingOption && pricingOption.discount > 0) {
+      return total + applyPricingOption(serviceBasePrice, pricingOption.discount);
+    }
+    
+    return total + serviceBasePrice;
+  }, 0);
+};
 
   const getServiceBasePrice = (serviceItem) => {
     return typeof serviceItem.calculatedPrice === 'object'

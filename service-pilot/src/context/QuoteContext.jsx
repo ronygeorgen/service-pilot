@@ -29,53 +29,61 @@ const quoteReducer = (state, action) => {
         answers: {}, // Reset answers when selecting new service
         selectedPricingOption: null, // Reset pricing option
       }
-    case "SET_ANSWERS": {
-      if (!state.currentService) return state
-
-      console.log('Setting answers:', action.payload)
-
-      const newState = {
+    case "SET_ANSWERS":
+      return {
         ...state,
         answers: action.payload,
-      }
+      };
 
-      return newState
-    }
     case "SHOW_PRICING": {
-      if (!state.currentService || !state.answers) return state
+      if (!state.currentService || !state.answers) return state;
 
-      console.log('Showing pricing for service:', state.currentService.name)
-      console.log('With answers:', state.answers)
-
-      // Calculate price when showing pricing
-      const priceData = calculatePrice(state.currentService, state.answers, defaultSettings2)
-      console.log('Calculated price data:', priceData)
+      const priceData = calculatePrice(state.currentService, state.answers, defaultSettings2);
       
-      const selectedService = {
+      // Check if this service already exists in selectedServices
+      const existingServiceIndex = state.selectedServices.findIndex(
+        service => service.service.id === state.currentService.id
+      );
+
+      const newService = {
         service: state.currentService,
-        answers: { ...state.answers }, // Create a copy of answers
+        answers: { ...state.answers },
         calculatedPrice: priceData,
         selectedPricingOption: null,
+      };
+
+      let updatedSelectedServices;
+      if (existingServiceIndex >= 0) {
+        // Update existing service
+        updatedSelectedServices = [...state.selectedServices];
+        updatedSelectedServices[existingServiceIndex] = newService;
+      } else {
+        // Add new service
+        updatedSelectedServices = [...state.selectedServices, newService];
       }
 
       return {
         ...state,
-        selectedServices: [...state.selectedServices, selectedService],
+        selectedServices: updatedSelectedServices,
         showPricing: true,
         showSummary: false,
-      }
+      };
     }
-    case "SELECT_PRICING_OPTION":
+    case "SELECT_PRICING_OPTION": {
+      // Find the index of the current service (last one in the array)
+      const currentIndex = state.selectedServices.length - 1;
+      if (currentIndex < 0) return state;
+      
       return {
         ...state,
-        // Update the pricing option for the last selected service
         selectedServices: state.selectedServices.map((service, index) => 
-          index === state.selectedServices.length - 1 
+          index === currentIndex 
             ? { ...service, selectedPricingOption: action.payload }
             : service
         ),
         selectedPricingOption: action.payload,
-      }
+      };
+    }
     case "SHOW_SUMMARY":
       return { 
         ...state, 
