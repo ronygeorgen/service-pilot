@@ -1,8 +1,13 @@
 import React, { useState } from 'react'
+import { adminLoginAction } from '../../../features/admin/adminActions';
+import { useDispatch } from 'react-redux';
 
 function Login() {
     const [credentials, setCredentials] = useState({email:'', password:''});
     const [errors, setErrors] = useState({email:'', password:''})
+    const [error, setError] = useState('')
+
+    const dispatch = useDispatch();
 
     const handleSubmit = ()=>{
         const newErrors = { email: '', password: '' };
@@ -18,6 +23,7 @@ function Login() {
         setErrors(newErrors);
         if (!hasError) {
             window.alert('Success!');
+            dispatch(adminLoginAction(credentials))
         }
     }
     console.log(errors);
@@ -31,6 +37,7 @@ function Login() {
                 <p className="text-sm text-gray-500 mt-1">Please enter your credentials to continue.</p>
             </div>
             <div className="flex flex-col gap-4">
+                <p className='text-red-600 text-sm'>{error}</p>
                 <div className=''>
                     <input type="text" placeholder="Email" value={credentials.email} onChange={(e)=>{setCredentials(prev=>({...prev,email:e.target.value})); setErrors(prev=>({...prev, email:''}))}} className="py-2 w-full px-4 border-2 rounded-lg focus:outline-none focus:border-blue-500"/>
                     <p className='text-sm text-red-600 pl-1'>{errors.email}</p>
