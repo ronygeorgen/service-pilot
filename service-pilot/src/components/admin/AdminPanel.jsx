@@ -86,7 +86,7 @@ function AdminPanel() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Minimum Price ($)
                   </label>
-                  <input type="number" value={settings?.services ? settings?.services[0].minimum_price:0}
+                  <input type="number" value={settings?.services ? settings?.services[0]?.minimum_price:0}
                     onChange={(e) => handleChangeMinimumPrice(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
