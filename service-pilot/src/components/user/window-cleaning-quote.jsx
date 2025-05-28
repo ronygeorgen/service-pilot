@@ -6,6 +6,9 @@ import { useQuote } from "../../context/QuoteContext"
 import { useNavigate } from 'react-router-dom'
 import { useLocation } from 'react-router-dom'
 import { useSelector } from 'react-redux' 
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import QuotePDF from './QuotePDF';
+import { axiosInstance } from "../../services/api"
 
 export default function WindowCleaningQuote() {
   const { selectedContact } = useSelector((state) => state.contacts)
@@ -14,15 +17,68 @@ export default function WindowCleaningQuote() {
   const { state } = useQuote()
   const location = useLocation()
   const { totalPrice: tt, totalSavings, selectedServices } = location.state || {}
-  console.log('finalized quote ================================', totalSavings, selectedServices);
 
   const [expandedSections, setExpandedSections] = useState({
     note: false,
     photos: false,
   })
   const [signature, setSignature] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
   const scrollRef = useRef(null)
   const [selectedPlans, setSelectedPlans] = useState({}) // Track selected plan for each service
+  const navigate = useNavigate();
+
+
+  const handleSubmitPurchase = async () => {
+  if (!signature.trim()) return;
+  
+  setIsSubmitting(true);
+  setSubmitError(null);
+
+  try {
+    // Submit each selected service
+    await Promise.all(selectedServices.map(async (service) => {
+      const serviceDetails = service?.service || {};
+      const selectedPlanId = selectedPlans[serviceDetails.id];
+      const plans = generatePlans(service);
+      const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
+      console.log('selected contact id ======', selectedContact.contact_id);
+      
+      const payload = {
+        contact_id: selectedContact.contact_id,
+        service_id: serviceDetails.id,
+        price_plan_id: selectedPlan.id,
+        total_amount: selectedPlan.price
+      };
+
+      await axiosInstance.post('/data/purchase/', payload);
+    }));
+
+    // Navigate to success page after successful submission
+    navigate('/success', {
+      state: {
+        contactName: `${selectedContact.first_name} ${selectedContact.last_name}`,
+        totalAmount: totalPrice,
+        services: selectedServices.map(service => ({
+          name: service.service.name,
+          plan: generatePlans(service).find(
+            plan => plan.id === selectedPlans[service.service.id]
+          ).name,
+          price: generatePlans(service).find(
+            plan => plan.id === selectedPlans[service.service.id]
+          ).price
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('Purchase submission failed:', error);
+    setSubmitError(error.response?.data?.message || 'Failed to submit purchase. Please try again.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   // Format phone number for display
   const formatPhoneNumber = (phone) => {
@@ -309,10 +365,25 @@ export default function WindowCleaningQuote() {
               Below is some information about our company, along with an overview of the information you provided during
               the quoting process.
             </p>
-            <a href="#" className="text-blue-500 hover:underline flex items-center justify-center space-x-2 text-sm">
-              <FileText className="w-4 h-4 text-red-500" />
-              <span>Download PDF</span>
-            </a>
+            {/* Replace the existing PDF download link with this */}
+              <PDFDownloadLink 
+                document={
+                  <QuotePDF 
+                    selectedContact={selectedContact}
+                    selectedServices={selectedServices}
+                    selectedPlans={selectedPlans}
+                    totalPrice={totalPrice}
+                  />
+                } 
+                fileName="quote.pdf"
+              >
+                {({ loading }) => (
+                  <button className="text-blue-500 hover:underline flex items-center justify-center space-x-2 text-sm">
+                    <FileText className="w-4 h-4 text-red-500" />
+                    <span>{loading ? 'Preparing document...' : 'Download PDF'}</span>
+                  </button>
+                )}
+              </PDFDownloadLink>
           </div>
 
           {/* Tabs */}
@@ -521,9 +592,22 @@ export default function WindowCleaningQuote() {
 
           {/* Final Button */}
           <div className="text-center">
-            <button className="bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-600 transition-colors font-medium text-sm">
-              I'm Ready to Schedule
+            <button
+              onClick={handleSubmitPurchase}
+              disabled={!signature.trim() || isSubmitting}
+              className={`px-6 py-3 rounded transition-colors font-medium text-sm ${
+                !signature.trim()
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-500 text-white hover:bg-blue-600"
+              }`}
+            >
+              {isSubmitting ? "Submitting..." : "I'm Ready to Schedule"}
             </button>
+            {submitError && (
+              <div className="mb-4 text-red-500 text-center text-sm">
+                {submitError}
+              </div>
+            )}
           </div>
         </div>
       </div>

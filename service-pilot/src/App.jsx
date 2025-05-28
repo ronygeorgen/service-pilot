@@ -5,6 +5,7 @@ import WindowCleaningQuotePage from './pages/user/window-cleaning-quotePage';
 import HomePage from './pages/user/home';
 import LoginPage from './pages/admin/LoginPage';
 import { QuoteProvider } from './context/QuoteContext';
+import SuccessPagePage from './pages/user/SuccessPagePage';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path='/admin' element={<AdminPanelPage/>}/>
           <Route path='admin/login' element={<LoginPage/>}/>
           <Route path='user/review/' element={<WindowCleaningQuotePage/>}/>
+          <Route path="/success" element={<SuccessPagePage />} />
         </Routes>
       </Router>
       </QuoteProvider>
