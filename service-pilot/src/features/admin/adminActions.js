@@ -59,6 +59,6 @@ export const adminLoginAction = createAsyncThunk('adminLogin', async (data, {rej
         return response.data
     }catch(error){
         console.log(error, 'error')
-        return rejectWithValue(error.response)
+        return rejectWithValue(error.response?.data)
     }
 })

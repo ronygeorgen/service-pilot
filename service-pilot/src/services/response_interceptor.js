@@ -12,7 +12,7 @@ axiosInstance.interceptors.response.use(
   
         try {
           // Send refresh token request
-          const res = await axios.post(`${BASE_URL}/auth/refresh-token`, {}, { withCredentials: true });
+          const res = await axios.post(`${BASE_URL}/token/refresh/`, {}, { withCredentials: true });
           
           const newAccessToken = res.data.accessToken;
           localStorage.setItem('accessToken', newAccessToken);

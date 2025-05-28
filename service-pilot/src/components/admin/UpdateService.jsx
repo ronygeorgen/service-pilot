@@ -129,10 +129,12 @@ const handleRemoveFeature = (featureId) => {
                         </label>
                         <input
                         type="text"
-                        value={question.options?.join(', ') || ''}
+                        value={question.options?.map(opt => Object.keys(opt)[0]).join(', ') || ''}
                         onChange={(e) => handleUpdateQuestion(
                               question.id,
-                              { options: e.target.value.split(',').map(o => o.trim()) }
+                              { options: e.target.value.split(',').map(label => ({
+              [label.trim()]: 0
+            })) }
                         )}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder={question.type === 'choice' ? "Small, Medium, Large" : "Option 1, Option 2"}
@@ -167,24 +169,29 @@ const handleRemoveFeature = (featureId) => {
                         Option Prices
                         </label>
                         <div className="space-y-3">
-                        {question.options.map(option => (
-                           <div key={option} className="flex items-center gap-3">
-                              <span className="text-sm text-gray-600 w-1/3">{option}</span>
-                              <div className="flex-1">
+                        {(question.options || []).map((opt, index) => {
+                           const key = Object.keys(opt)[0];
+                           const value = opt[key];
+                           return (
+                              <div key={index} className="flex items-center gap-3">
+                                 <span className="text-sm text-gray-600 w-1/3">{key}</span>
+                                 <div className="flex-1">
                                  <input
-                                 type="number"
-                                 value={question.optionPrices?.[option] || 0}
+                                    type="number"
+                                    value={value}
                                     onChange={(e) => handleUpdateOptionPrice(
                                        question.id,
-                                       option,
+                                       key,
                                        Number(e.target.value)
                                     )}
-                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                 placeholder="0"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="0"
                                  />
+                                 </div>
                               </div>
-                           </div>
-                        ))}
+                           );
+                                                      
+                           })}
                         </div>
                         <p className="text-xs text-gray-500 mt-2">
                         Set individual prices for each option
