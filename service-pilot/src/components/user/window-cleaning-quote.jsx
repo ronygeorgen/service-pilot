@@ -1,69 +1,145 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect, useMemo } from "react"
 import { Check, X, ChevronRight, ChevronUp, ChevronDown, FileText } from "lucide-react"
+import { useQuote } from "../../context/QuoteContext"
+import { useNavigate } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+import { useSelector } from 'react-redux' 
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import QuotePDF from './QuotePDF';
+import { axiosInstance } from "../../services/api"
 
 export default function WindowCleaningQuote() {
-  const [selectedPlan, setSelectedPlan] = useState("semi-annually")
+  const { selectedContact } = useSelector((state) => state.contacts)
   const [currentStep, setCurrentStep] = useState(0)
   const [activeTab, setActiveTab] = useState("about")
+  const { state } = useQuote()
+  const location = useLocation()
+  const { totalPrice: tt, totalSavings, selectedServices } = location.state || {}
+
   const [expandedSections, setExpandedSections] = useState({
     note: false,
     photos: false,
   })
   const [signature, setSignature] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
   const scrollRef = useRef(null)
+  const [selectedPlans, setSelectedPlans] = useState({}) // Track selected plan for each service
+  const navigate = useNavigate();
 
-  const plans = [
-    {
-      id: "monthly",
-      name: "Monthly",
-      price: 14,
-      color: "bg-blue-400",
-      features: [
-        { text: "Windows Cleaned Outside only", included: true },
-        { text: "36 Hrs Streak Free Guarantee", included: true },
-        { text: "$2 Million insurance protection", included: true },
-        { text: "$100 Pressure Washing Gift Certificate", included: true },
-        { text: "$100 Gutter Cleaning Gift Certificate", included: true },
-        { text: "1 Free Touch-up per month", included: true },
-        { text: "Paint scraping and decal residue", included: true },
-        { text: "Hard water stain removal", included: true },
-      ],
-    },
-    {
-      id: "quarterly",
-      name: "Quarterly",
-      price: 16,
-      color: "bg-blue-400",
-      features: [
-        { text: "Windows Cleaned Outside only", included: true },
-        { text: "36 Hrs Streak Free Guarantee", included: true },
-        { text: "$2 Million insurance protection", included: true },
-        { text: "$100 Pressure Washing Gift Certificate", included: true },
-        { text: "$100 Gutter Cleaning Gift Certificate", included: true },
-        { text: "1 Free Touch-up per month", included: true },
-        { text: "Paint scraping and decal residue", included: false },
-        { text: "Hard water stain removal", included: false },
-      ],
-    },
-    {
-      id: "semi-annually",
-      name: "Semi Annually",
-      price: 17,
-      color: "bg-green-500",
-      features: [
-        { text: "Windows Cleaned Outside only", included: true },
-        { text: "36 Hrs Streak Free Guarantee", included: true },
-        { text: "$2 Million insurance protection", included: true },
-        { text: "$100 Pressure Washing Gift Certificate", included: true },
-        { text: "$100 Gutter Cleaning Gift Certificate", included: true },
-        { text: "1 Free Touch-up per month", included: true },
-        { text: "Paint scraping and decal residue", included: false },
-        { text: "Hard water stain removal", included: false },
-      ],
-    },
-  ]
+
+  const handleSubmitPurchase = async () => {
+  if (!signature.trim()) return;
+  
+  setIsSubmitting(true);
+  setSubmitError(null);
+
+  try {
+    // Submit each selected service
+    await Promise.all(selectedServices.map(async (service) => {
+      const serviceDetails = service?.service || {};
+      const selectedPlanId = selectedPlans[serviceDetails.id];
+      const plans = generatePlans(service);
+      const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
+      console.log('selected contact id ======', selectedContact.contact_id);
+      
+      const payload = {
+        contact_id: selectedContact.contact_id,
+        service_id: serviceDetails.id,
+        price_plan_id: selectedPlan.id,
+        total_amount: selectedPlan.price
+      };
+
+      await axiosInstance.post('/data/purchase/', payload);
+    }));
+
+    // Navigate to success page after successful submission
+    navigate('/success', {
+      state: {
+        contactName: `${selectedContact.first_name} ${selectedContact.last_name}`,
+        totalAmount: totalPrice,
+        services: selectedServices.map(service => ({
+          name: service.service.name,
+          plan: generatePlans(service).find(
+            plan => plan.id === selectedPlans[service.service.id]
+          ).name,
+          price: generatePlans(service).find(
+            plan => plan.id === selectedPlans[service.service.id]
+          ).price
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('Purchase submission failed:', error);
+    setSubmitError(error.response?.data?.message || 'Failed to submit purchase. Please try again.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+  // Format phone number for display
+  const formatPhoneNumber = (phone) => {
+    if (!phone) return '';
+    return phone.replace(/(\d{1})(\d{3})(\d{3})(\d{4})/, '$1 ($2) $3-$4');
+  };
+
+  // Calculate the total price for each pricing option
+  const calculatePlanPrice = (pricingOption, optionPrices, booleanPrices) => {
+    // Calculate total from option prices (choice/number questions)
+    const optionsTotal = optionPrices.reduce((sum, option) => sum + option.total, 0)
+    
+    // Calculate total from boolean questions
+    const booleanTotal = booleanPrices.reduce((sum, boolPrice) => sum + boolPrice.price, 0)
+    
+    // Combine both totals
+    const baseTotal = optionsTotal + booleanTotal
+    
+    const discount = pricingOption.discount || 0
+    const discountedPrice = baseTotal * (1 - discount / 100)
+    
+    return {
+      basePrice: baseTotal,
+      discountedPrice: discountedPrice,
+      savings: baseTotal - discountedPrice
+    }
+  }
+
+  // Generate plans for a service
+  const generatePlans = (service) => {
+    if (!service.service?.pricingOptions) return []
+    
+    const optionPrices = service.calculatedPrice?.breakdown?.optionPrices || []
+    const booleanPrices = service.calculatedPrice?.breakdown?.booleanPrices || []
+    
+    return service.service.pricingOptions.map(option => {
+      const priceInfo = calculatePlanPrice(option, optionPrices, booleanPrices)
+      
+      return {
+        id: option.id.toString(),
+        name: option.name.charAt(0).toUpperCase() + option.name.slice(1),
+        basePrice: priceInfo.basePrice,
+        price: priceInfo.discountedPrice,
+        savings: priceInfo.savings,
+        discount: option.discount,
+        features: option.selectedFeatures || []
+      }
+    })
+  }
+
+  // Initialize selected plans
+  useEffect(() => {
+    const initialSelectedPlans = {}
+    selectedServices?.forEach(service => {
+      const plans = generatePlans(service)
+      if (plans.length > 0) {
+        initialSelectedPlans[service.service.id] = service.selectedPricingOption?.toString() || plans[0].id
+      }
+    })
+    setSelectedPlans(initialSelectedPlans)
+  }, [selectedServices])
 
   const steps = [
     { id: 0, color: "bg-blue-500" },
@@ -85,7 +161,17 @@ export default function WindowCleaningQuote() {
     }
   }
 
-  const selectedPlanData = plans.find((plan) => plan.id === selectedPlan)
+  // Calculate total price across all services
+  const calculateTotalPrice = () => {
+    return selectedServices?.reduce((total, service) => {
+      const plans = generatePlans(service)
+      const selectedPlanId = selectedPlans[service.service.id]
+      const selectedPlan = plans.find(plan => plan.id === selectedPlanId)
+      return total + (selectedPlan?.price || 0)
+    }, 0) || 0
+  }
+
+  const totalPrice = calculateTotalPrice()
 
   return (
     <div className="min-h-screen bg-gray-200 pb-20">
@@ -98,9 +184,25 @@ export default function WindowCleaningQuote() {
 
           <div className="mb-6">
             <h2 className="text-lg font-semibold mb-2">PREPARED FOR:</h2>
-            <p className="text-base font-medium">test test</p>
-            <p className="text-gray-600 text-sm">1146 South Waukegan Road ,</p>
-            <p className="text-gray-600 text-sm">Barker, TX 60085</p>
+            {selectedContact ? (
+              <>
+                <p className="text-base font-medium">
+                  {selectedContact.first_name} {selectedContact.last_name}
+                </p>
+                {selectedContact.phone && (
+                  <p className="text-gray-600 text-sm">
+                    Phone: {formatPhoneNumber(selectedContact.phone)}
+                  </p>
+                )}
+                {selectedContact.email && (
+                  <p className="text-gray-600 text-sm">
+                    Email: {selectedContact.email}
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="text-base font-medium">No contact selected</p>
+            )}
           </div>
 
           <div className="mb-4">
@@ -108,122 +210,151 @@ export default function WindowCleaningQuote() {
             <p className="text-gray-600 mb-2 text-sm">
               The prices shown are quotes based on the info you gave us, but will need to be confirmed.
             </p>
-            <a href="#" className="text-blue-500 hover:underline text-sm">
-              Get another service quote
-            </a>
           </div>
         </div>
       </div>
 
-      {/* Window Cleaning Video Section */}
-      <div className="bg-white mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12 py-6">
-        <div className="px-4">
-          <h3 className="text-xl font-semibold text-center mb-4">Window Cleaning</h3>
-          <div className="aspect-video bg-black rounded-lg overflow-hidden">
-            <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-              <div className="text-white text-center">
-                <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <div className="w-0 h-0 border-l-6 border-l-white border-t-3 border-t-transparent border-b-3 border-b-transparent ml-1"></div>
+      {/* Loop through each service */}
+      {selectedServices?.map((service, serviceIndex) => {
+        const serviceDetails = service?.service || {}
+        const plans = generatePlans(service)
+        const selectedPlanId = selectedPlans[serviceDetails.id]
+        const selectedPlanData = plans.find(plan => plan.id === selectedPlanId)
+        const answers = service?.answers || {}
+
+        return (
+          <div key={serviceIndex} className="mb-8">
+            {/* Service Video Section */}
+            <div className="bg-white mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12 py-6">
+              <div className="px-4">
+                <h3 className="text-xl font-semibold text-center mb-2">{serviceDetails.name || "Service"}</h3>
+                <p className="text-center text-gray-600 text-sm mb-4">Watch on YouTube</p>
+                <div className="aspect-video bg-black rounded-lg overflow-hidden max-w-2xl mx-auto">
+                  <iframe
+                    className="w-full h-full"
+                    src="https://www.youtube.com/embed/4l8fti9xYdc"
+                    title="YouTube video player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  ></iframe>
                 </div>
-                <p className="text-sm">Video Player</p>
+              </div>
+            </div>
+
+            {/* Details and Pricing Section */}
+            <div className="bg-white mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12 py-6">
+              <div className="px-4">
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-3">Details</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    {serviceDetails.description || "No description available"}
+                  </p>
+                </div>
+
+                {/* Step Indicators */}
+                <div className="flex justify-center mb-6">
+                  <div className="flex space-x-2">
+                    {steps.map((step, index) => (
+                      <div
+                        key={step.id}
+                        className={`w-2.5 h-2.5 rounded-full ${index === 2 ? "bg-green-500" : "bg-blue-500"}`}
+                      ></div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Pricing Plans */}
+                <div className="relative mb-6">
+                  <div 
+                    ref={scrollRef}
+                    className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 px-4"
+                    style={{ 
+                      scrollbarWidth: 'none', 
+                      msOverflowStyle: 'none',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    {plans.map((plan) => {
+                      const planFeatures = serviceDetails.features?.map(feature => {
+                        const isIncluded = plan.features.some(
+                          pf => pf.id === feature.id && pf.is_included
+                        )
+                        return {
+                          name: feature.name,
+                          included: isIncluded
+                        }
+                      }) || []
+
+                      return (
+                        <div key={plan.id} className="bg-white border rounded-lg overflow-hidden flex-shrink-0 w-72">
+                          <div className={`${selectedPlanId === plan.id ? "bg-green-500" : "bg-blue-400"} text-white text-center py-3`}>
+                            <h4 className="text-base font-semibold">{plan.name}</h4>
+                            {plan.discount > 0 && (
+                              <p className="text-xs mt-1">Save {plan.discount}%</p>
+                            )}
+                          </div>
+
+                          <div className="p-4">
+                            <ul className="space-y-2 mb-4">
+                              {planFeatures.map((feature, index) => (
+                                <li key={index} className="flex items-start space-x-2">
+                                  {feature.included ? (
+                                    <Check className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" />
+                                  ) : (
+                                    <Check className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
+                                  )}
+                                  <span className={`text-xs ${feature.included ? "text-gray-800" : "text-gray-400"}`}>
+                                    {feature.name}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+
+                            <div className="text-center">
+                              {plan.discount > 0 && (
+                                <div className="text-gray-500 text-sm line-through mb-1">${plan.basePrice.toFixed(2)}</div>
+                              )}
+                              <div className="text-xl font-bold mb-1">${plan.price.toFixed(2)}</div>
+                              {plan.discount > 0 && (
+                                <div className="text-green-500 text-xs mb-1">Save ${plan.savings.toFixed(2)}</div>
+                              )}
+                              <div className="text-gray-500 text-xs mb-3">Plus Tax</div>
+
+                              <button
+                                onClick={() => {
+                                  setSelectedPlans(prev => ({
+                                    ...prev,
+                                    [serviceDetails.id]: plan.id
+                                  }))
+                                }}
+                                className={`w-full py-2 px-4 rounded flex items-center justify-center text-sm ${
+                                  selectedPlanId === plan.id
+                                    ? "bg-green-500 text-white"
+                                    : "bg-blue-400 text-white hover:bg-blue-500"
+                                }`}
+                              >
+                                {selectedPlanId === plan.id ? (
+                                  <>
+                                    <Check className="w-4 h-4 mr-1" />
+                                    Selected
+                                  </>
+                                ) : (
+                                  "Select"
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Details and Pricing Section */}
-      <div className="bg-white mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12 py-6">
-        <div className="px-4">
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3">Details</h3>
-            <p className="text-gray-600 text-sm leading-relaxed">
-              Even though this bid assumes that all of the information you entered in is correct, we realize that you may
-              have forgotten to count a window or two. If that is the case, we're happy to adjust the bid when we get
-              there but before we begin the work. This bid includes regular cleaning practices, which doesn't include hard
-              water removal, razor usage, screen repair, construction cleaning, or any acid treatment of your windows. We
-              do offer these services, but they require an extra charge and in some cases a waiver to be signed. If you
-              think any of these extenuating circumstances might be an issue on your project, let us know when we're
-              scheduling and we'd be happy to work with you toward meeting all of your needs! We cannot be responsible for
-              leaky windows and doors unless you let us know before work begins.
-            </p>
-          </div>
-
-          {/* Step Indicators */}
-          <div className="flex justify-center mb-6">
-            <div className="flex space-x-2">
-              {steps.map((step, index) => (
-                <div
-                  key={step.id}
-                  className={`w-2.5 h-2.5 rounded-full ${index === 2 ? "bg-green-500" : "bg-blue-500"}`}
-                ></div>
-              ))}
-            </div>
-          </div>
-
-          {/* Pricing Plans with Horizontal Scroll */}
-          <div className="relative mb-6">
-            <div 
-              ref={scrollRef}
-              className="flex gap-4 overflow-x-auto scrollbar-hide pb-4"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              {plans.map((plan) => (
-                <div key={plan.id} className="bg-white border rounded-lg overflow-hidden flex-shrink-0 w-72">
-                  <div className={`${plan.color} text-white text-center py-3`}>
-                    <h4 className="text-base font-semibold">{plan.name}</h4>
-                  </div>
-
-                  <div className="p-4">
-                    <ul className="space-y-2 mb-4">
-                      {plan.features.map((feature, index) => (
-                        <li key={index} className="flex items-start space-x-2">
-                          {feature.included ? (
-                            <Check className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" />
-                          ) : (
-                            <X className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
-                          )}
-                          <span className={`text-xs ${feature.included ? "text-gray-800" : "text-gray-400"}`}>
-                            {feature.text}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    <div className="text-center">
-                      <div className="text-xl font-bold mb-1">${plan.price}</div>
-                      <div className="text-gray-500 text-xs mb-3">Plus Tax</div>
-
-                      {selectedPlan === plan.id ? (
-                        <div className="bg-green-500 text-white py-2 px-4 rounded flex items-center justify-center">
-                          <Check className="w-4 h-4" />
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setSelectedPlan(plan.id)}
-                          className="bg-blue-400 text-white py-2 px-4 rounded hover:bg-blue-500 transition-colors text-sm"
-                        >
-                          Select
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Navigation Arrow - positioned higher */}
-            <div className="flex justify-end mt-2">
-              <button 
-                onClick={scrollPlans}
-                className="bg-blue-500 text-white p-2.5 rounded-full hover:bg-blue-600 transition-colors"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+        )
+      })}
 
       {/* Learn More Section */}
       <div className="bg-white mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12 py-6">
@@ -234,10 +365,25 @@ export default function WindowCleaningQuote() {
               Below is some information about our company, along with an overview of the information you provided during
               the quoting process.
             </p>
-            <a href="#" className="text-blue-500 hover:underline flex items-center justify-center space-x-2 text-sm">
-              <FileText className="w-4 h-4 text-red-500" />
-              <span>Download PDF</span>
-            </a>
+            {/* Replace the existing PDF download link with this */}
+              <PDFDownloadLink 
+                document={
+                  <QuotePDF 
+                    selectedContact={selectedContact}
+                    selectedServices={selectedServices}
+                    selectedPlans={selectedPlans}
+                    totalPrice={totalPrice}
+                  />
+                } 
+                fileName="quote.pdf"
+              >
+                {({ loading }) => (
+                  <button className="text-blue-500 hover:underline flex items-center justify-center space-x-2 text-sm">
+                    <FileText className="w-4 h-4 text-red-500" />
+                    <span>{loading ? 'Preparing document...' : 'Download PDF'}</span>
+                  </button>
+                )}
+              </PDFDownloadLink>
           </div>
 
           {/* Tabs */}
@@ -280,6 +426,61 @@ export default function WindowCleaningQuote() {
             </div>
           )}
 
+          {activeTab === "specs" && (
+            <div className="space-y-4">
+              <h4 className="text-lg font-semibold">Selected Services</h4>
+              {selectedServices?.map((service, index) => {
+                const serviceDetails = service?.service || {}
+                const answers = service?.answers || {}
+                
+                return (
+                  <div key={index} className="mb-6">
+                    <h5 className="font-medium mb-3">{serviceDetails.name}</h5>
+                    <div className="space-y-3">
+                      {Object.entries(answers).map(([key, value]) => {
+                        // Find the corresponding question in the service's questions array
+                        const questionId = key.split('-')[0]; // Get the base ID (removes option suffix)
+                        const question = serviceDetails.questions?.find(q => q.id.toString() === questionId);
+                        
+                        // For boolean questions, use the question text directly
+                        if (question?.type === "boolean") {
+                          return (
+                            <div key={key} className="flex justify-between border-b pb-2">
+                              <span className="text-gray-600">{question.text}:</span>
+                              <span className="font-medium">
+                                {value === "Yes" ? "Yes" : "No"}
+                              </span>
+                            </div>
+                          );
+                        }
+                        
+                        // For choice/number questions with options
+                        const optionLabel = key.split('-')[1]; // Get the option label if exists
+                        let displayText = question?.text || key;
+                        
+                        // If it's an option, append the option label to the question text
+                        if (optionLabel && question) {
+                          displayText = `${optionLabel}`;
+                        } else if (question) {
+                          displayText = question.text;
+                        }
+
+                        return (
+                          <div key={key} className="flex justify-between border-b pb-2">
+                            <span className="text-gray-600">{displayText}:</span>
+                            <span className="font-medium">
+                              {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           <div className="mt-8">
             <h4 className="text-lg font-semibold mb-3">Disclaimer</h4>
             <div className="text-xs text-gray-600 space-y-3">
@@ -314,40 +515,20 @@ export default function WindowCleaningQuote() {
               </p>
 
               <div className="mt-4">
-                <p className="font-medium">WINDOWS:</p>
-                <p>
-                  – All windows must be closed on day of service. Any open windows which cannot be closed will not be
-                  washed.
-                </p>
-                <p>
-                  – You must ensure that all items to be cleaned are structurally sound prior to cleaning; Trushine Window
-                  Cleaning LTD reserves the right to photograph and/or notate any areas not structurally sound, and will
-                  notify the client prior to services being performed.
-                </p>
-                <p>
-                  – Full access is required on the day of the clean/repair. We are unable to move any obstacles which may
-                  inhibit cleaning or repair. Should partial access on the scheduled day reduce the extent of the
-                  clean/repair, we reserve the right to charge for a percentage of the windows/repair completed. If no
-                  access is available the day of the scheduled clean/repair, a $100 trip fee charge will be incurred.
-                </p>
-                <p>– We will not clean any windows we consider to be inaccessible or unsafe on the day of the clean.</p>
-                <p>
-                  – External glass surfaces will usually be washed with pure water from water fed poles, and will be left
-                  to dry naturally.
-                </p>
-                <p>
-                  – A window or door is defined as any part which consists of frame, sill, sash and glass, made of wood,
-                  aluminium, steel or UPVC.
-                </p>
-                <p>
-                  – Sills made of brick, tile, stone, or any material other than listed above (wood, aluminium, steel or
-                  UPVC) may damage our brushes, and will not be washed.
-                </p>
-                <p>
-                  – Please note that any gift certificates received for window cleaning cannot be applied towards your
-                  recurring service agreement. However, you are welcome to use them for interior window cleaning services.
-                </p>
-                <p>– TWC has 36 Hours Streak FREE Guarantee on all of our window cleaning packages.</p>
+                <p className="font-medium">SELECTED SERVICES:</p>
+                {selectedServices?.length > 0 ? (
+                  selectedServices.map((service, index) => {
+                    const serviceDetails = service?.service || {};
+                    return (
+                      <div key={index} className="mb-3">
+                        <p className="font-medium">{serviceDetails.name?.toUpperCase()}:</p>
+                        <p>{serviceDetails.description || "No description available"}</p>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p>– No services selected</p>
+                )}
               </div>
             </div>
           </div>
@@ -365,58 +546,33 @@ export default function WindowCleaningQuote() {
 
             <h3 className="text-lg font-semibold mb-4">You've chosen the following services:</h3>
 
-            <div className="flex justify-between items-center py-3 border-b">
-              <div className="text-left">
-                <span className="text-blue-500 font-medium text-sm">WINDOW CLEANING (SEMI ANNUALLY)</span>
-              </div>
-              <div className="text-right">
-                <span className="text-lg font-bold">${selectedPlanData?.price}</span>
-                <span className="text-gray-500 text-sm ml-2">X</span>
-                <div className="text-gray-500 text-xs">Plus Tax</div>
-              </div>
-            </div>
+            {selectedServices?.map((service, index) => {
+              const serviceDetails = service?.service || {}
+              const plans = generatePlans(service)
+              const selectedPlanId = selectedPlans[serviceDetails.id]
+              const selectedPlan = plans.find(plan => plan.id === selectedPlanId)
+
+              return (
+                <div key={index} className="flex justify-between items-center py-3 border-b">
+                  <div className="text-left">
+                    <span className="text-blue-500 font-medium text-sm">
+                      {serviceDetails.name?.toUpperCase()} ({selectedPlan?.name?.toUpperCase()})
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-bold">${selectedPlan?.price?.toFixed(2)}</span>
+                    {selectedPlan?.discount > 0 && (
+                      <span className="text-gray-500 text-xs ml-2">(Save {selectedPlan.discount}%)</span>
+                    )}
+                    <div className="text-gray-500 text-xs">Plus Tax</div>
+                  </div>
+                </div>
+              )
+            })}
 
             <div className="flex justify-between items-center py-3 font-bold text-base">
               <span>TOTAL</span>
-              <span>${selectedPlanData?.price}</span>
-            </div>
-          </div>
-
-          {/* Expandable Sections */}
-          <div className="space-y-3 mb-6">
-            <div className="border border-blue-300 rounded">
-              <button
-                onClick={() => toggleSection("note")}
-                className="w-full flex justify-between items-center p-3 text-blue-500 hover:bg-blue-50 text-sm"
-              >
-                <span>LEAVE A NOTE</span>
-                {expandedSections.note ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
-              {expandedSections.note && (
-                <div className="p-3 border-t">
-                  <textarea
-                    className="w-full h-20 p-2 border rounded resize-none text-sm"
-                    placeholder="Leave a note for the service team..."
-                  ></textarea>
-                </div>
-              )}
-            </div>
-
-            <div className="border border-blue-300 rounded">
-              <button
-                onClick={() => toggleSection("photos")}
-                className="w-full flex justify-between items-center p-3 text-blue-500 hover:bg-blue-50 text-sm"
-              >
-                <span>UPLOAD PHOTOS</span>
-                {expandedSections.photos ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
-              {expandedSections.photos && (
-                <div className="p-3 border-t">
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                    <p className="text-gray-500 text-sm">Click to upload photos or drag and drop</p>
-                  </div>
-                </div>
-              )}
+              <span>${totalPrice.toFixed(2)}</span>
             </div>
           </div>
 
@@ -436,9 +592,22 @@ export default function WindowCleaningQuote() {
 
           {/* Final Button */}
           <div className="text-center">
-            <button className="bg-blue-500 text-white px-6 py-3 rounded hover:bg-blue-600 transition-colors font-medium text-sm">
-              I'm Ready to Schedule
+            <button
+              onClick={handleSubmitPurchase}
+              disabled={!signature.trim() || isSubmitting}
+              className={`px-6 py-3 rounded transition-colors font-medium text-sm ${
+                !signature.trim()
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-500 text-white hover:bg-blue-600"
+              }`}
+            >
+              {isSubmitting ? "Submitting..." : "I'm Ready to Schedule"}
             </button>
+            {submitError && (
+              <div className="mb-4 text-red-500 text-center text-sm">
+                {submitError}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -448,7 +617,7 @@ export default function WindowCleaningQuote() {
         <div className="flex items-center space-x-2">
           <span className="text-sm">Your selection:</span>
           <div className="bg-white text-green-500 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
-            1
+            {selectedServices?.length || 0}
           </div>
         </div>
         <button className="text-white hover:text-gray-200">

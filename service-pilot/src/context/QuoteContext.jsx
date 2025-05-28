@@ -12,6 +12,7 @@ const initialState = {
   selectedPricingOption: null,
   answers: {},
   showSummary: false,
+  finalizedQuote: null,
 }
 
 const QuoteContext = createContext(undefined)
@@ -108,6 +109,16 @@ const quoteReducer = (state, action) => {
         selectedPricingOption: null,
         // Remove the last selected service since we're going back
         selectedServices: state.selectedServices.slice(0, -1),
+      }
+    case "FINALIZE_QUOTE":
+      return {
+        ...state,
+        finalizedQuote: {
+          ...action.payload,
+          selectedServices: state.selectedServices, // Keep selected services
+        },
+        showSummary: false,
+        currentService: null,
       }
     case "RESET":
       return initialState

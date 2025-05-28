@@ -95,13 +95,6 @@ const QuestionForm = ({ questions, serviceId }) => {
       const basePrice = parseFloat(unitPriceStr) || 0
       const hasCost = basePrice > 0
       
-      console.log('Rendering boolean question:', {
-        questionId: question.id,
-        unitPriceStr,
-        basePrice,
-        hasCost,
-        currentValue: values[question.id]
-      })
       
       return (
         <div className="space-y-3">
@@ -135,10 +128,7 @@ const QuestionForm = ({ questions, serviceId }) => {
               No
             </button>
           </div>
-          {/* Debug info - remove in production */}
-          <div className="text-xs text-gray-500">
-            Current value: {values[question.id] || 'none'} | Unit price: ${basePrice}
-          </div>
+          
         </div>
       )
     }
@@ -177,11 +167,7 @@ const QuestionForm = ({ questions, serviceId }) => {
         ))}
       </div>
 
-      {/* Debug section - remove in production */}
-      <div className="bg-gray-100 p-4 rounded text-sm">
-        <strong>Debug - Current Values:</strong>
-        <pre>{JSON.stringify(values, null, 2)}</pre>
-      </div>
+     
 
       <div className="flex justify-between pt-6">
         <button
