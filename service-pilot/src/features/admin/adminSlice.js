@@ -1,8 +1,11 @@
 import { createSlice } from "@reduxjs/toolkit";
 import defaultSettings from "../../data/defaultSettings";
-import { createService, editServiceAction, serviceListAction } from "./adminActions";
+import { adminLoginAction, createService, deleteServiceAction, editServiceAction, serviceListAction } from "./adminActions";
 
 const initialState = {
+    success:false,
+    error:'',
+    isLoginned:null,
     selectedService: null,
     showPricing: false,
     settings: {services:null},
@@ -30,7 +33,7 @@ const adminSlice = createSlice({
                 questions: [],
                 };
             state.settings = ({
-                ...state.settings, services:[...state.settings.services, newService]
+                ...state.settings, services:[...state.settings.services || [], newService]
             })
             state.selectedService=newService
         },
@@ -133,16 +136,24 @@ const adminSlice = createSlice({
             });
         },
         addFeature:(state, action)=>{
+            const newFeature = action.payload;
             state.selectedService = ({
                 ...state.selectedService,
-                availableFeatures: [...(state.selectedService.availableFeatures || []), action.payload]
+                features: [...(state.selectedService.features || []), newFeature]
             })
+            state.selectedService.pricingOptions = state.selectedService.pricingOptions.map(opt => ({
+                ...opt,
+                selectedFeatures: [
+                ...(opt.selectedFeatures || []),
+                { id: newFeature.id, is_included: false }
+                ]
+            }));
         },
         removeFeature:(state, action)=>{
             const featureId = action.payload;
             state.selectedService = ({
                 ...state.selectedService,
-                availableFeatures: state.selectedService.availableFeatures.filter(f => f.id !== featureId),
+                features: state.selectedService.features.filter(f => f.id !== featureId),
                 pricingOptions: state.selectedService.pricingOptions.map(option => ({
                     ...option,
                     selectedFeatures: option.selectedFeatures?.filter(id => id !== featureId)
@@ -151,18 +162,21 @@ const adminSlice = createSlice({
         },
         toggleFeature:(state, action)=>{
             const {optionId, featureId} = action.payload;
-            console.log(optionId, featureId, 'feat', action.payload);
+            console.log(optionId, 'feat', action.payload);
             
             state.selectedService = {
                 ...state.selectedService,
                 pricingOptions: state.selectedService.pricingOptions.map(opt => {
                 if (opt.id !== optionId) return opt;
-                    const alreadySelected = opt.selectedFeatures?.includes(featureId);
+                    const existing = opt.selectedFeatures?.find(f => f.id === featureId);
+
                     return {
-                        ...opt,
-                        selectedFeatures: alreadySelected
-                        ? opt.selectedFeatures.filter(id => id !== featureId)
-                        : [...(opt.selectedFeatures || []), featureId]
+                    ...opt,
+                    selectedFeatures: existing
+                        ? opt.selectedFeatures.map(f =>
+                            f.id === featureId ? { ...f, is_included: !f.is_included } : f
+                        )
+                        : [...(opt.selectedFeatures || []), { id: featureId, is_included: true }]
                     };
                 })
             }
@@ -183,7 +197,23 @@ const adminSlice = createSlice({
         })
         .addCase(editServiceAction.fulfilled, (state, action)=>{
             const id = action.meta.arg.id
-            state.settings = {...state.settings, services:state.settings.map(s=>{s.id==id?action.payload:s})};
+            state.settings = {...state.settings, services:state.settings?.services?.map(s=>s.id==id?action.payload:s)};
+            state.selectedService = null;
+            state.isEdited = false;
+        })
+        .addCase(deleteServiceAction.fulfilled, (state, action)=>{
+            const id = action.meta.arg.id
+            state.settings.services = state.settings?.services?.filter(s => s?.id !== id) || [];
+            state.selectedService = null;
+        })
+        .addCase(adminLoginAction.fulfilled, (state, action)=>{
+            localStorage.setItem('access_token',action.payload?.access_token)
+            localStorage.setItem('refresh_token',action.payload?.refresh_token)
+            state.isLoginned = true;
+        })
+        .addCase(adminLoginAction.rejected, (state, action)=>{
+            console.log(action.payload, 'fff');   
+            state.error = action.payload
         })
         
     }

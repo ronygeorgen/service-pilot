@@ -39,6 +39,8 @@ function UpdateService() {
 };
 
 const handleToggleFeature = (optionId, featureId) => {
+   console.log(featureId, 'feature');
+   
   dispatch(toggleFeature({optionId, featureId}));
 };
 
@@ -209,8 +211,8 @@ const handleRemoveFeature = (featureId) => {
             {/* Feature Input Area */}
             <div className="mb-4 flex gap-3">
                
-               {selectedService.availableFeatures?.length>0?
-               selectedService.availableFeatures?.map((feature) => (
+               {selectedService.features?.length>0?
+               selectedService.features?.map((feature) => (
                   <div key={feature.id} className=" bg-gray-200 px-2 py-1 rounded flex items-center gap-1">
                      <p className="text-sm text-gray-700">{feature.name}</p>
                      <button
@@ -281,11 +283,11 @@ const handleRemoveFeature = (featureId) => {
                         Features
                      </label>
                      <div className="flex flex-wrap gap-4">
-                        {selectedService.availableFeatures?.map((feature) => (
+                        {selectedService.features?.map((feature) => (
                            <label key={feature.id} className="flex items-center gap-2 text-sm text-gray-700">
                            <input
                               type="checkbox"
-                              checked={option.selectedFeatures?.includes(feature.id)}
+                              checked={option.selectedFeatures?.find(f => f.id === feature.id)?.is_included || false}
                               onChange={() =>
                                  handleToggleFeature(option.id, feature.id)
                               }
