@@ -94,7 +94,7 @@ const QuotePDF = ({ selectedContact, selectedServices, selectedPlans, totalPrice
       <Page size="A4" style={styles.page}>
         {/* Logo placeholder - replace with your actual logo */}
         <View style={{ alignItems: 'center', marginBottom: 20 }}>
-          <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Service Piolet</Text>
+          <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Service Pilot</Text>
           <Text style={{ fontSize: 12, color: '#666' }}>Services</Text>
         </View>
 
