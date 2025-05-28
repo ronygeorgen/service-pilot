@@ -27,7 +27,7 @@ function AdminPanel() {
   }; 
   const handleSave = ()=>{
     if (selectedService?.isNew){
-      dispatch(createService({minimumPrice:Number(settings?.minimumPrice), services: [selectedService]}));
+      dispatch(createService({minimumPrice:Number(settings?.services[0]?.minimum_price), services: [selectedService]}));
     }else{
       console.log('edit service');
       dispatch(editServiceAction(selectedService))
