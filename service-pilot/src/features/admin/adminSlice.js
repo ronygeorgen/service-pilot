@@ -1,8 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
-import defaultSettings from "../../data/defaultSettings";
 import { adminLoginAction, createService, deleteServiceAction, editServiceAction, serviceListAction } from "./adminActions";
 
+const admin_info = localStorage.getItem('admin_info')
+
 const initialState = {
+    admin_info:admin_info,
     success:false,
     error:'',
     isLoginned:null,
@@ -16,6 +18,10 @@ const adminSlice = createSlice({
     name:'admin',
     initialState: initialState,
     reducers:{
+        setReset:(state)=>{
+            state.success=false;
+            state.error=''
+        },
         setMinimumPrice:(state,action)=>{
             state.settings = {...state.settings, minimumPrice:action.payload};
         },
@@ -94,19 +100,23 @@ const adminSlice = createSlice({
                 ...state.selectedService,
                 questions: state.selectedService.questions.map(question => {
                 if (question.id === action.payload.questionId) {
-                    // Return a new question object with updated optionPrices
                     return {
                     ...question,
-                    optionPrices: {
-                        ...question.optionPrices,
-                        ...action.payload.value,
-                    },
+                    options: question.options.map(opt => {
+                        const key = Object.keys(opt)[0];
+                        if (key === Object.keys(action.payload.value)[0]) {
+                        // Replace with new value
+                        return action.payload.value;
+                        }
+                        return opt;
+                    }),
                     };
                 }
-                return question; // Return unchanged question
+                return question;
                 }),
             };
         },
+
         deleteQuestion:(state, action)=>{
             state.selectedService = ({
                 ...state.selectedService,
@@ -207,19 +217,21 @@ const adminSlice = createSlice({
             state.selectedService = null;
         })
         .addCase(adminLoginAction.fulfilled, (state, action)=>{
-            localStorage.setItem('access_token',action.payload?.access_token)
-            localStorage.setItem('refresh_token',action.payload?.refresh_token)
+            localStorage.setItem('access_token',action.payload?.access)
+            localStorage.setItem('refresh_token',action.payload?.refresh)
+            localStorage.setItem('admin_info', action.payload?.user_info)
             state.isLoginned = true;
+            state.success=true
         })
         .addCase(adminLoginAction.rejected, (state, action)=>{
             console.log(action.payload, 'fff');   
-            state.error = action.payload
+            state.error = action.payload?.error
         })
         
     }
 })
 
-export const {setMinimumPrice, setIsEdited, setSelectedService, addService, updateService, deleteService, addQuestion, updateQuestion, updateQuestionOptionPrice, deleteQuestion, addPricing, updatePricing, deletePricing,
+export const {setReset, setMinimumPrice, setIsEdited, setSelectedService, addService, updateService, deleteService, addQuestion, updateQuestion, updateQuestionOptionPrice, deleteQuestion, addPricing, updatePricing, deletePricing,
     addFeature, removeFeature, toggleFeature
 } = adminSlice.actions;
 export default  adminSlice.reducer;
