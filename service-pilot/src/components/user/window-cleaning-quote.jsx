@@ -179,7 +179,7 @@ export default function WindowCleaningQuote() {
       <div className="bg-white mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12 pt-6 pb-4">
         <div className="text-center px-4">
           <div className="mb-6">
-            <img src="/placeholder.svg?height=120&width=120" alt="Tru Shine Logo" className="mx-auto h-16 w-16" />
+            <img src="/sevicepilot_logo.png?height=120&width=120" alt="Tru Shine Logo" className="mx-auto h-16 w-16" />
           </div>
 
           <div className="mb-6">
@@ -412,7 +412,7 @@ export default function WindowCleaningQuote() {
           {activeTab === "about" && (
             <div className="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-6">
               <div className="flex-shrink-0">
-                <img src="/placeholder.svg?height=150&width=150" alt="Company Logo" className="h-24 w-24" />
+                <img src="/sevicepilot_logo.png?height=150&width=150" alt="Company Logo" className="h-24 w-24" />
               </div>
               <div className="flex-1">
                 <p className="text-gray-600 leading-relaxed text-sm">
