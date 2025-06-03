@@ -8,8 +8,9 @@ function Navbar() {
 
     const navigate = useNavigate();
     const handleLogout = ()=>{
-        localStorage.setItem('access_token', '')
-        localStorage.setItem('refresh_token', '')
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
+        localStorage.removeItem('admin_info')
         navigate('/admin/login')
     }
     console.log(admin_info, 'add');
