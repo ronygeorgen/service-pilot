@@ -1,6 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { axiosInstance } from "../../services/api";
-import { adminLogin, CreateService, serviceDelete, serviceEdit, serviceList } from "./services";
+import { adminLogin, CreateService, getGlobalSettings, globalSettings, serviceDelete, serviceEdit, serviceList } from "./services";
 
 export const createService = createAsyncThunk('createService', async (data, {rejectWithValue})=>{
     try{
@@ -56,6 +56,29 @@ export const adminLoginAction = createAsyncThunk('adminLogin', async (data, {rej
         
         const response = await adminLogin(data)
         console.log(response.data, 'responses login')
+        return response.data
+    }catch(error){
+        console.log(error, 'error')
+        return rejectWithValue(error.response?.data)
+    }
+})
+
+export const globalSettingsAction = createAsyncThunk('globalSettings', async (data, {rejectWithValue})=>{
+    try{
+        const response = await globalSettings(data)
+        console.log(response.data, 'responses globalsettings')
+        return response.data
+    }catch(error){
+        console.log(error, 'error')
+        return rejectWithValue(error.response?.data)
+    }
+})
+
+
+export const getGlobalSettingsActions = createAsyncThunk('getGlobalSettings', async (_, {rejectWithValue})=>{
+    try{
+        const response = await getGlobalSettings()
+        console.log(response.data, 'responses get globalsettings')
         return response.data
     }catch(error){
         console.log(error, 'error')

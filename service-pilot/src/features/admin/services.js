@@ -19,3 +19,11 @@ export const serviceDelete = async(id)=>{
 export const adminLogin = async(data)=>{
     return await axiosInstance.post(`/accounts/auth/login/`, data);
 }   
+
+export const globalSettings = async(data)=>{
+    return await axiosInstance.post(`data/globalsettings/update/`, data);
+} 
+
+export const getGlobalSettings = async()=>{
+    return await axiosInstance.get(`data/globalsettings/update/`);
+} 
