@@ -3,31 +3,39 @@ import {useDispatch, useSelector} from 'react-redux'
 import { Save, Plus, Trash } from 'lucide-react';
 import Service from './Service';
 import UpdateService from './UpdateService';
-import { addService, setIsEdited, setMinimumPrice } from '../../features/admin/adminSlice';
-import { createService, editServiceAction, serviceListAction } from '../../features/admin/adminActions';
+import { addService, setIsEdited, setMinimumPrice, setReset } from '../../features/admin/adminSlice';
+import { createService, editServiceAction, getGlobalSettingsActions, globalSettingsAction, serviceListAction } from '../../features/admin/adminActions';
 
 function AdminPanel() {
-    const settings = useSelector(state=>state.admin.settings)
-    const {selectedService, isEdited} = useSelector(state=>state.admin)
+  const [save, setSave] = useState(false);
+
+    const {selectedService, isEdited, settings, services, success, error} = useSelector(state=>state.admin)
 
     const dispatch = useDispatch();
 
     useEffect(()=>{
+      if (success){
+        dispatch(setReset());
+        setSave(false);
+      }
+    }, [success, error])
+
+    useEffect(()=>{
       dispatch(serviceListAction());
+      dispatch(getGlobalSettingsActions());
     },[])
 
-  //   const handleSaveSettings = () => {
-  //   updateSettings(localSettings);
-  //   alert('Settings saved successfully!');
-  // };
+  const saveGlobalsettings = ()=>{
+    dispatch(globalSettingsAction(settings))
+  }
 
   const handleChangeMinimumPrice = (value) => {
     const price = Number(value);
     dispatch(setMinimumPrice(price))
-  }; 
+  };  
   const handleSave = ()=>{
     if (selectedService?.isNew){
-      dispatch(createService({minimumPrice:Number(settings?.services[0]?.minimum_price), services: [selectedService]}));
+      dispatch(createService(selectedService));
     }else{
       console.log('edit service');
       dispatch(editServiceAction(selectedService))
@@ -43,7 +51,7 @@ function AdminPanel() {
     dispatch(addService())
   }
 
-  console.log(settings, 'sev')
+  console.log(settings, 'sev', success)
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">
@@ -71,8 +79,8 @@ function AdminPanel() {
               </div>
               
               <div className="space-y-2">
-                {settings?.services?.length > 0 ? (
-                  settings?.services.map((service) => (
+                {services?.length > 0 ? (
+                  services?.map((service) => (
                     <Service key={service.id} service={service} />
                   ))
                 ) : (
@@ -82,14 +90,17 @@ function AdminPanel() {
               
               <div className="mt-8">
                 <h3 className="text-md font-semibold text-gray-800 mb-2">Global Settings</h3>
-                <div>
+                <div className='space-y-1'>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Minimum Price ($)
                   </label>
-                  <input type="number" value={settings?.services ? settings?.services[0]?.minimum_price:0}
-                    onChange={(e) => handleChangeMinimumPrice(e.target.value)}
+                  <input type="number" value={settings?.minimum_price? settings?.minimum_price : 0}
+                    onChange={(e) => {handleChangeMinimumPrice(e.target.value); setSave(true);}}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                  {save && 
+                    <button className='border px-4 py-1 rounded bg-blue-700 hover:bg-blue-600 text-white font-semibold' onClick={saveGlobalsettings}>Save</button>
+                  }
                   <p className="text-xs text-gray-500 mt-1">
                     The minimum price for any service
                   </p>
