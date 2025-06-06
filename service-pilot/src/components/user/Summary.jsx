@@ -54,6 +54,7 @@ const handleFinalize = async () => {
         
         return {
           id: service.service.id,
+          price_plan: service.selectedPricingOption || 0,
           questions: Object.values(answersByQuestion).map(question => {
             // Clean up the question object based on its type
             const serviceQuestion = service.service.questions.find(q => q.id === question.id);

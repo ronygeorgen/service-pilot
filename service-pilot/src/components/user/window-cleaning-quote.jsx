@@ -23,6 +23,7 @@ export default function WindowCleaningQuote() {
   const location = useLocation()
   const { totalPrice: tt, totalSavings, selectedServices } = location.state || {}
 
+
   const [expandedSections, setExpandedSections] = useState({
     note: false,
     photos: false,
@@ -508,24 +509,28 @@ const generatePlans = (service) => {
               Below is some information about our company, along with an overview of the information you provided during
               the quoting process.
             </p>
-            <PDFDownloadLink 
-              document={
-                <QuotePDF 
-                  selectedContact={quoteData.contact}
-                  selectedServices={quoteData.services}
-                  selectedPlans={selectedPlans}
-                  totalPrice={totalPrice}
-                />
-              } 
-              fileName="quote.pdf"
-            >
-              {({ loading }) => (
-                <button className="text-blue-500 hover:underline flex items-center justify-center space-x-2 text-sm">
-                  <FileText className="w-4 h-4 text-red-500" />
-                  <span>{loading ? 'Preparing document...' : 'Download PDF'}</span>
-                </button>
-              )}
-            </PDFDownloadLink>
+            <div className="flex justify-center mt-6">
+              <PDFDownloadLink 
+                document={
+                  <QuotePDF 
+                    selectedContact={quoteData.contact}
+                    selectedServices={quoteData.services}
+                    selectedPlans={selectedPlans}
+                    totalPrice={totalPrice}
+                    signature={signature}
+                  />
+                } 
+                fileName={`quote_${quoteData.contact?.first_name || 'customer'}.pdf`}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+              >
+                {({ loading }) => (
+                  <div className="flex items-center space-x-2">
+                    <FileText className="w-5 h-5" />
+                    <span>{loading ? 'Generating PDF...' : 'Download PDF Quote'}</span>
+                  </div>
+                )}
+              </PDFDownloadLink>
+            </div>
           </div>
 
           {/* Tabs */}
@@ -722,7 +727,13 @@ const generatePlans = (service) => {
                   value={signature}
                   onChange={(e) => setSignature(e.target.value)}
                   placeholder="Your signature"
-                  className="w-full text-center text-base italic focus:outline-none"
+                  style={{ 
+                    width: '100%',
+                    textAlign: 'center',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    fontStyle: 'italic' // Simple italic instead of custom font
+                  }}
                 />
               </div>
             </div>
