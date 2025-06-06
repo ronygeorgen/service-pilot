@@ -4,7 +4,7 @@ import { deleteService, setIsEdited, setSelectedService } from '../../features/a
 import { Trash } from 'lucide-react';
 import { deleteServiceAction } from '../../features/admin/adminActions';
 
-function Service({service}) {
+function Service({service, setErrors}) {
     const [showConfirm, setShowConfirm] = useState(false);
 
     const dispatch = useDispatch();
@@ -16,6 +16,7 @@ function Service({service}) {
             const confirmed = window.confirm('Your data will be lost. Do you want to continue?');
             if (!confirmed) return;
         }
+        setErrors('')
         dispatch(setIsEdited(false))
         dispatch(setSelectedService(service))
     }

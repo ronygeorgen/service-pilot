@@ -7,6 +7,7 @@ const initialState = {
     admin_info:admin_info,
     success:false,
     error:'',
+    pending:false,
     isLoginned:null,
     selectedService: null,
     showPricing: false,
