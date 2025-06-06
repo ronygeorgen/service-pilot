@@ -9,8 +9,13 @@ import { useSelector } from 'react-redux'
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import QuotePDF from './QuotePDF';
 import { axiosInstance } from "../../services/api"
+import { useParams } from 'react-router-dom';
 
 export default function WindowCleaningQuote() {
+  const { quoteId } = useParams();
+  const [quoteData, setQuoteData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { selectedContact } = useSelector((state) => state.contacts)
   const [currentStep, setCurrentStep] = useState(0)
   const [activeTab, setActiveTab] = useState("about")
@@ -27,58 +32,76 @@ export default function WindowCleaningQuote() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const scrollRef = useRef(null)
-  const [selectedPlans, setSelectedPlans] = useState({}) // Track selected plan for each service
+  const [selectedPlans, setSelectedPlans] = useState({})
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const fetchQuoteData = async () => {
+      try {
+        const response = await axiosInstance.get(`/data/user/review/${quoteId}/`);
+        setQuoteData(response.data);
+        
+        // Initialize selected plans from the quote data
+        if (response.data.services) {
+          const initialSelectedPlans = {};
+          response.data.services.forEach(service => {
+            if (service.pricingOptions && service.pricingOptions.length > 0) {
+              // Use the submitted price plan if exists, otherwise use the first option
+              initialSelectedPlans[service.id] = 
+                response.data.is_submited && response.data.price_plan 
+                  ? response.data.price_plan.toString() 
+                  : service.pricingOptions[0].id.toString();
+            }
+          });
+          setSelectedPlans(initialSelectedPlans);
+        }
+      } catch (err) {
+        setError(err.message || 'Failed to fetch quote data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (quoteId) {
+      fetchQuoteData();
+    }
+  }, [quoteId]);
 
   const handleSubmitPurchase = async () => {
-  if (!signature.trim()) return;
-  
-  setIsSubmitting(true);
-  setSubmitError(null);
+    if (!signature.trim()) return;
+    
+    setIsSubmitting(true);
+    setSubmitError(null);
 
-  try {
-    // Submit each selected service
-    await Promise.all(selectedServices.map(async (service) => {
-      const serviceDetails = service?.service || {};
-      const selectedPlanId = selectedPlans[serviceDetails.id];
-      const plans = generatePlans(service);
-      const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
-      console.log('selected contact id ======', selectedContact.contact_id);
-      
-      const payload = {
-        contact_id: selectedContact.contact_id,
-        service_id: serviceDetails.id,
-        price_plan_id: selectedPlan.id,
-        total_amount: selectedPlan.price
-      };
+    try {
+      // Submit the quote with selected plan
+      await axiosInstance.post(`/quotes/${quoteId}/submit/`, {
+        price_plan: selectedPlans[quoteData.services[0].id],
+        signature,
+        total_amount: totalPrice
+      });
 
-      await axiosInstance.post('/data/purchase/', payload);
-    }));
-
-    // Navigate to success page after successful submission
-    navigate('/success', {
-      state: {
-        contactName: `${selectedContact.first_name} ${selectedContact.last_name}`,
-        totalAmount: totalPrice,
-        services: selectedServices.map(service => ({
-          name: service.service.name,
-          plan: generatePlans(service).find(
-            plan => plan.id === selectedPlans[service.service.id]
-          ).name,
-          price: generatePlans(service).find(
-            plan => plan.id === selectedPlans[service.service.id]
-          ).price
-        }))
-      }
-    });
-  } catch (error) {
-    console.error('Purchase submission failed:', error);
-    setSubmitError(error.response?.data?.message || 'Failed to submit purchase. Please try again.');
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+      // Navigate to success page after successful submission
+      navigate('/success', {
+        state: {
+          contactName: `${quoteData.contact.first_name} ${quoteData.contact.last_name}`,
+          totalAmount: totalPrice,
+          services: quoteData.services.map(service => ({
+            name: service.name,
+            plan: service.pricingOptions.find(
+              plan => plan.id.toString() === selectedPlans[service.id]
+            ).name,
+            price: totalPrice
+          }))
+        }
+      });
+    } catch (error) {
+      console.error('Purchase submission failed:', error);
+      setSubmitError(error.response?.data?.message || 'Failed to submit purchase. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Format phone number for display
   const formatPhoneNumber = (phone) => {
@@ -87,35 +110,38 @@ export default function WindowCleaningQuote() {
   };
 
   // Calculate the total price for each pricing option
-  const calculatePlanPrice = (pricingOption, optionPrices, booleanPrices) => {
-    // Calculate total from option prices (choice/number questions)
-    const optionsTotal = optionPrices.reduce((sum, option) => sum + option.total, 0)
+  const calculatePlanPrice = (pricingOption, service) => {
+    let baseTotal = 0;
     
-    // Calculate total from boolean questions
-    const booleanTotal = booleanPrices.reduce((sum, boolPrice) => sum + boolPrice.price, 0)
+    // Calculate total from questions
+    if (service.questions) {
+      service.questions.forEach(question => {
+        if (question.reactions) {
+          if (question.type === 'boolean' && question.reactions.ans) {
+            baseTotal += parseFloat(question.unit_price || 0);
+          } else if (question.type === 'choice' && question.reactions.qty) {
+            baseTotal += parseFloat(question.unit_price || 0) * parseInt(question.reactions.qty);
+          }
+        }
+      });
+    }
     
-    // Combine both totals
-    const baseTotal = optionsTotal + booleanTotal
-    
-    const discount = pricingOption.discount || 0
-    const discountedPrice = baseTotal * (1 - discount / 100)
+    const discount = pricingOption.discount || 0;
+    const discountedPrice = baseTotal * (1 - discount / 100);
     
     return {
       basePrice: baseTotal,
       discountedPrice: discountedPrice,
       savings: baseTotal - discountedPrice
-    }
-  }
+    };
+  };
 
   // Generate plans for a service
   const generatePlans = (service) => {
-    if (!service.service?.pricingOptions) return []
+    if (!service.pricingOptions) return [];
     
-    const optionPrices = service.calculatedPrice?.breakdown?.optionPrices || []
-    const booleanPrices = service.calculatedPrice?.breakdown?.booleanPrices || []
-    
-    return service.service.pricingOptions.map(option => {
-      const priceInfo = calculatePlanPrice(option, optionPrices, booleanPrices)
+    return service.pricingOptions.map(option => {
+      const priceInfo = calculatePlanPrice(option, service);
       
       return {
         id: option.id.toString(),
@@ -125,53 +151,74 @@ export default function WindowCleaningQuote() {
         savings: priceInfo.savings,
         discount: option.discount,
         features: option.selectedFeatures || []
-      }
-    })
-  }
-
-  // Initialize selected plans
-  useEffect(() => {
-    const initialSelectedPlans = {}
-    selectedServices?.forEach(service => {
-      const plans = generatePlans(service)
-      if (plans.length > 0) {
-        initialSelectedPlans[service.service.id] = service.selectedPricingOption?.toString() || plans[0].id
-      }
-    })
-    setSelectedPlans(initialSelectedPlans)
-  }, [selectedServices])
+      };
+    });
+  };
 
   const steps = [
     { id: 0, color: "bg-blue-500" },
     { id: 1, color: "bg-blue-500" },
     { id: 2, color: "bg-green-500" },
     { id: 3, color: "bg-gray-400" },
-  ]
+  ];
 
   const toggleSection = (section) => {
     setExpandedSections((prev) => ({
       ...prev,
       [section]: !prev[section],
-    }))
-  }
+    }));
+  };
 
   const scrollPlans = () => {
     if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: 300, behavior: 'smooth' })
+      scrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
     }
-  }
+  };
 
   // Calculate total price across all services
   const calculateTotalPrice = () => {
-    return selectedServices?.reduce((total, service) => {
-      const plans = generatePlans(service)
-      const selectedPlanId = selectedPlans[service.service.id]
-      const selectedPlan = plans.find(plan => plan.id === selectedPlanId)
-      return total + (selectedPlan?.price || 0)
-    }, 0) || 0
+    if (!quoteData?.services) return 0;
+    
+    return quoteData.services.reduce((total, service) => {
+      const plans = generatePlans(service);
+      const selectedPlanId = selectedPlans[service.id];
+      const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
+      return total + (selectedPlan?.price || 0);
+    }, 0);
+  };
+
+  const totalPrice = calculateTotalPrice();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-200 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-700">Loading quote...</p>
+        </div>
+      </div>
+    );
   }
 
-  const totalPrice = calculateTotalPrice()
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-200 flex items-center justify-center">
+        <div className="text-center text-red-500">
+          <p>Error loading quote: {error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!quoteData) {
+    return (
+      <div className="min-h-screen bg-gray-200 flex items-center justify-center">
+        <div className="text-center">
+          <p>No quote data found</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-200 pb-20">
@@ -184,19 +231,19 @@ export default function WindowCleaningQuote() {
 
           <div className="mb-6">
             <h2 className="text-lg font-semibold mb-2">PREPARED FOR:</h2>
-            {selectedContact ? (
+            {quoteData.contact ? (
               <>
                 <p className="text-base font-medium">
-                  {selectedContact.first_name} {selectedContact.last_name}
+                  {quoteData.contact.first_name} {quoteData.contact.last_name}
                 </p>
-                {selectedContact.phone && (
+                {quoteData.contact.phone && (
                   <p className="text-gray-600 text-sm">
-                    Phone: {formatPhoneNumber(selectedContact.phone)}
+                    Phone: {formatPhoneNumber(quoteData.contact.phone)}
                   </p>
                 )}
-                {selectedContact.email && (
+                {quoteData.contact.email && (
                   <p className="text-gray-600 text-sm">
-                    Email: {selectedContact.email}
+                    Email: {quoteData.contact.email}
                   </p>
                 )}
               </>
@@ -215,19 +262,18 @@ export default function WindowCleaningQuote() {
       </div>
 
       {/* Loop through each service */}
-      {selectedServices?.map((service, serviceIndex) => {
-        const serviceDetails = service?.service || {}
-        const plans = generatePlans(service)
-        const selectedPlanId = selectedPlans[serviceDetails.id]
-        const selectedPlanData = plans.find(plan => plan.id === selectedPlanId)
-        const answers = service?.answers || {}
+      {quoteData.services?.map((service, serviceIndex) => {
+        const plans = generatePlans(service);
+        const selectedPlanId = selectedPlans[service.id];
+        const selectedPlanData = plans.find(plan => plan.id === selectedPlanId);
+        const isSubmitted = quoteData.is_submited;
 
         return (
           <div key={serviceIndex} className="mb-8">
             {/* Service Video Section */}
             <div className="bg-white mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12 py-6">
               <div className="px-4">
-                <h3 className="text-xl font-semibold text-center mb-2">{serviceDetails.name || "Service"}</h3>
+                <h3 className="text-xl font-semibold text-center mb-2">{service.name || "Service"}</h3>
                 <p className="text-center text-gray-600 text-sm mb-4">Watch on YouTube</p>
                 <div className="aspect-video bg-black rounded-lg overflow-hidden max-w-2xl mx-auto">
                   <iframe
@@ -248,7 +294,7 @@ export default function WindowCleaningQuote() {
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold mb-3">Details</h3>
                   <p className="text-gray-600 text-sm leading-relaxed">
-                    {serviceDetails.description || "No description available"}
+                    {service.description || "No description available"}
                   </p>
                 </div>
 
@@ -265,95 +311,144 @@ export default function WindowCleaningQuote() {
                 </div>
 
                 {/* Pricing Plans */}
-                <div className="relative mb-6">
-                  <div 
-                    ref={scrollRef}
-                    className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 px-4"
-                    style={{ 
-                      scrollbarWidth: 'none', 
-                      msOverflowStyle: 'none',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    {plans.map((plan) => {
-                      const planFeatures = serviceDetails.features?.map(feature => {
-                        const isIncluded = plan.features.some(
-                          pf => pf.id === feature.id && pf.is_included
-                        )
-                        return {
-                          name: feature.name,
-                          included: isIncluded
-                        }
-                      }) || []
+                {!isSubmitted ? (
+                  <div className="relative mb-6">
+                    <div 
+                      ref={scrollRef}
+                      className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 px-4"
+                      style={{ 
+                        scrollbarWidth: 'none', 
+                        msOverflowStyle: 'none',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      {plans.map((plan) => {
+                        const planFeatures = service.features?.map(feature => {
+                          const isIncluded = plan.features.some(
+                            pf => pf.id === feature.id && pf.is_included
+                          );
+                          return {
+                            name: feature.name,
+                            included: isIncluded
+                          };
+                        }) || [];
 
-                      return (
-                        <div key={plan.id} className="bg-white border rounded-lg overflow-hidden flex-shrink-0 w-72">
-                          <div className={`${selectedPlanId === plan.id ? "bg-green-500" : "bg-blue-400"} text-white text-center py-3`}>
-                            <h4 className="text-base font-semibold">{plan.name}</h4>
-                            {plan.discount > 0 && (
-                              <p className="text-xs mt-1">Save {plan.discount}%</p>
-                            )}
+                        return (
+                          <div key={plan.id} className="bg-white border rounded-lg overflow-hidden flex-shrink-0 w-72">
+                            <div className={`${selectedPlanId === plan.id ? "bg-green-500" : "bg-blue-400"} text-white text-center py-3`}>
+                              <h4 className="text-base font-semibold">{plan.name}</h4>
+                              {plan.discount > 0 && (
+                                <p className="text-xs mt-1">Save {plan.discount}%</p>
+                              )}
+                            </div>
+
+                            <div className="p-4">
+                              <ul className="space-y-2 mb-4">
+                                {planFeatures.map((feature, index) => (
+                                  <li key={index} className="flex items-start space-x-2">
+                                    {feature.included ? (
+                                      <Check className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" />
+                                    ) : (
+                                      <Check className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
+                                    )}
+                                    <span className={`text-xs ${feature.included ? "text-gray-800" : "text-gray-400"}`}>
+                                      {feature.name}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+
+                              <div className="text-center">
+                                {plan.discount > 0 && (
+                                  <div className="text-gray-500 text-sm line-through mb-1">${plan.basePrice.toFixed(2)}</div>
+                                )}
+                                <div className="text-xl font-bold mb-1">${plan.price.toFixed(2)}</div>
+                                {plan.discount > 0 && (
+                                  <div className="text-green-500 text-xs mb-1">Save ${plan.savings.toFixed(2)}</div>
+                                )}
+                                <div className="text-gray-500 text-xs mb-3">Plus Tax</div>
+
+                                <button
+                                  onClick={() => {
+                                    setSelectedPlans(prev => ({
+                                      ...prev,
+                                      [service.id]: plan.id
+                                    }));
+                                  }}
+                                  className={`w-full py-2 px-4 rounded flex items-center justify-center text-sm ${
+                                    selectedPlanId === plan.id
+                                      ? "bg-green-500 text-white"
+                                      : "bg-blue-400 text-white hover:bg-blue-500"
+                                  }`}
+                                >
+                                  {selectedPlanId === plan.id ? (
+                                    <>
+                                      <Check className="w-4 h-4 mr-1" />
+                                      Selected
+                                    </>
+                                  ) : (
+                                    "Select"
+                                  )}
+                                </button>
+                              </div>
+                            </div>
                           </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mb-6 bg-gray-100 p-4 rounded-lg">
+                    <h4 className="text-lg font-semibold mb-3">Selected Plan</h4>
+                    {selectedPlanData && (
+                      <div className="bg-white border rounded-lg overflow-hidden">
+                        <div className="bg-green-500 text-white text-center py-3">
+                          <h4 className="text-base font-semibold">{selectedPlanData.name}</h4>
+                          {selectedPlanData.discount > 0 && (
+                            <p className="text-xs mt-1">Save {selectedPlanData.discount}%</p>
+                          )}
+                        </div>
 
-                          <div className="p-4">
-                            <ul className="space-y-2 mb-4">
-                              {planFeatures.map((feature, index) => (
+                        <div className="p-4">
+                          <ul className="space-y-2 mb-4">
+                            {service.features?.map((feature, index) => {
+                              const isIncluded = selectedPlanData.features.some(
+                                pf => pf.id === feature.id && pf.is_included
+                              );
+                              return (
                                 <li key={index} className="flex items-start space-x-2">
-                                  {feature.included ? (
+                                  {isIncluded ? (
                                     <Check className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" />
                                   ) : (
                                     <Check className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
                                   )}
-                                  <span className={`text-xs ${feature.included ? "text-gray-800" : "text-gray-400"}`}>
+                                  <span className={`text-xs ${isIncluded ? "text-gray-800" : "text-gray-400"}`}>
                                     {feature.name}
                                   </span>
                                 </li>
-                              ))}
-                            </ul>
+                              );
+                            })}
+                          </ul>
 
-                            <div className="text-center">
-                              {plan.discount > 0 && (
-                                <div className="text-gray-500 text-sm line-through mb-1">${plan.basePrice.toFixed(2)}</div>
-                              )}
-                              <div className="text-xl font-bold mb-1">${plan.price.toFixed(2)}</div>
-                              {plan.discount > 0 && (
-                                <div className="text-green-500 text-xs mb-1">Save ${plan.savings.toFixed(2)}</div>
-                              )}
-                              <div className="text-gray-500 text-xs mb-3">Plus Tax</div>
-
-                              <button
-                                onClick={() => {
-                                  setSelectedPlans(prev => ({
-                                    ...prev,
-                                    [serviceDetails.id]: plan.id
-                                  }))
-                                }}
-                                className={`w-full py-2 px-4 rounded flex items-center justify-center text-sm ${
-                                  selectedPlanId === plan.id
-                                    ? "bg-green-500 text-white"
-                                    : "bg-blue-400 text-white hover:bg-blue-500"
-                                }`}
-                              >
-                                {selectedPlanId === plan.id ? (
-                                  <>
-                                    <Check className="w-4 h-4 mr-1" />
-                                    Selected
-                                  </>
-                                ) : (
-                                  "Select"
-                                )}
-                              </button>
-                            </div>
+                          <div className="text-center">
+                            {selectedPlanData.discount > 0 && (
+                              <div className="text-gray-500 text-sm line-through mb-1">${selectedPlanData.basePrice.toFixed(2)}</div>
+                            )}
+                            <div className="text-xl font-bold mb-1">${selectedPlanData.price.toFixed(2)}</div>
+                            {selectedPlanData.discount > 0 && (
+                              <div className="text-green-500 text-xs mb-1">Save ${selectedPlanData.savings.toFixed(2)}</div>
+                            )}
+                            <div className="text-gray-500 text-xs">Plus Tax</div>
                           </div>
                         </div>
-                      )
-                    })}
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
-        )
+        );
       })}
 
       {/* Learn More Section */}
@@ -365,25 +460,24 @@ export default function WindowCleaningQuote() {
               Below is some information about our company, along with an overview of the information you provided during
               the quoting process.
             </p>
-            {/* Replace the existing PDF download link with this */}
-              <PDFDownloadLink 
-                document={
-                  <QuotePDF 
-                    selectedContact={selectedContact}
-                    selectedServices={selectedServices}
-                    selectedPlans={selectedPlans}
-                    totalPrice={totalPrice}
-                  />
-                } 
-                fileName="quote.pdf"
-              >
-                {({ loading }) => (
-                  <button className="text-blue-500 hover:underline flex items-center justify-center space-x-2 text-sm">
-                    <FileText className="w-4 h-4 text-red-500" />
-                    <span>{loading ? 'Preparing document...' : 'Download PDF'}</span>
-                  </button>
-                )}
-              </PDFDownloadLink>
+            <PDFDownloadLink 
+              document={
+                <QuotePDF 
+                  selectedContact={quoteData.contact}
+                  selectedServices={quoteData.services}
+                  selectedPlans={selectedPlans}
+                  totalPrice={totalPrice}
+                />
+              } 
+              fileName="quote.pdf"
+            >
+              {({ loading }) => (
+                <button className="text-blue-500 hover:underline flex items-center justify-center space-x-2 text-sm">
+                  <FileText className="w-4 h-4 text-red-500" />
+                  <span>{loading ? 'Preparing document...' : 'Download PDF'}</span>
+                </button>
+              )}
+            </PDFDownloadLink>
           </div>
 
           {/* Tabs */}
@@ -429,55 +523,29 @@ export default function WindowCleaningQuote() {
           {activeTab === "specs" && (
             <div className="space-y-4">
               <h4 className="text-lg font-semibold">Selected Services</h4>
-              {selectedServices?.map((service, index) => {
-                const serviceDetails = service?.service || {}
-                const answers = service?.answers || {}
-                
-                return (
-                  <div key={index} className="mb-6">
-                    <h5 className="font-medium mb-3">{serviceDetails.name}</h5>
-                    <div className="space-y-3">
-                      {Object.entries(answers).map(([key, value]) => {
-                        // Find the corresponding question in the service's questions array
-                        const questionId = key.split('-')[0]; // Get the base ID (removes option suffix)
-                        const question = serviceDetails.questions?.find(q => q.id.toString() === questionId);
-                        
-                        // For boolean questions, use the question text directly
-                        if (question?.type === "boolean") {
-                          return (
-                            <div key={key} className="flex justify-between border-b pb-2">
-                              <span className="text-gray-600">{question.text}:</span>
-                              <span className="font-medium">
-                                {value === "Yes" ? "Yes" : "No"}
-                              </span>
-                            </div>
-                          );
-                        }
-                        
-                        // For choice/number questions with options
-                        const optionLabel = key.split('-')[1]; // Get the option label if exists
-                        let displayText = question?.text || key;
-                        
-                        // If it's an option, append the option label to the question text
-                        if (optionLabel && question) {
-                          displayText = `${optionLabel}`;
-                        } else if (question) {
-                          displayText = question.text;
-                        }
-
-                        return (
-                          <div key={key} className="flex justify-between border-b pb-2">
-                            <span className="text-gray-600">{displayText}:</span>
-                            <span className="font-medium">
-                              {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
+              {quoteData.services?.map((service, index) => (
+                <div key={index} className="mb-6">
+                  <h5 className="font-medium mb-3">{service.name}</h5>
+                  <div className="space-y-3">
+                    {service.questions?.map((question) => {
+                      if (!question.reactions) return null;
+                      
+                      return (
+                        <div key={question.id} className="flex justify-between border-b pb-2">
+                          <span className="text-gray-600">{question.text}:</span>
+                          <span className="font-medium">
+                            {question.type === 'boolean' 
+                              ? question.reactions.ans ? 'Yes' : 'No'
+                              : question.type === 'choice'
+                                ? question.reactions.qty
+                                : ''}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           )}
 
@@ -516,16 +584,13 @@ export default function WindowCleaningQuote() {
 
               <div className="mt-4">
                 <p className="font-medium">SELECTED SERVICES:</p>
-                {selectedServices?.length > 0 ? (
-                  selectedServices.map((service, index) => {
-                    const serviceDetails = service?.service || {};
-                    return (
-                      <div key={index} className="mb-3">
-                        <p className="font-medium">{serviceDetails.name?.toUpperCase()}:</p>
-                        <p>{serviceDetails.description || "No description available"}</p>
-                      </div>
-                    );
-                  })
+                {quoteData.services?.length > 0 ? (
+                  quoteData.services.map((service, index) => (
+                    <div key={index} className="mb-3">
+                      <p className="font-medium">{service.name?.toUpperCase()}:</p>
+                      <p>{service.description || "No description available"}</p>
+                    </div>
+                  ))
                 ) : (
                   <p>– No services selected</p>
                 )}
@@ -535,95 +600,98 @@ export default function WindowCleaningQuote() {
         </div>
       </div>
 
-      {/* Final Booking Section */}
-      <div className="bg-white mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12 py-6">
-        <div className="px-4">
-          <div className="text-center mb-6">
-            <p className="text-gray-600 mb-4 text-sm">
-              Please review the details below to confirm that we got everything right, and then we'll go ahead and book
-              you in.
-            </p>
+      {/* Final Booking Section - Only show if not submitted */}
+      {!quoteData.is_submited && (
+        <div className="bg-white mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12 py-6">
+          <div className="px-4">
+            <div className="text-center mb-6">
+              <p className="text-gray-600 mb-4 text-sm">
+                Please review the details below to confirm that we got everything right, and then we'll go ahead and book
+                you in.
+              </p>
 
-            <h3 className="text-lg font-semibold mb-4">You've chosen the following services:</h3>
+              <h3 className="text-lg font-semibold mb-4">You've chosen the following services:</h3>
 
-            {selectedServices?.map((service, index) => {
-              const serviceDetails = service?.service || {}
-              const plans = generatePlans(service)
-              const selectedPlanId = selectedPlans[serviceDetails.id]
-              const selectedPlan = plans.find(plan => plan.id === selectedPlanId)
+              {quoteData.services?.map((service, index) => {
+                const plans = generatePlans(service);
+                const selectedPlanId = selectedPlans[service.id];
+                const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
 
-              return (
-                <div key={index} className="flex justify-between items-center py-3 border-b">
-                  <div className="text-left">
-                    <span className="text-blue-500 font-medium text-sm">
-                      {serviceDetails.name?.toUpperCase()} ({selectedPlan?.name?.toUpperCase()})
-                    </span>
+                return (
+                  <div key={index} className="flex justify-between items-center py-3 border-b">
+                    <div className="text-left">
+                      <span className="text-blue-500 font-medium text-sm">
+                        {service.name?.toUpperCase()} ({selectedPlan?.name?.toUpperCase()})
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-lg font-bold">${selectedPlan?.price?.toFixed(2)}</span>
+                      {selectedPlan?.discount > 0 && (
+                        <span className="text-gray-500 text-xs ml-2">(Save {selectedPlan.discount}%)</span>
+                      )}
+                      <div className="text-gray-500 text-xs">Plus Tax</div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className="text-lg font-bold">${selectedPlan?.price?.toFixed(2)}</span>
-                    {selectedPlan?.discount > 0 && (
-                      <span className="text-gray-500 text-xs ml-2">(Save {selectedPlan.discount}%)</span>
-                    )}
-                    <div className="text-gray-500 text-xs">Plus Tax</div>
-                  </div>
-                </div>
-              )
-            })}
+                );
+              })}
 
-            <div className="flex justify-between items-center py-3 font-bold text-base">
-              <span>TOTAL</span>
-              <span>${totalPrice.toFixed(2)}</span>
-            </div>
-          </div>
-
-          {/* Signature Section */}
-          <div className="mb-6">
-            <h4 className="text-base font-semibold mb-3">Please leave your signature below</h4>
-            <div className="border-b-2 border-gray-300 pb-2 mb-4">
-              <input
-                type="text"
-                value={signature}
-                onChange={(e) => setSignature(e.target.value)}
-                placeholder="Your signature"
-                className="w-full text-center text-base italic focus:outline-none"
-              />
-            </div>
-          </div>
-
-          {/* Final Button */}
-          <div className="text-center">
-            <button
-              onClick={handleSubmitPurchase}
-              disabled={!signature.trim() || isSubmitting}
-              className={`px-6 py-3 rounded transition-colors font-medium text-sm ${
-                !signature.trim()
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-500 text-white hover:bg-blue-600"
-              }`}
-            >
-              {isSubmitting ? "Submitting..." : "I'm Ready to Schedule"}
-            </button>
-            {submitError && (
-              <div className="mb-4 text-red-500 text-center text-sm">
-                {submitError}
+              <div className="flex justify-between items-center py-3 font-bold text-base">
+                <span>TOTAL</span>
+                <span>${totalPrice.toFixed(2)}</span>
               </div>
-            )}
+            </div>
+
+            {/* Signature Section */}
+            <div className="mb-6">
+              <h4 className="text-base font-semibold mb-3">Please leave your signature below</h4>
+              <div className="border-b-2 border-gray-300 pb-2 mb-4">
+                <input
+                  type="text"
+                  value={signature}
+                  onChange={(e) => setSignature(e.target.value)}
+                  placeholder="Your signature"
+                  className="w-full text-center text-base italic focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Final Button */}
+            <div className="text-center">
+              <button
+                onClick={handleSubmitPurchase}
+                disabled={!signature.trim() || isSubmitting}
+                className={`px-6 py-3 rounded transition-colors font-medium text-sm ${
+                  !signature.trim()
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-blue-500 text-white hover:bg-blue-600"
+                }`}
+              >
+                {isSubmitting ? "Submitting..." : "I'm Ready to Schedule"}
+              </button>
+              {submitError && (
+                <div className="mb-4 text-red-500 text-center text-sm">
+                  {submitError}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Fixed Bottom Navigation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-green-500 text-white py-3 px-4 flex justify-between items-center z-50">
-        <div className="flex items-center space-x-2">
-          <span className="text-sm">Your selection:</span>
-          <div className="bg-white text-green-500 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
-            {selectedServices?.length || 0}
+      {!quoteData.is_submited && (
+        <div className="fixed bottom-0 left-0 right-0 bg-green-500 text-white py-3 px-4 flex justify-between items-center z-50">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm">Your selection:</span>
+            <div className="bg-white text-green-500 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+              {quoteData.services?.length || 0}
+            </div>
           </div>
+          <button className="text-white hover:text-gray-200">
+            <ChevronUp className="w-5 h-5" />
+          </button>
         </div>
-        <button className="text-white hover:text-gray-200">
-          <ChevronUp className="w-5 h-5" />
-        </button>
-      </div>
+      )}
     </div>
-  )
+  );
 }
