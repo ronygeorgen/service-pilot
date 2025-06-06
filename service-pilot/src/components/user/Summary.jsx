@@ -18,27 +18,68 @@ const Summary = () => {
     dispatch({ type: "ADD_MORE_SERVICES" })
   }
 
+  console.log('selected service details in summary page==', state.selectedServices)
+
+
 const handleFinalize = async () => {
   setIsSubmitting(true);
   try {
     // Prepare the data to save in the exact format backend expects
     const quoteData = {
-      contact: selectedContact.contact_id, // Using the exact field name "contact"
-      services: state.selectedServices.map(service => ({
-        id: service.service.id, // Service ID directly as "id"
-        questions: Object.entries(service.answers).map(([key, value]) => {
-          // Extract question ID and type from the key
+      contact: selectedContact.contact_id,
+      services: state.selectedServices.map(service => {
+        // Group answers by question ID
+        const answersByQuestion = {};
+        
+        Object.entries(service.answers).forEach(([key, value]) => {
           const [questionId, optionLabel] = key.split('-');
           
-          return {
-            id: parseInt(questionId), // Ensure ID is a number
-            qty: typeof value === 'number' ? value : 0, // Quantity if numeric answer
-            ans: typeof value === 'boolean' ? value : Boolean(value) // Boolean answer
-          };
-        })
-      })),
-      total_amount: calculateTotalPrice(), // Using exact field name "total_amount"
-      price_plan: state.selectedServices[0]?.selectedPricingOption || 0 // Assuming single service or primary plan
+          if (!answersByQuestion[questionId]) {
+            answersByQuestion[questionId] = {
+              id: parseInt(questionId),
+              options: {},
+              ans: false
+            };
+          }
+          
+          // Handle boolean questions
+          if (value === 'Yes' || value === 'No') {
+            answersByQuestion[questionId].ans = value === 'Yes';
+          } 
+          // Handle choice options
+          else if (optionLabel) {
+            answersByQuestion[questionId].options[optionLabel.toLowerCase()] = parseInt(value) || 0;
+          }
+        });
+        
+        return {
+          id: service.service.id,
+          questions: Object.values(answersByQuestion).map(question => {
+            // Clean up the question object based on its type
+            const serviceQuestion = service.service.questions.find(q => q.id === question.id);
+            
+            if (serviceQuestion?.type === 'boolean') {
+              // For boolean questions, only include ans if true
+              return {
+                id: question.id,
+                ans: question.ans
+              };
+            } else if (serviceQuestion?.type === 'choice') {
+              // For choice questions, include options and ans
+              return {
+                id: question.id,
+                ans: question.ans,
+                options: question.options
+              };
+            }
+            
+            // Fallback (shouldn't happen if all questions are properly typed)
+            return question;
+          })
+        };
+      }),
+      total_amount: calculateTotalPrice(),
+      price_plan: state.selectedServices[0]?.selectedPricingOption || 0
     };
 
     // Save to backend
