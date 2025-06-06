@@ -111,49 +111,80 @@ export default function WindowCleaningQuote() {
 
   // Calculate the total price for each pricing option
   const calculatePlanPrice = (pricingOption, service) => {
-    let baseTotal = 0;
-    
-    // Calculate total from questions
-    if (service.questions) {
-      service.questions.forEach(question => {
-        if (question.reactions) {
-          if (question.type === 'boolean' && question.reactions.ans) {
-            baseTotal += parseFloat(question.unit_price || 0);
-          } else if (question.type === 'choice' && question.reactions.qty) {
-            baseTotal += parseFloat(question.unit_price || 0) * parseInt(question.reactions.qty);
-          }
-        }
-      });
-    }
-    
-    const discount = pricingOption.discount || 0;
-    const discountedPrice = baseTotal * (1 - discount / 100);
-    
-    return {
-      basePrice: baseTotal,
-      discountedPrice: discountedPrice,
-      savings: baseTotal - discountedPrice
-    };
+  let baseTotal = 0;
+  const priceBreakdown = {
+    basePrice: 0,
+    booleanPrices: [],
+    optionPrices: [],
+    total: 0
   };
 
-  // Generate plans for a service
-  const generatePlans = (service) => {
-    if (!service.pricingOptions) return [];
+  // Calculate prices from questions
+  service.questions?.forEach(question => {
+    const reaction = question.reactions?.[0]; // Get the first reaction
     
-    return service.pricingOptions.map(option => {
-      const priceInfo = calculatePlanPrice(option, service);
-      
-      return {
-        id: option.id.toString(),
-        name: option.name.charAt(0).toUpperCase() + option.name.slice(1),
-        basePrice: priceInfo.basePrice,
-        price: priceInfo.discountedPrice,
-        savings: priceInfo.savings,
-        discount: option.discount,
-        features: option.selectedFeatures || []
-      };
-    });
+    if (question.type === 'boolean' && reaction?.ans) {
+      // Boolean question with "Yes" answer
+      const price = parseFloat(question.unit_price) || 0;
+      baseTotal += price;
+      priceBreakdown.booleanPrices.push({
+        questionText: question.text,
+        price: price
+      });
+    } 
+    else if (question.type === 'choice' && reaction?.options) {
+      // Choice question with options
+      reaction.options.forEach(option => {
+        const optionPrice = parseFloat(option.question_option.value) || 0;
+        const quantity = parseInt(option.qty) || 0;
+        const optionTotal = optionPrice * quantity;
+        
+        baseTotal += optionTotal;
+        priceBreakdown.optionPrices.push({
+          optionName: option.question_option.label,
+          unitPrice: optionPrice,
+          quantity: quantity,
+          total: optionTotal
+        });
+      });
+    }
+  });
+
+  priceBreakdown.basePrice = baseTotal;
+  priceBreakdown.total = baseTotal;
+  
+  const discount = pricingOption.discount || 0;
+  const discountedPrice = discount > 0 
+    ? baseTotal * (1 - discount / 100)
+    : baseTotal;
+  
+  return {
+    basePrice: baseTotal,
+    discountedPrice: discountedPrice,
+    savings: baseTotal - discountedPrice,
+    priceBreakdown: priceBreakdown
   };
+};
+
+  // Generate plans for a service
+const generatePlans = (service) => {
+  if (!service.pricingOptions) return [];
+  
+  return service.pricingOptions.map(option => {
+    const priceInfo = calculatePlanPrice(option, service);
+    
+    return {
+      id: option.id.toString(),
+      name: option.name.charAt(0).toUpperCase() + option.name.slice(1),
+      basePrice: priceInfo.basePrice,
+      price: priceInfo.discountedPrice,
+      savings: priceInfo.savings,
+      discount: option.discount,
+      features: option.selectedFeatures || [],
+      priceBreakdown: priceInfo.priceBreakdown
+    };
+  });
+};
 
   const steps = [
     { id: 0, color: "bg-blue-500" },
@@ -349,7 +380,7 @@ export default function WindowCleaningQuote() {
                                     {feature.included ? (
                                       <Check className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" />
                                     ) : (
-                                      <Check className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
+                                      <X className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
                                     )}
                                     <span className={`text-xs ${feature.included ? "text-gray-800" : "text-gray-400"}`}>
                                       {feature.name}
@@ -360,11 +391,28 @@ export default function WindowCleaningQuote() {
 
                               <div className="text-center">
                                 {plan.discount > 0 && (
-                                  <div className="text-gray-500 text-sm line-through mb-1">${plan.basePrice.toFixed(2)}</div>
+                                  <div className="text-gray-500 text-sm line-through mb-1">
+                                    ${plan.basePrice.toFixed(2)}
+                                  </div>
                                 )}
-                                <div className="text-xl font-bold mb-1">${plan.price.toFixed(2)}</div>
+                                
+                                {/* Show price breakdown if needed */}
+                                {plan.priceBreakdown.booleanPrices.length > 0 && (
+                                  <div className="text-xs text-gray-500 mb-1">
+                                    {plan.priceBreakdown.booleanPrices.map((item, idx) => (
+                                      <div key={idx}>+ {item.questionText}</div>
+                                    ))}
+                                  </div>
+                                )}
+                                
+                                <div className="text-xl font-bold mb-1">
+                                  ${plan.price.toFixed(2)}
+                                </div>
+                                
                                 {plan.discount > 0 && (
-                                  <div className="text-green-500 text-xs mb-1">Save ${plan.savings.toFixed(2)}</div>
+                                  <div className="text-green-500 text-xs mb-1">
+                                    Save ${plan.savings.toFixed(2)}
+                                  </div>
                                 )}
                                 <div className="text-gray-500 text-xs mb-3">Plus Tax</div>
 
@@ -524,22 +572,46 @@ export default function WindowCleaningQuote() {
             <div className="space-y-4">
               <h4 className="text-lg font-semibold">Selected Services</h4>
               {quoteData.services?.map((service, index) => (
-                <div key={index} className="mb-6">
-                  <h5 className="font-medium mb-3">{service.name}</h5>
+                <div key={index} className="mb-6 border p-4 rounded-lg bg-gray-50">
+                  <h5 className="font-medium text-lg mb-3">{service.name}</h5>
                   <div className="space-y-3">
                     {service.questions?.map((question) => {
-                      if (!question.reactions) return null;
+                      const reaction = question.reactions?.[0];
                       
                       return (
-                        <div key={question.id} className="flex justify-between border-b pb-2">
-                          <span className="text-gray-600">{question.text}:</span>
-                          <span className="font-medium">
-                            {question.type === 'boolean' 
-                              ? question.reactions.ans ? 'Yes' : 'No'
-                              : question.type === 'choice'
-                                ? question.reactions.qty
-                                : ''}
-                          </span>
+                        <div key={question.id} className="border-b pb-2 last:border-b-0">
+                          <div className="flex justify-between">
+                            <span className="text-gray-700 font-medium">{question.text}</span>
+                            {question.type === 'boolean' && (
+                              <span className="font-medium">
+                                {reaction?.ans ? 'Yes' : 'No'}
+                              </span>
+                            )}
+                          </div>
+                          
+                          {question.type === 'choice' && reaction?.options && (
+                            <div className="mt-2 pl-4">
+                              {reaction.options.map((option, optIndex) => (
+                                <div key={optIndex} className="flex justify-between text-sm">
+                                  <span className="text-gray-600">
+                                    {option.question_option.label}:
+                                  </span>
+                                  <span className="font-medium">
+                                    {option.qty} × ${option.question_option.value} = 
+                                    <span className="ml-1">
+                                      ${(parseFloat(option.question_option.value) * parseInt(option.qty)).toFixed(2)}
+                                    </span>
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {question.type === 'boolean' && reaction?.ans && question.unit_price !== '0.00' && (
+                            <div className="text-right text-sm text-gray-500 mt-1">
+                              +${parseFloat(question.unit_price).toFixed(2)}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
