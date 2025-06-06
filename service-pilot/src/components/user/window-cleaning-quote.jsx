@@ -87,7 +87,7 @@ export default function WindowCleaningQuote() {
 
     try {
       // Submit the quote with selected plan
-      await axiosInstance.post(`/quotes/${quoteId}/submit/`, {
+      await axiosInstance.post(`/data/purchase/${quoteId}/`, {
         price_plan: selectedPlans[quoteData.services[0].id],
         signature,
         total_amount: totalPrice
@@ -115,7 +115,6 @@ export default function WindowCleaningQuote() {
     }
   };
 
-  console.log(selectedServicePlans, 'seee');
 
   // Format phone number for display
   const formatPhoneNumber = (phone) => {
