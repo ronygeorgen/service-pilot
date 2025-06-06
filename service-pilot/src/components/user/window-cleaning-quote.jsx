@@ -85,13 +85,17 @@ export default function WindowCleaningQuote() {
     setIsSubmitting(true);
     setSubmitError(null);
 
+    const payload = {
+      purchase_id: quoteData.id,
+      total_amount: quoteData.total_amount,
+      signature: signature,
+      services: selectedServicePlans
+    };
+
     try {
       // Submit the quote with selected plan
-      await axiosInstance.post(`/quotes/${quoteId}/submit/`, {
-        price_plan: selectedPlans[quoteData.services[0].id],
-        signature,
-        total_amount: totalPrice
-      });
+      const response = await axiosInstance.post(`data/quotes/${quoteId}/submit/`, payload);
+      console.log('Submission success:', response.data);
 
       // Navigate to success page after successful submission
       navigate('/success', {
@@ -101,7 +105,7 @@ export default function WindowCleaningQuote() {
           services: quoteData.services.map(service => ({
             name: service.name,
             plan: service.pricingOptions.find(
-              plan => plan.id.toString() === selectedPlans[service.id]
+              plan => plan.id.toString() === selectedServicePlans?.find(item => item.service_id === service.id)?.price_plan
             ).name,
             price: totalPrice
           }))
