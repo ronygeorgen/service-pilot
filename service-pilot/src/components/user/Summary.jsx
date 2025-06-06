@@ -1,50 +1,59 @@
 "use client"
 
-import React from "react"
+import { useState } from "react"
 import { useQuote } from "../../context/QuoteContext"
 import { formatCurrency, applyPricingOption, calculateSavings } from "../../utils/calculations"
 import { useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux' 
+import { axiosInstance } from "../../services/api"
 
 const Summary = () => {
   const { state, settings, dispatch } = useQuote()
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const navigate = useNavigate()
+  const { selectedContact } = useSelector((state) => state.contacts)
+  
 
   const handleAddMoreServices = () => {
     dispatch({ type: "ADD_MORE_SERVICES" })
   }
 
 const handleFinalize = async () => {
-  const baseTotal = state.selectedServices.reduce((total, service) => total + getServiceBasePrice(service), 0)
-  const totalPrice = calculateTotalPrice()
-  const totalSavings = baseTotal - totalPrice
+  setIsSubmitting(true);
+  try {
+    // Prepare the data to save in the exact format backend expects
+    const quoteData = {
+      contact: selectedContact.contact_id, // Using the exact field name "contact"
+      services: state.selectedServices.map(service => ({
+        id: service.service.id, // Service ID directly as "id"
+        questions: Object.entries(service.answers).map(([key, value]) => {
+          // Extract question ID and type from the key
+          const [questionId, optionLabel] = key.split('-');
+          
+          return {
+            id: parseInt(questionId), // Ensure ID is a number
+            qty: typeof value === 'number' ? value : 0, // Quantity if numeric answer
+            ans: typeof value === 'boolean' ? value : Boolean(value) // Boolean answer
+          };
+        })
+      })),
+      total_amount: calculateTotalPrice(), // Using exact field name "total_amount"
+      price_plan: state.selectedServices[0]?.selectedPricingOption || 0 // Assuming single service or primary plan
+    };
 
-  // Prepare questions with their text
-  const questionsWithText = {};
-  state.selectedServices.forEach(service => {
-    if (service.questions) {
-      service.questions.forEach(question => {
-        if (question.type === "boolean") {
-          questionsWithText[question.id] = question.text;
-        } else if (question.type === "number" || question.type === "choice") {
-          question.options.forEach(option => {
-            const label = Object.keys(option)[0];
-            questionsWithText[`${question.id}-${label}`] = `${question.text} - ${label}`;
-          });
-        }
-      });
-    }
-  });
+    // Save to backend
+    const response = await axiosInstance.post('/data/purchase/', quoteData);
+    const quoteId = response.data.id;
 
-  navigate('/user/review/', {
-    state: {
-      totalPrice,
-      totalSavings,
-      baseTotal,
-      selectedServices: state.selectedServices,
-      questionsWithText, // Add this
-    }
-  })
-}
+    // Navigate to review page with quote ID
+    navigate(`/user/review/${quoteId}`);
+  } catch (error) {
+    console.error('Error saving quote:', error);
+    // Handle error (show toast/message)
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
 
   // Get pricing option for a specific service
@@ -235,9 +244,12 @@ const calculateTotalPrice = () => {
         </button>
         <button
           onClick={handleFinalize}
-          className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors"
+          disabled={isSubmitting}
+          className={`px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors ${
+            isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+          }`}
         >
-          Finalize Quote
+          {isSubmitting ? 'Saving...' : 'Finalize Quote'}
         </button>
       </div>
     </div>

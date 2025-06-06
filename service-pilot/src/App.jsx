@@ -18,7 +18,7 @@ function App() {
           <Route path='/' element={<HomePage/>} />
           <Route path='/admin' element={<ProtectedRoute><AdminPanelPage/></ProtectedRoute>}/>
           <Route path='admin/login' element={<LoginPage/>}/>
-          <Route path='user/review/' element={<WindowCleaningQuotePage/>}/>
+          <Route path='user/review/:quoteId' element={<WindowCleaningQuotePage/>}/>
           <Route path="/success" element={<SuccessPagePage />} />
         </Routes>
       </Router>
