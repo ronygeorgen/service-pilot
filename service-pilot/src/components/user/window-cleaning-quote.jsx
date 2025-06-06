@@ -225,7 +225,7 @@ const generatePlans = (service) => {
     
     return quoteData.services.reduce((total, service) => {
       const plans = generatePlans(service);
-      const selectedPlanId = selectedPlans[service.id];
+      const selectedPlanId = selectedServicePlans?.find(item => item.service_id === service.id)?.price_plan;
       const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
       return total + (selectedPlan?.price || 0);
     }, 0);
@@ -382,7 +382,7 @@ const generatePlans = (service) => {
                         return (
                           <div key={plan.id} className="bg-white border rounded-lg overflow-hidden flex-shrink-0 w-72">
                             <div className={`${selectedPlanId === plan.id ? "bg-green-500" : "bg-blue-400"} text-white text-center py-3`}>
-                              <h4 className="text-base font-semibold">{plan.name}{plan.id}</h4>
+                              <h4 className="text-base font-semibold">{plan.name}</h4>
                               {plan.discount > 0 && (
                                 <p className="text-xs mt-1">Save {plan.discount}%</p>
                               )}
@@ -708,8 +708,10 @@ const generatePlans = (service) => {
 
               {quoteData.services?.map((service, index) => {
                 const plans = generatePlans(service);
-                const selectedPlanId = selectedPlans[service.id];
+                const selectedPlanId = selectedServicePlans?.find(item => item.service_id === service.id)?.price_plan;
                 const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
+                console.log(selectedPlan, selectedPlanId, 'lddj');
+                
 
                 return (
                   <div key={index} className="flex justify-between items-center py-3 border-b">
