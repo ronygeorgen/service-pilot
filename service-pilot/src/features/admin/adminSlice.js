@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { adminLoginAction, createService, deleteServiceAction, editServiceAction, serviceListAction } from "./adminActions";
+import { adminLoginAction, createService, deleteServiceAction, editServiceAction, getGlobalSettingsActions, globalSettingsAction, serviceListAction } from "./adminActions";
 
 const admin_info = localStorage.getItem('admin_info')
 
@@ -10,7 +10,8 @@ const initialState = {
     isLoginned:null,
     selectedService: null,
     showPricing: false,
-    settings: {services:null},
+    settings: null,
+    services: [],
     isEdited:false
 }
 
@@ -23,7 +24,7 @@ const adminSlice = createSlice({
             state.error=''
         },
         setMinimumPrice:(state,action)=>{
-            state.settings = {...state.settings, minimumPrice:action.payload};
+            state.settings = {...state.settings, minimum_price:action.payload};
         },
         setIsEdited:(state, action)=>{
             state.isEdited = action.payload;
@@ -38,9 +39,7 @@ const adminSlice = createSlice({
                 isNew: true,
                 questions: [],
                 };
-            state.settings = ({
-                ...state.settings, services:[...state.settings.services || [], newService]
-            })
+            state.services = [...state.services || [], newService]
             state.selectedService=newService
         },
         updateService:(state, action)=>{
@@ -48,13 +47,6 @@ const adminSlice = createSlice({
             state.isEdited = true;
         },
         deleteService:(state, action)=>{
-            state.settings = ({
-                ...state.settings,
-                services: state.settings.services.filter(s=>s.id !== action.payload.serviceId)
-            });
-            if (state.selectedService?.id == action.payload.serviceId){
-                state.selectedService = null
-            }
         },
         addQuestion: (state)=>{
             const newQuestion = {
@@ -201,27 +193,29 @@ const adminSlice = createSlice({
     extraReducers(builder){
         builder
         .addCase(createService.fulfilled, (state, action)=>{
-            const createdService = action.payload[0];
-            const tempId = action.meta.arg.services?.[0]?.id;
-            console.log(tempId, 'remm', createService, 'ddd')
-            state.settings.services = state.settings.services.map(service =>
+            const createdService = action.payload;
+            const tempId = action.meta.arg.id;
+            console.log(tempId, 'remm', 'ddd')
+            state.services = state.services.map(service =>
                 service.id === tempId ? { ...createdService } : service
             );
             state.selectedService=null
             state.isEdited=false
         })
         .addCase(serviceListAction.fulfilled, (state, action)=>{
-            state.settings = {...state.settings, services:action.payload};
+            state.services = action.payload;
         })
         .addCase(editServiceAction.fulfilled, (state, action)=>{
             const id = action.meta.arg.id
-            state.settings = {...state.settings, services:state.settings?.services?.map(s=>s.id==id?action.payload:s)};
+            state.services = state.services?.map(s=>s.id==id?action.payload:s);
             state.selectedService = null;
             state.isEdited = false;
         })
         .addCase(deleteServiceAction.fulfilled, (state, action)=>{
-            const id = action.meta.arg.id
-            state.settings.services = state.settings?.services?.filter(s => s?.id !== id) || [];
+            const id = action.meta.arg
+            console.log(id, 'iddddd');
+            
+            state.services = state.services?.filter(s => s?.id !== id) || [];
             state.selectedService = null;
         })
         .addCase(adminLoginAction.fulfilled, (state, action)=>{
@@ -234,6 +228,16 @@ const adminSlice = createSlice({
         .addCase(adminLoginAction.rejected, (state, action)=>{
             console.log(action.payload, 'fff');   
             state.error = action.payload?.error
+        })
+        .addCase(globalSettingsAction.fulfilled, (state, action)=>{
+            console.log(action.payload, 'sss');   
+            state.settings = {...state.settings, ...action.payload};
+            state.success = true;
+        })
+
+        .addCase(getGlobalSettingsActions.fulfilled, (state, action)=>{
+            state.settings = action.payload;
+            state.success = true;
         })
         
     }
