@@ -14,6 +14,8 @@ import { useParams } from 'react-router-dom';
 export default function WindowCleaningQuote() {
   const { quoteId } = useParams();
   const [quoteData, setQuoteData] = useState(null);
+  const [selectedServicePlans, setSelectedServicePlans] = useState([]);
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { selectedContact } = useSelector((state) => state.contacts)
@@ -40,7 +42,16 @@ export default function WindowCleaningQuote() {
     const fetchQuoteData = async () => {
       try {
         const response = await axiosInstance.get(`/data/user/review/${quoteId}/`);
-        setQuoteData(response.data);
+        const data = response.data;
+        setQuoteData(data);
+
+        if (data?.services) {
+          const initialSelectedPlans = data.services.map(service => ({
+            service_id: service.id,
+            price_plan: service.price_plan?.price_plan || null,
+          }));
+          setSelectedServicePlans(initialSelectedPlans);
+        }
         
         // Initialize selected plans from the quote data
         if (response.data.services) {
@@ -103,6 +114,8 @@ export default function WindowCleaningQuote() {
       setIsSubmitting(false);
     }
   };
+
+  console.log(selectedServicePlans, 'seee');
 
   // Format phone number for display
   const formatPhoneNumber = (phone) => {
@@ -175,7 +188,7 @@ const generatePlans = (service) => {
     const priceInfo = calculatePlanPrice(option, service);
     
     return {
-      id: option.id.toString(),
+      id: option.id,
       name: option.name.charAt(0).toUpperCase() + option.name.slice(1),
       basePrice: priceInfo.basePrice,
       price: priceInfo.discountedPrice,
@@ -296,7 +309,9 @@ const generatePlans = (service) => {
       {/* Loop through each service */}
       {quoteData.services?.map((service, serviceIndex) => {
         const plans = generatePlans(service);
-        const selectedPlanId = selectedPlans[service.id];
+        const selectedPlanId = selectedServicePlans?.find(item => item.service_id === service.id)?.price_plan;
+        console.log(selectedPlanId, quoteData, 'kkkd');
+        
         const selectedPlanData = plans.find(plan => plan.id === selectedPlanId);
         const isSubmitted = quoteData.is_submited;
 
@@ -368,7 +383,7 @@ const generatePlans = (service) => {
                         return (
                           <div key={plan.id} className="bg-white border rounded-lg overflow-hidden flex-shrink-0 w-72">
                             <div className={`${selectedPlanId === plan.id ? "bg-green-500" : "bg-blue-400"} text-white text-center py-3`}>
-                              <h4 className="text-base font-semibold">{plan.name}</h4>
+                              <h4 className="text-base font-semibold">{plan.name}{plan.id}</h4>
                               {plan.discount > 0 && (
                                 <p className="text-xs mt-1">Save {plan.discount}%</p>
                               )}
@@ -419,10 +434,13 @@ const generatePlans = (service) => {
 
                                 <button
                                   onClick={() => {
-                                    setSelectedPlans(prev => ({
-                                      ...prev,
-                                      [service.id]: plan.id
-                                    }));
+                                    setSelectedServicePlans(prev =>
+                                      prev.map(item =>
+                                        item.service_id === service.id
+                                          ? { ...item, price_plan: plan.id }
+                                          : item
+                                      )
+                                    );
                                   }}
                                   className={`w-full py-2 px-4 rounded flex items-center justify-center text-sm ${
                                     selectedPlanId === plan.id
