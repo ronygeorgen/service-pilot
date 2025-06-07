@@ -564,7 +564,7 @@ const generatePlans = (service) => {
                     selectedServices={quoteData.services}
                     selectedPlans={selectedPlans}
                     totalPrice={totalPrice}
-                    signature={signature}
+                    signature={quoteData?.is_submited ? quoteData.signature : signature}
                   />
                 } 
                 fileName={`quote_${quoteData.contact?.first_name || 'customer'}.pdf`}
