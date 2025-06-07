@@ -45,16 +45,39 @@ export default function WindowCleaningQuote() {
         const data = response.data;
         setQuoteData(data);
 
+        console.log(data?.services, 'kdj');
+      
+        // {data.services?.map((service, index) => {
+        //   console.log(service, 'sseerrgg');
+          
+        //     const plans = generatePlans(service);
+        //     const selectedPlanId = selectedServicePlans?.find(item => item.service_id === service.id)?.price_plan;
+            
+        //     console.log(plans, 'plaaaaaaaaaaaans');
+        //     console.log(selectedPlanId);
+            
+        //     const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
+        //     console.log(selectedPlan, selectedPlanId, 'lddjdjdjj');
+        //   }
+        // )}
+
         if (data?.services) {
-          const initialSelectedPlans = data.services.map(service => ({
-            service_id: service.id,
-            price_plan: service.price_plan?.price_plan || null,
-          }));
+          const initialSelectedPlans = data.services?.map(service => {
+            const plans = generatePlans(service);
+            const selectedPlan = plans.find(plan => plan.id === service?.price_plan?.price_plan);
+
+            return {
+              service_id: service.id,
+              price_plan: service.price_plan?.price_plan || null,
+              total_amount: selectedPlan?.price,
+            };
+          });
+
           setSelectedServicePlans(initialSelectedPlans);
         }
         
         // Initialize selected plans from the quote data
-        if (response.data.services) {
+        if (response.data?.services) {
           const initialSelectedPlans = {};
           response.data.services.forEach(service => {
             if (service.pricingOptions && service.pricingOptions.length > 0) {
@@ -68,6 +91,8 @@ export default function WindowCleaningQuote() {
           setSelectedPlans(initialSelectedPlans);
         }
       } catch (err) {
+        console.log(err, 'errr');
+        
         setError(err.message || 'Failed to fetch quote data');
       } finally {
         setLoading(false);
@@ -95,7 +120,7 @@ export default function WindowCleaningQuote() {
     try {
       // Submit the quote with selected plan
       const response = await axiosInstance.post(`data/quotes/${quoteId}/submit/`, payload);
-      console.log('Submission success:', response.data);
+      console.log('Submission success:', response.data, quoteData);
 
       // Navigate to success page after successful submission
       navigate('/success', {
@@ -105,7 +130,7 @@ export default function WindowCleaningQuote() {
           services: quoteData.services.map(service => ({
             name: service.name,
             plan: service.pricingOptions.find(
-              plan => plan.id.toString() === selectedServicePlans?.find(item => item.service_id === service.id)?.price_plan
+              plan => plan.id === selectedServicePlans?.find(item => item.service_id === service.id)?.price_plan
             ).name,
             price: totalPrice
           }))
@@ -474,9 +499,9 @@ const generatePlans = (service) => {
                     {selectedPlanData && (
                       <div className="bg-white border rounded-lg overflow-hidden">
                         <div className="bg-green-500 text-white text-center py-3">
-                          <h4 className="text-base font-semibold">{selectedPlanData.name}</h4>
+                          <h4 className="text-base font-semibold">{service?.price_plan?.plan_name}</h4>
                           {selectedPlanData.discount > 0 && (
-                            <p className="text-xs mt-1">Save {selectedPlanData.discount}%</p>
+                            <p className="text-xs mt-1">Save {service?.price_plan?.discount}%</p>
                           )}
                         </div>
 
@@ -502,13 +527,13 @@ const generatePlans = (service) => {
                           </ul>
 
                           <div className="text-center">
-                            {selectedPlanData.discount > 0 && (
+                            {/* {selectedPlanData.discount > 0 && (
                               <div className="text-gray-500 text-sm line-through mb-1">${selectedPlanData.basePrice.toFixed(2)}</div>
-                            )}
-                            <div className="text-xl font-bold mb-1">${selectedPlanData.price.toFixed(2)}</div>
-                            {selectedPlanData.discount > 0 && (
+                            )} */}
+                            <div className="text-xl font-bold mb-1">${service?.price_plan?.total_amount}</div>
+                            {/* {selectedPlanData.discount > 0 && (
                               <div className="text-green-500 text-xs mb-1">Save ${selectedPlanData.savings.toFixed(2)}</div>
-                            )}
+                            )} */}
                             <div className="text-gray-500 text-xs">Plus Tax</div>
                           </div>
                         </div>
