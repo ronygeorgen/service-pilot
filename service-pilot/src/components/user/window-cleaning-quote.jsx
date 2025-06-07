@@ -69,7 +69,7 @@ export default function WindowCleaningQuote() {
             return {
               service_id: service.id,
               price_plan: service.price_plan?.price_plan || null,
-              total_amount: selectedPlan?.price,
+              total_amount: selectedPlan?.price.toFixed(2),
             };
           });
 
@@ -466,7 +466,7 @@ const generatePlans = (service) => {
                                     setSelectedServicePlans(prev =>
                                       prev.map(item =>
                                         item.service_id === service.id
-                                          ? { ...item, price_plan: plan.id }
+                                          ? { ...item, price_plan: plan.id, total_amount:plan.price.toFixed(2) }
                                           : item
                                       )
                                     );
