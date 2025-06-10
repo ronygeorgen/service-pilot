@@ -11,7 +11,7 @@ export default function SuccessPage() {
           <CheckCircle className="w-16 h-16 text-green-500" />
         </div>
         
-        <h1 className="text-2xl font-bold text-gray-800 mb-4">Purchase Successful!</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-4">Quote Accepted!</h1>
         
         <p className="text-gray-600 mb-6">
           Thank you, {state?.contactName || 'customer'}, for your purchase. 
@@ -34,12 +34,12 @@ export default function SuccessPage() {
           </div>
         </div>
         
-        <button 
+        {/* <button 
           onClick={() => window.location.href = '/'}
           className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition-colors"
         >
           Return to Home
-        </button>
+        </button> */}
       </div>
     </div>
   );
