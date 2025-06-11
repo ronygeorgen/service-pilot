@@ -4,10 +4,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 
-
-function Login() {
-    const [credentials, setCredentials] = useState({ email: '', password: '' });
-    const [errors, setErrors] = useState({ email: '', password: '' });
+function UserLogin() {
+    const [credentials, setCredentials] = useState({email: '', password: ''});
+    const [errors, setErrors] = useState({email: '', password: ''});
     const [error_msg, setError] = useState('');
     
     const { error, isLoginned, admin_info } = useSelector(state => state.admin);
@@ -17,7 +16,7 @@ function Login() {
     // Redirect if already logged in
     useEffect(() => {
         if (isLoginned || admin_info) {
-            navigate('/admin');
+            navigate('/');
         }
     }, [isLoginned, admin_info, navigate]);
 
@@ -54,7 +53,7 @@ function Login() {
         <div className="w-screen h-screen flex items-center justify-center bg-gray-100">
             <form onSubmit={handleSubmit} className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 flex flex-col gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-blue-600">Welcome Back, Admin</h1>
+                    <h1 className="text-3xl font-bold text-blue-600">Welcome to User Login</h1>
                     <p className="text-sm text-gray-500 mt-1">Please enter your credentials to continue.</p>
                 </div>
                 <div className="flex flex-col gap-4">
@@ -93,8 +92,8 @@ function Login() {
                     >
                         Sign In
                     </button>
-                    <Link to="/user/login/" className="text-blue-600 hover:underline text-sm text-center mt-2">
-                        Are you a user? Login here
+                    <Link to="/admin/login/" className="text-blue-600 hover:underline text-sm text-center mt-2">
+                        Are you an admin? Login here
                     </Link>
                 </div>
             </form>
@@ -102,4 +101,4 @@ function Login() {
     );
 }
 
-export default Login;
+export default UserLogin;

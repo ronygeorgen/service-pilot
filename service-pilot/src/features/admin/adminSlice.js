@@ -189,7 +189,24 @@ const adminSlice = createSlice({
                 })
             }
             state.isEdited=true;
-        }
+        },
+        adminLogout: (state) => {
+            // Clear all admin-related state
+            state.admin_info = null;
+            state.isLoginned = false;
+            state.success = false;
+            state.error = '';
+            state.pending = false;
+            
+            // Clear selected service if needed
+            state.selectedService = null;
+            
+            // Clear localStorage items
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            localStorage.removeItem('admin_info');
+            localStorage.removeItem('user_authenticated');
+        },
     },
     extraReducers(builder){
         builder
@@ -223,8 +240,10 @@ const adminSlice = createSlice({
             localStorage.setItem('access_token',action.payload?.access)
             localStorage.setItem('refresh_token',action.payload?.refresh)
             localStorage.setItem('admin_info', action.payload?.user_info)
+            state.admin_info = action.payload?.user_info;
             state.isLoginned = true;
             state.success=true
+            state.error = '';
         })
         .addCase(adminLoginAction.rejected, (state, action)=>{
             console.log(action.payload, 'fff');   
@@ -245,6 +264,6 @@ const adminSlice = createSlice({
 })
 
 export const {setReset, setMinimumPrice, setIsEdited, setSelectedService, addService, updateService, deleteService, addQuestion, updateQuestion, updateQuestionOptionPrice, deleteQuestion, addPricing, updatePricing, deletePricing,
-    addFeature, removeFeature, toggleFeature
+    addFeature, removeFeature, toggleFeature, adminLogout
 } = adminSlice.actions;
 export default  adminSlice.reducer;

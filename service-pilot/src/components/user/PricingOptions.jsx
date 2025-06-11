@@ -54,6 +54,14 @@ const PricingOptions = () => {
   const pricingOptions = getPricingOptions()
   const currentServiceData = getCurrentServiceData()
 
+  const getFeatureNameById = (featureId) => {
+  const currentService = getCurrentServiceData()?.service;
+  if (!currentService?.features) return `Feature ${featureId}`;
+  
+  const feature = currentService.features.find(f => f.id === featureId);
+  return feature ? feature.name : `Feature ${featureId}`;
+};
+
   console.log('PricingOptions render - Current state:', {
     basePrice,
     currentServiceData,
@@ -223,7 +231,7 @@ const PricingOptions = () => {
                             : "bg-gray-100 text-gray-600"
                         }`}
                       >
-                        {feature.is_included ? "✓" : "○"} {feature.name || `Feature ${feature.id}`}
+                         {feature.is_included ? "✓" : "✗"} {getFeatureNameById(feature.id)}
                       </span>
                     ))}
                   </div>

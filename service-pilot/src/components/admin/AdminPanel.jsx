@@ -5,10 +5,12 @@ import Service from './Service';
 import UpdateService from './UpdateService';
 import { addService, setIsEdited, setMinimumPrice, setReset } from '../../features/admin/adminSlice';
 import { createService, editServiceAction, getGlobalSettingsActions, globalSettingsAction, serviceListAction } from '../../features/admin/adminActions';
+import { useNavigate } from "react-router-dom"
 
 function AdminPanel() {
   const [save, setSave] = useState(false);
   const [errors, setErrors] = useState({});
+    const navigate = useNavigate()
 
     const {selectedService, isEdited, settings, services, success, error} = useSelector(state=>state.admin)
 
