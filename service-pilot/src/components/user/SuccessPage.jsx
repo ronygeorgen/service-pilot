@@ -24,7 +24,7 @@ export default function SuccessPage() {
             {state?.services?.map((service, index) => (
               <div key={index} className="flex justify-between">
                 <span>{service.name} ({service.plan})</span>
-                <span>${service.price.toFixed(2)}</span>
+                <span>${service.price}</span>
               </div>
             ))}
           </div>

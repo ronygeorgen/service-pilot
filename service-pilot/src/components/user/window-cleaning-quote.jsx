@@ -46,32 +46,27 @@ export default function WindowCleaningQuote() {
         setQuoteData(data);
 
         console.log(data?.services, 'kdj');
-      
-        // {data.services?.map((service, index) => {
-        //   console.log(service, 'sseerrgg');
-          
-        //     const plans = generatePlans(service);
-        //     const selectedPlanId = selectedServicePlans?.find(item => item.service_id === service.id)?.price_plan;
-            
-        //     console.log(plans, 'plaaaaaaaaaaaans');
-        //     console.log(selectedPlanId);
-            
-        //     const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
-        //     console.log(selectedPlan, selectedPlanId, 'lddjdjdjj');
-        //   }
-        // )}
 
         if (data?.services) {
           const initialSelectedPlans = data.services?.map(service => {
             const plans = generatePlans(service);
-            const selectedPlan = plans.find(plan => plan.id === service?.price_plan?.price_plan);
+
+            console.log(plans, 'plans');
+            
+            const selectedPlan = plans.find(plan => plan.id === service?.price_plan);
+
+            console.log(selectedPlan, 'selected_plan');
+            
 
             return {
               service_id: service.id,
-              price_plan: service.price_plan?.price_plan || null,
+              price_plan: service.price_plan || null,
               total_amount: selectedPlan?.price.toFixed(2),
             };
           });
+
+          console.log(initialSelectedPlans, 'initial');
+          
 
           setSelectedServicePlans(initialSelectedPlans);
         }
@@ -83,9 +78,7 @@ export default function WindowCleaningQuote() {
             if (service.pricingOptions && service.pricingOptions.length > 0) {
               // Use the submitted price plan if exists, otherwise use the first option
               initialSelectedPlans[service.id] = 
-                response.data.is_submited && response.data.price_plan 
-                  ? response.data.price_plan.toString() 
-                  : service.pricingOptions[0].id.toString();
+                service.price_plan
             }
           });
           setSelectedPlans(initialSelectedPlans);
@@ -112,7 +105,7 @@ export default function WindowCleaningQuote() {
 
     const payload = {
       purchase_id: quoteData.id,
-      total_amount: quoteData.total_amount,
+      total_amount: Number(quoteData.total_amount).toFixed(2),
       signature: signature,
       services: selectedServicePlans
     };
@@ -132,7 +125,7 @@ export default function WindowCleaningQuote() {
             plan: service.pricingOptions.find(
               plan => plan.id === selectedServicePlans?.find(item => item.service_id === service.id)?.price_plan
             ).name,
-            price: totalPrice
+            price: selectedServicePlans.find(item => item.service_id === service.id)?.total_amount 
           }))
         }
       });
@@ -144,8 +137,10 @@ export default function WindowCleaningQuote() {
     }
   };
 
-  console.log(selectedServicePlans, 'seee');
+  console.log(selectedServicePlans, 'seeddddddqwee  e');
 
+  console.log(selectedPlans, 'planssss');
+  
   // Format phone number for display
   const formatPhoneNumber = (phone) => {
     if (!phone) return '';
@@ -164,27 +159,27 @@ export default function WindowCleaningQuote() {
 
   // Calculate prices from questions
   service.questions?.forEach(question => {
-    const reaction = question.reactions?.[0]; // Get the first reaction
+    const reaction = question?.reactions?.[0]; // Get the first reaction
     
-    if (question.type === 'boolean' && reaction?.ans) {
+    if (question?.type === 'boolean' && question?.bool_ans) {
       // Boolean question with "Yes" answer
-      const price = parseFloat(question.unit_price) || 0;
+      const price = parseFloat(question?.unit_price) || 0;
       baseTotal += price;
       priceBreakdown.booleanPrices.push({
-        questionText: question.text,
+        questionText: question?.text,
         price: price
       });
     } 
-    else if (question.type === 'choice' && reaction?.options) {
+    else if (question?.type === 'choice' && question?.options) {
       // Choice question with options
-      reaction.options.forEach(option => {
-        const optionPrice = parseFloat(option.question_option.value) || 0;
+      question?.options.forEach(option => {
+        const optionPrice = parseFloat(option.value) || 0;
         const quantity = parseInt(option.qty) || 0;
         const optionTotal = optionPrice * quantity;
         
         baseTotal += optionTotal;
         priceBreakdown.optionPrices.push({
-          optionName: option.question_option.label,
+          optionName: option?.label,
           unitPrice: optionPrice,
           quantity: quantity,
           total: optionTotal
@@ -470,6 +465,11 @@ const generatePlans = (service) => {
                                           : item
                                       )
                                     );
+                                    setSelectedPlans(prev => ({
+                                      ...prev,
+                                      [service.id]: plan.id
+                                    }));
+
                                   }}
                                   className={`w-full py-2 px-4 rounded flex items-center justify-center text-sm ${
                                     selectedPlanId === plan.id
@@ -499,18 +499,16 @@ const generatePlans = (service) => {
                     {selectedPlanData && (
                       <div className="bg-white border rounded-lg overflow-hidden">
                         <div className="bg-green-500 text-white text-center py-3">
-                          <h4 className="text-base font-semibold">{service?.price_plan?.plan_name}</h4>
-                          {selectedPlanData.discount > 0 && (
-                            <p className="text-xs mt-1">Save {service?.price_plan?.discount}%</p>
+                          <h4 className="text-base font-semibold">{selectedPlanData?.name}</h4>
+                          {selectedPlanData?.discount > 0 && (
+                            <p className="text-xs mt-1">Save {selectedPlanData?.discount}%</p>
                           )}
                         </div>
 
                         <div className="p-4">
                           <ul className="space-y-2 mb-4">
-                            {service.features?.map((feature, index) => {
-                              const isIncluded = selectedPlanData.features.some(
-                                pf => pf.id === feature.id && pf.is_included
-                              );
+                            {selectedPlanData?.features?.map((feature, index) => {
+                              const isIncluded = feature?.is_included
                               return (
                                 <li key={index} className="flex items-start space-x-2">
                                   {isIncluded ? (
@@ -527,13 +525,13 @@ const generatePlans = (service) => {
                           </ul>
 
                           <div className="text-center">
-                            {/* {selectedPlanData.discount > 0 && (
+                            {selectedPlanData.discount > 0 && (
                               <div className="text-gray-500 text-sm line-through mb-1">${selectedPlanData.basePrice.toFixed(2)}</div>
-                            )} */}
-                            <div className="text-xl font-bold mb-1">${service?.price_plan?.total_amount}</div>
-                            {/* {selectedPlanData.discount > 0 && (
+                            )}
+                            <div className="text-xl font-bold mb-1">${selectedPlanData?.price?.toFixed(2)}</div>
+                            {selectedPlanData.discount > 0 && (
                               <div className="text-green-500 text-xs mb-1">Save ${selectedPlanData.savings.toFixed(2)}</div>
-                            )} */}
+                            )}
                             <div className="text-gray-500 text-xs">Plus Tax</div>
                           </div>
                         </div>
@@ -628,30 +626,30 @@ const generatePlans = (service) => {
                   <h5 className="font-medium text-lg mb-3">{service.name}</h5>
                   <div className="space-y-3">
                     {service.questions?.map((question) => {
-                      const reaction = question.reactions?.[0];
+                      const reaction = question?.reactions?.[0];
                       
                       return (
-                        <div key={question.id} className="border-b pb-2 last:border-b-0">
+                        <div key={question?.id} className="border-b pb-2 last:border-b-0">
                           <div className="flex justify-between">
-                            <span className="text-gray-700 font-medium">{question.text}</span>
-                            {question.type === 'boolean' && (
+                            <span className="text-gray-700 font-medium">{question?.text}</span>
+                            {question?.type === 'boolean' && (
                               <span className="font-medium">
-                                {reaction?.ans ? 'Yes' : 'No'}
+                                {question?.bool_ans ? 'Yes' : 'No'}
                               </span>
                             )}
                           </div>
                           
-                          {question.type === 'choice' && reaction?.options && (
+                          {question?.type === 'choice' && question?.options && (
                             <div className="mt-2 pl-4">
-                              {reaction.options.map((option, optIndex) => (
+                              {question?.options.map((option, optIndex) => (
                                 <div key={optIndex} className="flex justify-between text-sm">
                                   <span className="text-gray-600">
-                                    {option.question_option.label}:
+                                    {option?.label}:
                                   </span>
                                   <span className="font-medium">
-                                    {option.qty} × ${option.question_option.value} = 
+                                    {option?.qty} × ${option?.value} = 
                                     <span className="ml-1">
-                                      ${(parseFloat(option.question_option.value) * parseInt(option.qty)).toFixed(2)}
+                                      ${(parseFloat(option?.value) * parseInt(option?.qty)).toFixed(2)}
                                     </span>
                                   </span>
                                 </div>
@@ -659,7 +657,7 @@ const generatePlans = (service) => {
                             </div>
                           )}
                           
-                          {question.type === 'boolean' && reaction?.ans && question.unit_price !== '0.00' && (
+                          {question?.type === 'boolean' && question?.bool_ans && question.unit_price !== '0.00' && (
                             <div className="text-right text-sm text-gray-500 mt-1">
                               +${parseFloat(question.unit_price).toFixed(2)}
                             </div>

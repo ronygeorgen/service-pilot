@@ -96,7 +96,9 @@ const QuotePDF = ({ selectedContact, selectedServices, selectedPlans, totalPrice
     const serviceId = service.id;
     const planId = selectedPlans[serviceId];
     const plans = generatePlans(service);
-    return plans.find(plan => plan.id === planId);
+    console.log(plans, 'plddd', planId, selectedPlans, serviceId);
+    
+    return plans.find(plan => String(plan.id) === String(planId));
   };
 
   return (
@@ -140,6 +142,8 @@ const QuotePDF = ({ selectedContact, selectedServices, selectedPlans, totalPrice
         
         {selectedServices?.map((service, index) => {
           const selectedPlan = getSelectedPlan(service);
+          console.log(selectedPlan, 'quote page', service);
+          
           
           return (
             <View key={index} style={styles.serviceContainer}>
@@ -233,11 +237,11 @@ const generatePlans = (service) => {
       price: priceInfo.discountedPrice,
       savings: priceInfo.savings,
       discount: option.discount,
-      features: service.features.map(feature => ({
-        ...feature,
-        included: option.selectedFeatures.some(
-          sf => sf.id === feature.id && sf.is_included
-        )
+      features: option.selectedFeatures.map(feature => ({ // Changed to use option.selectedFeatures directly
+        id: feature.id,
+        name: feature.name,
+        description: feature.description || '',
+        included: feature.is_included
       }))
     };
   });
@@ -252,9 +256,8 @@ const calculatePlanPrice = (pricingOption, service) => {
   };
 
   service.questions?.forEach(question => {
-    const reaction = question.reactions?.[0];
-    
-    if (question.type === 'boolean' && reaction?.ans) {
+    // Modified to work with friend's response structure
+    if (question.type === 'boolean' && question.bool_ans) {
       const price = parseFloat(question.unit_price) || 0;
       baseTotal += price;
       priceBreakdown.booleanPrices.push({
@@ -262,14 +265,14 @@ const calculatePlanPrice = (pricingOption, service) => {
         price: price
       });
     } 
-    else if (question.type === 'choice' && reaction?.options) {
-      reaction.options.forEach(option => {
-        const optionPrice = parseFloat(option.question_option.value) || 0;
+    else if (question.type === 'choice' && question.options) {
+      question.options.forEach(option => {
+        const optionPrice = parseFloat(option.value) || 0; // Changed from question_option.value
         const quantity = parseInt(option.qty) || 0;
         const optionTotal = optionPrice * quantity;
         baseTotal += optionTotal;
         priceBreakdown.optionPrices.push({
-          optionName: option.question_option.label,
+          optionName: option.label,
           unitPrice: optionPrice,
           quantity: quantity,
           total: optionTotal
