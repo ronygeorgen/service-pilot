@@ -38,6 +38,7 @@ export default function WindowCleaningQuote() {
   const [selectedPlans, setSelectedPlans] = useState({})
   const navigate = useNavigate();
 
+
   useEffect(() => {
     const fetchQuoteData = async () => {
       try {
@@ -245,19 +246,31 @@ const generatePlans = (service) => {
     }
   };
 
-  // Calculate total price across all services
-  const calculateTotalPrice = () => {
-    if (!quoteData?.services) return 0;
-    
-    return quoteData.services.reduce((total, service) => {
-      const plans = generatePlans(service);
-      const selectedPlanId = selectedServicePlans?.find(item => item.service_id === service.id)?.price_plan;
-      const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
-      return total + (selectedPlan?.price || 0);
-    }, 0);
-  };
 
-  const totalPrice = calculateTotalPrice();
+// Calculate total price across all services
+const calculateTotalPrice = () => {
+  if (!quoteData?.services) return { total: 0, isMinimumPriceApplied: false };
+  
+  const calculatedTotal = quoteData.services.reduce((total, service) => {
+    const plans = generatePlans(service);
+    const selectedPlanId = selectedServicePlans?.find(item => item.service_id === service.id)?.price_plan;
+    const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
+    return total + (selectedPlan?.price || 0);
+  }, 0);
+
+  // Get minimum price from response
+  const minimumPrice = parseFloat(quoteData.minimum_price) || 0;
+  
+  return {
+    total: Math.max(calculatedTotal, minimumPrice),
+    isMinimumPriceApplied: minimumPrice > 0 && calculatedTotal < minimumPrice,
+    minimumPrice
+  };
+};
+
+const { total: totalPrice, isMinimumPriceApplied, minimumPrice } = calculateTotalPrice();
+
+
 
   if (loading) {
     return (
@@ -333,6 +346,7 @@ const generatePlans = (service) => {
 
       {/* Loop through each service */}
       {quoteData.services?.map((service, serviceIndex) => {
+        
         const plans = generatePlans(service);
         const selectedPlanId = selectedServicePlans?.find(item => item.service_id === service.id)?.price_plan;
         console.log(selectedPlanId, quoteData, 'kkkd');
@@ -564,6 +578,8 @@ const generatePlans = (service) => {
                     selectedPlans={selectedPlans}
                     totalPrice={totalPrice}
                     signature={quoteData?.is_submited ? quoteData.signature : signature}
+                    minimumPrice={quoteData.minimum_price}  // Add this
+                    isMinimumPriceApplied={parseInt(totalPrice) > 0 && parseInt(quoteData.minimum_price) >= parseInt(totalPrice)}
                   />
                 } 
                 fileName={`quote_${quoteData.contact?.first_name || 'customer'}.pdf`}
@@ -759,6 +775,15 @@ const generatePlans = (service) => {
                   </div>
                 );
               })}
+
+              {isMinimumPriceApplied && (
+                <div className="text-sm text-gray-600 mb-2 text-center">
+                  <p>
+                    <span className="font-medium">Note:</span> The total reflects our minimum service price of ${minimumPrice.toFixed(2)}.
+                  </p>
+                  <p>This ensures we can deliver the quality service you expect.</p>
+                </div>
+              )}
 
               <div className="flex justify-between items-center py-3 font-bold text-base">
                 <span>TOTAL</span>

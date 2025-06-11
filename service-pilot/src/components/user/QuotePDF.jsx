@@ -75,7 +75,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#2c3e50',
     fontFamily: 'Helvetica'
-    
   },
   totalPrice: {
     fontSize: 16,
@@ -83,21 +82,36 @@ const styles = StyleSheet.create({
     marginTop: 20,
     textAlign: 'right'
   },
+  minimumPriceNote: {
+    fontSize: 10,
+    color: '#7f8c8d',
+    textAlign: 'right',
+    marginTop: 5
+  },
   disclaimer: {
     fontSize: 10,
     color: '#7f8c8d',
     marginTop: 30,
     lineHeight: 1.3
+  },
+  section: {
+    marginBottom: 20
   }
 });
 
-const QuotePDF = ({ selectedContact, selectedServices, selectedPlans, totalPrice, signature }) => {
+const QuotePDF = ({ 
+  selectedContact, 
+  selectedServices, 
+  selectedPlans, 
+  totalPrice, 
+  signature,
+  minimumPrice,
+  isMinimumPriceApplied 
+}) => {
   const getSelectedPlan = (service) => {
     const serviceId = service.id;
     const planId = selectedPlans[serviceId];
     const plans = generatePlans(service);
-    console.log(plans, 'plddd', planId, selectedPlans, serviceId);
-    
     return plans.find(plan => String(plan.id) === String(planId));
   };
 
@@ -142,8 +156,6 @@ const QuotePDF = ({ selectedContact, selectedServices, selectedPlans, totalPrice
         
         {selectedServices?.map((service, index) => {
           const selectedPlan = getSelectedPlan(service);
-          console.log(selectedPlan, 'quote page', service);
-          
           
           return (
             <View key={index} style={styles.serviceContainer}>
@@ -184,6 +196,11 @@ const QuotePDF = ({ selectedContact, selectedServices, selectedPlans, totalPrice
 
         <View style={styles.totalPrice}>
           <Text>Total: ${totalPrice.toFixed(2)}</Text>
+          {isMinimumPriceApplied && (
+            <Text style={styles.minimumPriceNote}>
+              Note: The total reflects our minimum service price of ${minimumPrice.toFixed(2)} to ensure quality service.
+            </Text>
+          )}
         </View>
       </Page>
 
@@ -223,7 +240,6 @@ const QuotePDF = ({ selectedContact, selectedServices, selectedPlans, totalPrice
   );
 };
 
-// Helper functions remain the same as in your original code
 const generatePlans = (service) => {
   if (!service.pricingOptions) return [];
   
@@ -237,7 +253,7 @@ const generatePlans = (service) => {
       price: priceInfo.discountedPrice,
       savings: priceInfo.savings,
       discount: option.discount,
-      features: option.selectedFeatures.map(feature => ({ // Changed to use option.selectedFeatures directly
+      features: option.selectedFeatures.map(feature => ({
         id: feature.id,
         name: feature.name,
         description: feature.description || '',
@@ -256,7 +272,6 @@ const calculatePlanPrice = (pricingOption, service) => {
   };
 
   service.questions?.forEach(question => {
-    // Modified to work with friend's response structure
     if (question.type === 'boolean' && question.bool_ans) {
       const price = parseFloat(question.unit_price) || 0;
       baseTotal += price;
@@ -267,7 +282,7 @@ const calculatePlanPrice = (pricingOption, service) => {
     } 
     else if (question.type === 'choice' && question.options) {
       question.options.forEach(option => {
-        const optionPrice = parseFloat(option.value) || 0; // Changed from question_option.value
+        const optionPrice = parseFloat(option.value) || 0;
         const quantity = parseInt(option.qty) || 0;
         const optionTotal = optionPrice * quantity;
         baseTotal += optionTotal;

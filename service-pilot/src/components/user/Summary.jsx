@@ -24,6 +24,9 @@ const Summary = () => {
 const handleFinalize = async () => {
   setIsSubmitting(true);
   try {
+    const { adjustedPrice: totalAmount } = calculateTotalPrice();
+    console.log('total amount after minimum price addedddd==',totalAmount);
+    
     // Prepare the data to save in the exact format backend expects
     const quoteData = {
       contact: selectedContact.contact_id,
@@ -79,7 +82,7 @@ const handleFinalize = async () => {
           })
         };
       }),
-      total_amount: calculateTotalPrice().toFixed(2),
+      total_amount: totalAmount,
       price_plan: state.selectedServices[0]?.selectedPricingOption || 0
     };
 
@@ -113,7 +116,8 @@ const handleFinalize = async () => {
 
   // Calculate total price with all service pricing options applied
 const calculateTotalPrice = () => {
-  return state.selectedServices.reduce((total, serviceItem) => {
+  // Calculate the raw total
+  const rawTotal = state.selectedServices.reduce((total, serviceItem) => {
     const pricingOption = getPricingOptionForService(serviceItem.service, serviceItem.selectedPricingOption);
     const serviceBasePrice = typeof serviceItem.calculatedPrice === 'object' 
       ? serviceItem.calculatedPrice.total 
@@ -125,6 +129,18 @@ const calculateTotalPrice = () => {
     
     return total + serviceBasePrice;
   }, 0);
+
+  // Find the highest minimum price among selected services
+  const highestMinimumPrice = state.selectedServices.reduce((max, serviceItem) => {
+    const serviceMinPrice = serviceItem.service.minimum_price || 0;
+    return Math.max(max, serviceMinPrice);
+  }, 0);
+
+  // Return both the adjusted price and whether minimum price was applied
+  return {
+    adjustedPrice: Math.max(rawTotal, highestMinimumPrice),
+    isMinimumPriceApplied: rawTotal < highestMinimumPrice
+  };
 };
 
   const getServiceBasePrice = (serviceItem) => {
@@ -133,7 +149,8 @@ const calculateTotalPrice = () => {
       : serviceItem.calculatedPrice
   }
 
-  const totalPrice = calculateTotalPrice()
+const { adjustedPrice: totalPrice, isMinimumPriceApplied } = calculateTotalPrice();
+
   const baseTotal = state.selectedServices.reduce((total, service) => 
     total + getServiceBasePrice(service), 0)
   const totalSavings = baseTotal - totalPrice
@@ -257,24 +274,32 @@ const calculateTotalPrice = () => {
       )}
 
       {/* Total Price */}
-      <div className="border-t pt-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <p className="text-lg font-semibold text-gray-800">Total Price:</p>
-            {totalSavings > 0 && (
-              <p className="text-sm text-gray-500 line-through">
-                Original: {formatCurrency(baseTotal)}
-              </p>
-            )}
-          </div>
-          <div className="text-right">
-            <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalPrice)}</p>
-            {totalSavings > 0 && (
-              <p className="text-sm text-green-600">You save {formatCurrency(totalSavings)}</p>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Total Price */}
+{/* Total Price */}
+<div className="border-t pt-4">
+  <div className="flex justify-between items-center">
+    <div>
+      <p className="text-lg font-semibold text-gray-800">Total Price:</p>
+      {totalSavings > 0 && (
+        <p className="text-sm text-gray-500 line-through">
+          Original: {formatCurrency(baseTotal)}
+        </p>
+      )}
+      {/* Add note when minimum price is applied */}
+      {isMinimumPriceApplied && (
+        <p className="text-sm text-blue-600 mt-1">
+          Note: The total has been adjusted to meet the minimum price requirement of {formatCurrency(totalPrice)} for the selected services.
+        </p>
+      )}
+    </div>
+    <div className="text-right">
+      <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalPrice)}</p>
+      {totalSavings > 0 && (
+        <p className="text-sm text-green-600">You save {formatCurrency(totalSavings)}</p>
+      )}
+    </div>
+  </div>
+</div>
 
       {/* Action Buttons */}
       <div className="flex justify-between pt-6 space-x-4">
