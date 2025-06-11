@@ -184,7 +184,7 @@ function UpdateService({errors, setErrors}) {
                              errors?.[`question_${question.id}_type`] ? 'border-red-500' : 'border-gray-300'
                            }`}
                         >
-                           <option value="number">Number</option>
+                           <option value="choice">Number</option>
                            <option value="boolean">Yes/No</option>
                         </select>
                         {errors?.[`question_${question.id}_type`] && (

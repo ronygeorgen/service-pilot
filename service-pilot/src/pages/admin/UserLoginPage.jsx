@@ -1,5 +1,5 @@
 import React from 'react'
-import UserLogin from '../../components/admin/Login/userLogin'
+import UserLogin from '../../components/user/UserLogin'
 
 function UserLoginPage() {
   return (
