@@ -8,7 +8,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import { QuoteProvider } from './context/QuoteContext';
 import SuccessPagePage from './pages/user/SuccessPagePage';
-import UserLoginPage from './pages/admin/userLoginPage';
+import UserLoginPage from './pages/admin/UserLoginPage';
 
 function App() {
   return (
