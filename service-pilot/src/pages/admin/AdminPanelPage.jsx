@@ -5,7 +5,7 @@ import Navbar from '../../components/admin/Navbar'
 function AdminPanelPage() {
   return (
     <>  
-        <Navbar />
+        <Navbar is_admin={true} />
         <AdminPanel />
     </>
   )

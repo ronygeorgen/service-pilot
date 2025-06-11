@@ -137,6 +137,7 @@ export default function WindowCleaningQuote() {
     }
   };
 
+
   console.log(selectedServicePlans, 'seeddddddqwee  e');
 
   console.log(selectedPlans, 'planssss');

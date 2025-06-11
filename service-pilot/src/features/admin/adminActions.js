@@ -56,6 +56,7 @@ export const adminLoginAction = createAsyncThunk('adminLogin', async (data, {rej
         
         const response = await adminLogin(data)
         console.log(response.data, 'responses login')
+        localStorage.setItem("user_authenticated", "true");
         return response.data
     }catch(error){
         console.log(error, 'error')
