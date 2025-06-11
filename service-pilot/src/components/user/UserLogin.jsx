@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { adminLoginAction } from '../../../features/admin/adminActions';
+import { adminLoginAction } from '../../features/admin/adminActions';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
