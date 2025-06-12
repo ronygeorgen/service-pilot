@@ -83,7 +83,7 @@ const handleFinalize = async () => {
           })
         };
       }),
-      total_amount: totalAmount,
+      total_amount: totalAmount.toFixed(2),
       price_plan: state.selectedServices[0]?.selectedPricingOption || 0
     };
 
