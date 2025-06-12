@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import { deleteService, setIsEdited, setSelectedService } from '../../features/admin/adminSlice';
+import { deleteService, setIsEdited, setReset, setSelectedService } from '../../features/admin/adminSlice';
 import { Trash } from 'lucide-react';
 import { deleteServiceAction } from '../../features/admin/adminActions';
 
@@ -8,8 +8,14 @@ function Service({service, setErrors}) {
     const [showConfirm, setShowConfirm] = useState(false);
 
     const dispatch = useDispatch();
-    const selectedService = useSelector(state=>state.admin.selectedService)
-    const isEdited = useSelector(state=>state.admin.isEdited)
+    const {selectedService, isEdited, pending, success} = useSelector(state=>state.admin)
+
+    useEffect(()=>{
+      if (success){
+        setShowConfirm(false);
+      }
+      dispatch(setReset());
+    },[success])
 
     const handleClick = ()=>{
         if (isEdited) {
@@ -24,7 +30,6 @@ function Service({service, setErrors}) {
     const confirmDelete = () => {
         dispatch(deleteService({ serviceId: service.id }));
         dispatch(deleteServiceAction(service.id));
-        setShowConfirm(false);
     };
   return (
     <>
@@ -52,6 +57,17 @@ function Service({service, setErrors}) {
     {showConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
           <div className="bg-white p-5 rounded-lg shadow-md w-72">
+            {
+              pending?
+              <>
+            <p className="text-center text-gray-800 font-semibold mb-">Deleting</p>
+            <div className="flex justify-center items-center h-32">
+      <div className="w-9 h-9 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+            </>
+              :
+            
+              <>
             <p className="text-center text-gray-800 font-semibold mb-4">Are you sure you want to delete?</p>
             <div className="flex justify-between">
               <button
@@ -67,6 +83,8 @@ function Service({service, setErrors}) {
                 No
               </button>
             </div>
+            </>
+}
           </div>
         </div>
       )}
