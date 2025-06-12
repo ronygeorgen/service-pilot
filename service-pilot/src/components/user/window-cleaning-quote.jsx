@@ -25,11 +25,9 @@ export default function WindowCleaningQuote() {
   const location = useLocation()
   const { totalPrice: tt, totalSavings, selectedServices } = location.state || {}
 
-  const params = new URLSearchParams(location.search);
-  const locationId = params.get("location");
-  const isSpecialLocation = locationId === "b8qvo7VooP3JD3dIZU42";
-
-
+  const pathSegments = location.pathname.split('/');
+  const isSpecialLocation = pathSegments.includes('b8qvo7VooP3JD3dIZU42');
+  
   const [expandedSections, setExpandedSections] = useState({
     note: false,
     photos: false,
