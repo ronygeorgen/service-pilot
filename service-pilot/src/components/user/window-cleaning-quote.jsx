@@ -34,8 +34,9 @@ export default function WindowCleaningQuote() {
   // console.log("path segments ==", pathSegments);
   
 
-  const isSpecialLocation = window.location.href.includes('b8qvo7VooP3JD3dIZU42');
-  console.log("location pathhhhh==== ", window.location.href);
+  const queryParams = new URLSearchParams(window.location.search);
+  const locationId = queryParams.get('locationId');
+  const isSpecialLocation = locationId === 'b8qvo7VooP3JD3dIZU42';
   
   console.log("isSpecialLoction == ",isSpecialLocation);
   
