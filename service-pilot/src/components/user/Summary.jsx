@@ -12,7 +12,8 @@ const Summary = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const navigate = useNavigate()
   const { selectedContact } = useSelector((state) => state.contacts)
-  
+  const queryParams = new URLSearchParams(window.location.search);
+  const locationId = queryParams.get('location');
 
   const handleAddMoreServices = () => {
     dispatch({ type: "ADD_MORE_SERVICES" })
@@ -91,7 +92,7 @@ const handleFinalize = async () => {
     const quoteId = response.data.id;
 
     // Navigate to review page with quote ID
-    navigate(`/user/review/${quoteId}`);
+     navigate(`/user/review/${quoteId}${locationId ? `?location=${locationId}` : ''}`);
   } catch (error) {
     console.error('Error saving quote:', error);
     // Handle error (show toast/message)
