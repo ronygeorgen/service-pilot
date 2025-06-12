@@ -25,6 +25,10 @@ export default function WindowCleaningQuote() {
   const location = useLocation()
   const { totalPrice: tt, totalSavings, selectedServices } = location.state || {}
 
+  const params = new URLSearchParams(location.search);
+  const locationId = params.get("location");
+  const isSpecialLocation = locationId === "b8qvo7VooP3JD3dIZU42";
+
 
   const [expandedSections, setExpandedSections] = useState({
     note: false,
@@ -342,7 +346,30 @@ const { total: totalPrice, isMinimumPriceApplied, minimumPrice } = calculateTota
             </p>
           </div>
         </div>
+      {/* Return to Home Button - Conditionally Rendered */}
+        {isSpecialLocation && (
+          <div className="text-center my-4">
+            <button
+              onClick={() => {
+                if (!quoteData.is_submited) {
+                  const confirmLeave = window.confirm(
+                    "Are you sure you want to leave?"
+                  );
+                  if (confirmLeave) {
+                    navigate('/');
+                  }
+                } else {
+                  navigate('/');
+                }
+              }}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg shadow-md transition duration-300"
+            >
+              Return to Home
+            </button>
+          </div>
+        )}
       </div>
+
 
       {/* Loop through each service */}
       {quoteData.services?.map((service, serviceIndex) => {
