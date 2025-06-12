@@ -249,6 +249,7 @@ const { adjustedPrice: totalPrice, isMinimumPriceApplied } = calculateTotalPrice
                   {pricingOption && pricingOption.discount > 0 ? (
                     <div>
                       <p className="font-medium text-gray-700">{formatCurrency(servicePrice)}</p>
+                      <div className="text-gray-500 text-xs mb-3">Plus Tax</div>
                       <p className="text-sm text-gray-500 line-through">{formatCurrency(serviceBasePrice)}</p>
                     </div>
                   ) : (
@@ -295,6 +296,7 @@ const { adjustedPrice: totalPrice, isMinimumPriceApplied } = calculateTotalPrice
     </div>
     <div className="text-right">
       <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalPrice)}</p>
+      <div className="text-gray-500 text-md mb-3">Plus Tax</div>
       {totalSavings > 0 && (
         <p className="text-sm text-green-600">You save {formatCurrency(totalSavings)}</p>
       )}

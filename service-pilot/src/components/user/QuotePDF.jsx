@@ -196,6 +196,7 @@ const QuotePDF = ({
 
         <View style={styles.totalPrice}>
           <Text>Total: ${totalPrice.toFixed(2)}</Text>
+          <Text style={styles.minimumPriceNote}>Plus Tax</Text>
           {isMinimumPriceApplied && (
             <Text style={styles.minimumPriceNote}>
               Note: The total reflects our minimum service price of ${minimumPrice.toFixed(2)} to ensure quality service.

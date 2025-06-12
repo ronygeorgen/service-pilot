@@ -20,7 +20,8 @@ export default function WindowCleaningQuote() {
   const [error, setError] = useState(null);
   const { selectedContact } = useSelector((state) => state.contacts)
   const [currentStep, setCurrentStep] = useState(0)
-  const [activeTab, setActiveTab] = useState("about")
+  const [activeTab, setActiveTab] = useState("recouring")
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const { state } = useQuote()
   
   const ALLOWED_LOCATION_ID = 'b8qvo7VooP3JD3dIZU42';
@@ -116,7 +117,7 @@ export default function WindowCleaningQuote() {
   }, [quoteId]);
 
   const handleSubmitPurchase = async () => {
-    if (!signature.trim()) return;
+    
     
     setIsSubmitting(true);
     setSubmitError(null);
@@ -124,7 +125,7 @@ export default function WindowCleaningQuote() {
     const payload = {
       purchase_id: quoteData.id,
       total_amount: Number(quoteData.total_amount).toFixed(2),
-      signature: signature,
+      signature: signature || "Digital Acceptance",
       services: selectedServicePlans
     };
 
@@ -352,6 +353,25 @@ const { total: totalPrice, isMinimumPriceApplied, minimumPrice } = calculateTota
             )}
           </div>
 
+          {/* Added About Company Section Here */}
+          <div className="mb-6 mt-20">
+            <h3 className="text-lg font-semibold mb-3 text-center md:text-center">About Our Company</h3>
+            <div className="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-6">
+              <div className="flex-shrink-0">
+                <img src="/sevicepilot_logo.png?height=150&width=150" alt="Company Logo" className="h-24 w-24 mx-auto md:mx-0" />
+              </div>
+              <div className="flex-1">
+                <p className="text-gray-600 leading-relaxed text-sm">
+                  Thanks for taking the time to fill out our instant online bid. We know your time is valuable and our
+                  instant online bid feature is just one way we help to accommodate your schedule. Whether it is getting
+                  the bid done for you quickly or getting your windows cleaned right the first time, we have built our
+                  business in a way to prove to you that we are serious about your satisfaction in every way possible!
+                </p>
+                <p className="text-gray-600 mt-3 text-sm text-right">- Arman K</p>
+              </div>
+            </div>
+          </div>
+
           <div className="mb-4">
             <h3 className="text-lg font-semibold mb-3">Which of These Services Would You Like?</h3>
             <p className="text-gray-600 mb-2 text-sm">
@@ -359,7 +379,8 @@ const { total: totalPrice, isMinimumPriceApplied, minimumPrice } = calculateTota
             </p>
           </div>
         </div>
-      {/* Return to Home Button - Conditionally Rendered */}
+
+        {/* Return to Home Button - Conditionally Rendered */}
         {isSpecialLocation && (
           <div className="text-center my-4">
             <button
@@ -404,7 +425,7 @@ const { total: totalPrice, isMinimumPriceApplied, minimumPrice } = calculateTota
                 <div className="aspect-video bg-black rounded-lg overflow-hidden max-w-2xl mx-auto">
                   <iframe
                     className="w-full h-full"
-                    src="https://www.youtube.com/embed/4l8fti9xYdc"
+                    src="https://www.youtube.com/embed/kANi_aj5Aqc"
                     title="YouTube video player"
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -487,7 +508,7 @@ const { total: totalPrice, isMinimumPriceApplied, minimumPrice } = calculateTota
                               <div className="text-center">
                                 {plan.discount > 0 && (
                                   <div className="text-gray-500 text-sm line-through mb-1">
-                                    ${plan.basePrice.toFixed(2)}
+                                    ${plan.basePrice.toFixed(2)} 
                                   </div>
                                 )}
                                 
@@ -601,183 +622,169 @@ const { total: totalPrice, isMinimumPriceApplied, minimumPrice } = calculateTota
       })}
 
       {/* Learn More Section */}
-      <div className="bg-white mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12 py-6">
-        <div className="px-4">
-          <div className="text-center mb-6">
-            <h3 className="text-xl font-semibold mb-3">Learn more about us!</h3>
-            <p className="text-gray-600 mb-3 text-sm">
-              Below is some information about our company, along with an overview of the information you provided during
-              the quoting process.
-            </p>
-            <div className="flex justify-center mt-6">
-              <PDFDownloadLink 
-                document={
-                  <QuotePDF 
-                    selectedContact={quoteData.contact}
-                    selectedServices={quoteData.services}
-                    selectedPlans={selectedPlans}
-                    totalPrice={totalPrice}
-                    signature={quoteData?.is_submited ? quoteData.signature : signature}
-                    minimumPrice={quoteData.minimum_price}  // Add this
-                    isMinimumPriceApplied={parseInt(totalPrice) > 0 && parseInt(quoteData.minimum_price) >= parseInt(totalPrice)}
-                  />
-                } 
-                fileName={`quote_${quoteData.contact?.first_name || 'customer'}.pdf`}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
-              >
-                {({ loading }) => (
-                  <div className="flex items-center space-x-2">
-                    <FileText className="w-5 h-5" />
-                    <span>{loading ? 'Generating PDF...' : 'Download PDF Quote'}</span>
-                  </div>
-                )}
-              </PDFDownloadLink>
-            </div>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex justify-center mb-6">
-            <div className="flex border-b">
-              <button
-                onClick={() => setActiveTab("about")}
-                className={`px-4 py-2 font-medium text-sm ${
-                  activeTab === "about" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-600 hover:text-gray-800"
-                }`}
-              >
-                About Company
-              </button>
-              <button
-                onClick={() => setActiveTab("specs")}
-                className={`px-4 py-2 font-medium text-sm ${
-                  activeTab === "specs" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-600 hover:text-gray-800"
-                }`}
-              >
-                Job Specs
-              </button>
-            </div>
-          </div>
-
-          {/* Tab Content */}
-          {activeTab === "about" && (
-            <div className="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-6">
-              <div className="flex-shrink-0">
-                <img src="/sevicepilot_logo.png?height=150&width=150" alt="Company Logo" className="h-24 w-24" />
-              </div>
-              <div className="flex-1">
-                <p className="text-gray-600 leading-relaxed text-sm">
-                  Thanks for taking the time to fill out our instant online bid. We know your time is valuable and our
-                  instant online bid feature is just one way we help to accommodate your schedule. Whether it is getting
-                  the bid done for you quickly or getting your windows cleaned right the first time, we have built our
-                  business in a way to prove to you that we are serious about your satisfaction in every way possible!
-                </p>
-                <p className="text-gray-600 mt-3 text-sm">- Arman K</p>
-              </div>
+      {/* Learn More Section */}
+<div className="bg-white mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12 py-6">
+  <div className="px-4">
+    <div className="text-center mb-6">
+      <h3 className="text-xl font-semibold mb-3">Learn more about us!</h3>
+      <p className="text-gray-600 mb-3 text-sm">
+        Below is some important information about our terms and conditions, along with an overview of the information you provided during
+        the quoting process.
+      </p>
+      <div className="flex justify-center mt-6">
+        <PDFDownloadLink 
+          document={
+            <QuotePDF 
+              selectedContact={quoteData.contact}
+              selectedServices={quoteData.services}
+              selectedPlans={selectedPlans}
+              totalPrice={totalPrice}
+              signature={quoteData?.is_submited ? quoteData.signature : signature}
+              minimumPrice={quoteData.minimum_price}
+              isMinimumPriceApplied={parseInt(totalPrice) > 0 && parseInt(quoteData.minimum_price) >= parseInt(totalPrice)}
+            />
+          } 
+          fileName={`quote_${quoteData.contact?.first_name || 'customer'}.pdf`}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+        >
+          {({ loading }) => (
+            <div className="flex items-center space-x-2">
+              <FileText className="w-5 h-5" />
+              <span>{loading ? 'Generating PDF...' : 'Download PDF Quote'}</span>
             </div>
           )}
+        </PDFDownloadLink>
+      </div>
+    </div>
 
-          {activeTab === "specs" && (
-            <div className="space-y-4">
-              <h4 className="text-lg font-semibold">Selected Services</h4>
-              {quoteData.services?.map((service, index) => (
-                <div key={index} className="mb-6 border p-4 rounded-lg bg-gray-50">
-                  <h5 className="font-medium text-lg mb-3">{service.name}</h5>
-                  <div className="space-y-3">
-                    {service.questions?.map((question) => {
-                      const reaction = question?.reactions?.[0];
-                      
-                      return (
-                        <div key={question?.id} className="border-b pb-2 last:border-b-0">
-                          <div className="flex justify-between">
-                            <span className="text-gray-700 font-medium">{question?.text}</span>
-                            {question?.type === 'boolean' && (
-                              <span className="font-medium">
-                                {question?.bool_ans ? 'Yes' : 'No'}
-                              </span>
-                            )}
-                          </div>
-                          
-                          {question?.type === 'choice' && question?.options && (
-                            <div className="mt-2 pl-4">
-                              {question?.options.map((option, optIndex) => (
-                                <div key={optIndex} className="flex justify-between text-sm">
-                                  <span className="text-gray-600">
-                                    {option?.label}:
-                                  </span>
-                                  <span className="font-medium">
-                                    {option?.qty} × ${option?.value} = 
-                                    <span className="ml-1">
-                                      ${(parseFloat(option?.value) * parseInt(option?.qty)).toFixed(2)}
-                                    </span>
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          
-                          {question?.type === 'boolean' && question?.bool_ans && question.unit_price !== '0.00' && (
-                            <div className="text-right text-sm text-gray-500 mt-1">
-                              +${parseFloat(question.unit_price).toFixed(2)}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+    {/* Tabs */}
+    <div className="flex justify-center mb-6">
+      <div className="flex border-b">
+        <button
+          onClick={() => setActiveTab("recouring")}
+          className={`px-4 py-2 font-medium text-sm ${
+            activeTab === "recouring" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-600 hover:text-gray-800"
+          }`}
+        >
+          Recouring Service Terms
+        </button>
+        <button
+          onClick={() => setActiveTab("terms")}
+          className={`px-4 py-2 font-medium text-sm ${
+            activeTab === "terms" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-600 hover:text-gray-800"
+          }`}
+        >
+          Terms and Conditions
+        </button>
+        <button
+          onClick={() => setActiveTab("specs")}
+          className={`px-4 py-2 font-medium text-sm ${
+            activeTab === "specs" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-600 hover:text-gray-800"
+          }`}
+        >
+          Job Specs
+        </button>
+      </div>
+    </div>
 
-          <div className="mt-8">
-            <h4 className="text-lg font-semibold mb-3">Disclaimer</h4>
-            <div className="text-xs text-gray-600 space-y-3">
-              <div>
-                <p className="font-medium">Terms and Conditions</p>
-                <p>
-                  "We" or "our" or "TWC" refers to Trushine Window Cleaning Ltd. "You", "your" or "the client" refers to
-                  the customer receiving the service(s) detailed.
-                </p>
-              </div>
+    {/* Tab Content */}
+    {activeTab === "recouring" && (
+      <div className="space-y-4">
+        <h4 className="text-lg font-semibold">Recouring Service Terms and Conditions</h4>
+        <p className="text-gray-600 text-sm">
+          All recurring services require a minimum 3-month commitment and may be canceled with 30 days notice after the initial period.
+        </p>
+      </div>
+    )}
 
-              <p>
-                – Any special accommodation has to be reviewed and accepted by management staff prior accepting the
-                proposal.
-              </p>
-              <p>
-                – Quotations are valid for 30 days, and accepted only in writing by signature and will subject to the
-                Terms and Conditions herein on the day of services.
-              </p>
-              <p>
-                – All work shall be completed in workmanship like manner, and if applicable, in compliance with all
-                building codes and other applicable laws.
-              </p>
-              <p>
-                – TWC warrants that it is adequately insured for injury to its employees and other incurring loss of
-                injury as a result of the acts of its employees.
-              </p>
-              <p>
-                – TWC reserves the right to change these terms and conditions at any time without prior notice. In the
-                event that any changes are made, the revised terms and conditions shall be posted on the website
-                immediately.
-              </p>
-
-              <div className="mt-4">
-                <p className="font-medium">SELECTED SERVICES:</p>
-                {quoteData.services?.length > 0 ? (
-                  quoteData.services.map((service, index) => (
-                    <div key={index} className="mb-3">
-                      <p className="font-medium">{service.name?.toUpperCase()}:</p>
-                      <p>{service.description || "No description available"}</p>
-                    </div>
-                  ))
-                ) : (
-                  <p>– No services selected</p>
-                )}
-              </div>
-            </div>
+    {activeTab === "terms" && (
+      <div className="space-y-4">
+        <h4 className="text-lg font-semibold">Terms and Conditions</h4>
+        <div className="text-xs text-gray-600 space-y-3">
+          <div>
+            <p>"We" or "our" or "TWC" refers to Trushine Window Cleaning Ltd. "You", "your" or "the client" refers to
+            the customer receiving the service(s) detailed.</p>
           </div>
+
+          <p>
+            – Any special accommodation has to be reviewed and accepted by management staff prior accepting the
+            proposal.
+          </p>
+          <p>
+            – Quotations are valid for 30 days, and accepted only in writing by signature and will subject to the
+            Terms and Conditions herein on the day of services.
+          </p>
+          <p>
+            – All work shall be completed in workmanship like manner, and if applicable, in compliance with all
+            building codes and other applicable laws.
+          </p>
+          <p>
+            – TWC warrants that it is adequately insured for injury to its employees and other incurring loss of
+            injury as a result of the acts of its employees.
+          </p>
+          <p>
+            – TWC reserves the right to change these terms and conditions at any time without prior notice. In the
+            event that any changes are made, the revised terms and conditions shall be posted on the website
+            immediately.
+          </p>
         </div>
       </div>
+    )}
+
+    {activeTab === "specs" && (
+      <div className="space-y-4">
+        <h4 className="text-lg font-semibold">Selected Services</h4>
+        {quoteData.services?.map((service, index) => (
+          <div key={index} className="mb-6 border p-4 rounded-lg bg-gray-50">
+            <h5 className="font-medium text-lg mb-3">{service.name}</h5>
+            <div className="space-y-3">
+              {service.questions?.map((question) => {
+                const reaction = question?.reactions?.[0];
+                
+                return (
+                  <div key={question?.id} className="border-b pb-2 last:border-b-0">
+                    <div className="flex justify-between">
+                      <span className="text-gray-700 font-medium">{question?.text}</span>
+                      {question?.type === 'boolean' && (
+                        <span className="font-medium">
+                          {question?.bool_ans ? 'Yes' : 'No'}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {question?.type === 'choice' && question?.options && (
+                      <div className="mt-2 pl-4">
+                        {question?.options.map((option, optIndex) => (
+                          <div key={optIndex} className="flex justify-between text-sm">
+                            <span className="text-gray-600">
+                              {option?.label}:
+                            </span>
+                            <span className="font-medium">
+                              {option?.qty} × ${option?.value} = 
+                              <span className="ml-1">
+                                ${(parseFloat(option?.value) * parseInt(option?.qty)).toFixed(2)}
+                              </span>
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {question?.type === 'boolean' && question?.bool_ans && question.unit_price !== '0.00' && (
+                      <div className="text-right text-sm text-gray-500 mt-1">
+                                +${parseFloat(question.unit_price).toFixed(2)}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
 
       {/* Final Booking Section - Only show if not submitted */}
       {!quoteData.is_submited && (
@@ -810,7 +817,7 @@ const { total: totalPrice, isMinimumPriceApplied, minimumPrice } = calculateTota
                       {selectedPlan?.discount > 0 && (
                         <span className="text-gray-500 text-xs ml-2">(Save {selectedPlan.discount}%)</span>
                       )}
-                      <div className="text-gray-500 text-xs">Plus Tax</div>
+                      <div className="text-gray-500 text-sm">Plus Tax</div>
                     </div>
                   </div>
                 );
@@ -826,9 +833,10 @@ const { total: totalPrice, isMinimumPriceApplied, minimumPrice } = calculateTota
               )}
 
               <div className="flex justify-between items-center py-3 font-bold text-base">
-                <span>TOTAL</span>
-                <span>${totalPrice.toFixed(2)}</span>
+                <span className="text-2xl">TOTAL</span>
+                <span className="text-2xl" >${totalPrice.toFixed(2)}</span>
               </div>
+              <div className="text-right text-gray-500 text-base">Plus Tax</div>
             </div>
 
             {/* Signature Section */}
@@ -853,11 +861,24 @@ const { total: totalPrice, isMinimumPriceApplied, minimumPrice } = calculateTota
 
             {/* Final Button */}
             <div className="text-center">
+              <div className="mb-6 flex items-center justify-center">
+                <input
+                  type="checkbox"
+                  id="termsCheckbox"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <label htmlFor="termsCheckbox" className="text-sm text-gray-700">
+                  I have read and agree to all terms and conditions
+                </label>
+              </div>
+
               <button
                 onClick={handleSubmitPurchase}
-                disabled={!signature.trim() || isSubmitting}
+                disabled={!termsAccepted || isSubmitting}
                 className={`px-6 py-3 rounded transition-colors font-medium text-sm ${
-                  !signature.trim()
+                  !termsAccepted
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-blue-500 text-white hover:bg-blue-600"
                 }`}
