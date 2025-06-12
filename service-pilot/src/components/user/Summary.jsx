@@ -253,7 +253,10 @@ const { adjustedPrice: totalPrice, isMinimumPriceApplied } = calculateTotalPrice
                       <p className="text-sm text-gray-500 line-through">{formatCurrency(serviceBasePrice)}</p>
                     </div>
                   ) : (
+                    <div>
                     <p className="font-medium text-gray-700">{formatCurrency(servicePrice)}</p>
+                    <div className="text-gray-500 text-xs mb-3">Plus Tax</div>
+                    </div>
                   )}
                 </div>
               </div>
