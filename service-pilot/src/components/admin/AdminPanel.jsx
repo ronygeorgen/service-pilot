@@ -12,7 +12,7 @@ function AdminPanel() {
   const [errors, setErrors] = useState({});
     const navigate = useNavigate()
 
-    const {selectedService, isEdited, settings, services, success, error} = useSelector(state=>state.admin)
+    const {selectedService, isEdited, settings, services, success, error, pending, service_list_pending} = useSelector(state=>state.admin)
 
     const dispatch = useDispatch();
 
@@ -145,16 +145,22 @@ function AdminPanel() {
                   <Plus size={20} />
                 </button>
               </div>
-              
-              <div className="space-y-2">
-                {services?.length > 0 ? (
-                  services?.map((service) => (
-                    <Service key={service.id} service={service} setErrors={setErrors}/>
-                  ))
-                ) : (
-                  <p>No services available.</p>
-                )}
-              </div>
+              {
+                service_list_pending?
+                <div className="flex justify-center items-center h-32">
+                  <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+                :
+                <div className="space-y-2">
+                  {services?.length > 0 ? (
+                    services?.map((service) => (
+                      <Service key={service.id} service={service} setErrors={setErrors}/>
+                    ))
+                  ) : (
+                    <p>No services available.</p>
+                  )}
+                </div>
+              }
               
               <div className="mt-8">
                 <h3 className="text-md font-semibold text-gray-800 mb-2">Global Settings</h3>
@@ -185,12 +191,20 @@ function AdminPanel() {
                 <>
                 {isEdited&&
                   <div className='w-full flex justify-end'>
+                    {pending?
+                    <button className="flex items-center gap-1 py-2 px-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600"
+                    >
+                      <Save size={16} />
+                      Saving......
+                    </button>
+                    :
                     <button className="flex items-center gap-1 py-2 px-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600"
                     onClick={handleSave}
                     >
                       <Save size={16} />
                       Save Changes
                     </button>
+                    }
                   </div>
                 }
                   <UpdateService errors={errors} setErrors={setErrors}/>

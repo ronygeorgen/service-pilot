@@ -8,6 +8,7 @@ const initialState = {
     success:false,
     error:'',
     pending:false,
+    service_list_pending:false,
     isLoginned:null,
     selectedService: null,
     showPricing: false,
@@ -37,6 +38,7 @@ const adminSlice = createSlice({
             const newService = {
                 id: `service-${Date.now()}`,
                 name: 'New Service',
+                description: '',
                 isNew: true,
                 questions: [],
                 };
@@ -210,6 +212,9 @@ const adminSlice = createSlice({
     },
     extraReducers(builder){
         builder
+        .addCase(createService.pending, (state, action)=>{
+            state.pending =true;
+        })
         .addCase(createService.fulfilled, (state, action)=>{
             const createdService = action.payload;
             const tempId = action.meta.arg.id;
@@ -217,17 +222,29 @@ const adminSlice = createSlice({
             state.services = state.services.map(service =>
                 service.id === tempId ? { ...createdService } : service
             );
+            state.pending = false;
             state.selectedService=null
             state.isEdited=false
         })
+        .addCase(serviceListAction.pending, (state, action)=>{
+            state.service_list_pending =true;
+        })
         .addCase(serviceListAction.fulfilled, (state, action)=>{
             state.services = action.payload;
+            state.service_list_pending =false;
+        })
+        .addCase(editServiceAction.pending, (state, action)=>{
+            state.pending =true;
         })
         .addCase(editServiceAction.fulfilled, (state, action)=>{
             const id = action.meta.arg.id
             state.services = state.services?.map(s=>s.id==id?action.payload:s);
             state.selectedService = null;
             state.isEdited = false;
+            state.pending = false;
+        })
+        .addCase(deleteServiceAction.pending, (state, action)=>{
+            state.pending =true;
         })
         .addCase(deleteServiceAction.fulfilled, (state, action)=>{
             const id = action.meta.arg
@@ -235,6 +252,8 @@ const adminSlice = createSlice({
             
             state.services = state.services?.filter(s => s?.id !== id) || [];
             state.selectedService = null;
+            state.success=true;
+            state.pending=false;
         })
         .addCase(adminLoginAction.fulfilled, (state, action)=>{
             localStorage.setItem('access_token',action.payload?.access)
