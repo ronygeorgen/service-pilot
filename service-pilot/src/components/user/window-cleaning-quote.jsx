@@ -35,7 +35,7 @@ export default function WindowCleaningQuote() {
   
 
   const queryParams = new URLSearchParams(window.location.search);
-  const locationId = queryParams.get('locationId');
+  const locationId = queryParams.get('location');
   const isSpecialLocation = locationId === 'b8qvo7VooP3JD3dIZU42';
   
   console.log("isSpecialLoction == ",isSpecialLocation);
