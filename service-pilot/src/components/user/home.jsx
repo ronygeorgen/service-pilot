@@ -17,6 +17,7 @@ const Home = () => {
 
   const queryParams = new URLSearchParams(window.location.search);
   console.log('the url we are takinggg',window.location.search);
+  console.log('queryParams',queryParams);
   
   const locationId = queryParams.get('location');
   const isSpecialLocation = locationId === 'b8qvo7VooP3JD3dIZU42';
