@@ -6,6 +6,7 @@ import { LogOut, User } from "lucide-react"
 import { fetchServices } from "../../features/user/servicesSlice"
 import QuoteWidget from "./QuoteWidget"
 import { useNavigate } from "react-router-dom"
+import { useParams } from 'react-router-dom';
 
 
 const Home = () => {
@@ -14,6 +15,11 @@ const Home = () => {
   const [user] = useState({ name: "John Doe", email: "john@example.com" })
   const navigate = useNavigate()
 
+  const queryParams = new URLSearchParams(window.location.search);
+  console.log('the url we are takinggg',window.location.search);
+  
+  const locationId = queryParams.get('location');
+  const isSpecialLocation = locationId === 'b8qvo7VooP3JD3dIZU42';
 
   useEffect(() => {
     dispatch(fetchServices())
