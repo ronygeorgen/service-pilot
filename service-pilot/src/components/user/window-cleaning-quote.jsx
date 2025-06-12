@@ -22,12 +22,14 @@ export default function WindowCleaningQuote() {
   const [currentStep, setCurrentStep] = useState(0)
   const [activeTab, setActiveTab] = useState("about")
   const { state } = useQuote()
+
+  const ALLOWED_LOCATION_ID = 'b8qvo7VooP3JD3dIZU42';
   const location = useLocation()
   const { totalPrice: tt, totalSavings, selectedServices } = location.state || {}
 
-  const pathSegments = location.pathname.split('/');
-  const isSpecialLocation = pathSegments.includes('b8qvo7VooP3JD3dIZU42');
-  
+
+  const isSpecialLocation = location.pathname.includes(ALLOWED_LOCATION_ID);
+
   const [expandedSections, setExpandedSections] = useState({
     note: false,
     photos: false,
