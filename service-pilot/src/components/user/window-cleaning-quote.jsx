@@ -27,15 +27,17 @@ export default function WindowCleaningQuote() {
   const location = useLocation()
   const { totalPrice: tt, totalSavings, selectedServices } = location.state || {}
 
-  console.log("Location.pathname ===", location.pathname.split('/'));
+  // console.log("Location.pathname ===", location.pathname.split('/'));
   
-  const pathSegments = location.pathname.split('/');
+  // const pathSegments = location.pathname.split('/');
 
-  console.log("path segments ==", pathSegments);
+  // console.log("path segments ==", pathSegments);
   
 
-  const isSpecialLocation = pathSegments.includes('b8qvo7VooP3JD3dIZU42');
-  console.log("isSpedialloction == ",isSpecialLocation);
+  const isSpecialLocation = window.location.href.includes('b8qvo7VooP3JD3dIZU42');
+  console.log("location pathhhhh==== ", window.location.href);
+  
+  console.log("isSpecialLoction == ",isSpecialLocation);
   
 
   const [expandedSections, setExpandedSections] = useState({
@@ -599,7 +601,7 @@ const { total: totalPrice, isMinimumPriceApplied, minimumPrice } = calculateTota
       <div className="bg-white mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12 py-6">
         <div className="px-4">
           <div className="text-center mb-6">
-            <h3 className="text-xl font-semibold mb-3">Learn more about us!!</h3>
+            <h3 className="text-xl font-semibold mb-3">Learn more about us!</h3>
             <p className="text-gray-600 mb-3 text-sm">
               Below is some information about our company, along with an overview of the information you provided during
               the quoting process.
