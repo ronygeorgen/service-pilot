@@ -8,7 +8,7 @@ export default function SuccessPage() {
   useEffect(() => {
     // Load the form embed script
     const script = document.createElement('script');
-    script.src = 'https://link.msgsndr.com/js/form_embed.js';
+    script.src = 'https://api.leadconnectorhq.com/js/form_embed.js';
     script.async = true;
     document.body.appendChild(script);
 
@@ -35,14 +35,15 @@ export default function SuccessPage() {
         <div className="mb-6">
           <h2 className="font-semibold text-gray-800 mb-3">Schedule Your Service</h2>
           <div className="w-full overflow-hidden rounded-lg border border-gray-200">
-            <iframe 
+            {/* <iframe 
               src="https://api.leadconnectorhq.com/widget/booking/Z9uiXkytRRdpjVma2Av9" 
               style={{ width: '100%', height: '700px', border: 'none' }}
               scrolling="no" 
               id="Z9uiXkytRRdpjVma2Av9_1749760546254"
               className="mx-auto"
               title="Booking Calendar"
-            ></iframe>
+            ></iframe> */}
+            <iframe src="https://api.leadconnectorhq.com/widget/booking/1rwE7cUSN5MxPeI1CHiB" style={{ width: "100%", border: "none", overflow: "hidden" }} scrolling="no" id="1rwE7cUSN5MxPeI1CHiB_1750084425977" title="Booking Calendar"></iframe>
           </div>
         </div>
         

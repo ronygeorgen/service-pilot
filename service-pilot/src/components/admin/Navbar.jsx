@@ -40,7 +40,7 @@ function Navbar({ is_admin = false, is_user = false }) {
                     {/* User Info and Controls */}
                     <div className="flex items-center space-x-4">
                         {/* User display */}
-                        <div className="flex items-center space-x-2">
+                        {/* <div className="flex items-center space-x-2">
                             <User className="w-5 h-5 text-gray-500" />
                             <div className="hidden sm:block">
                                 <p className="text-sm font-medium text-gray-900">
@@ -54,7 +54,7 @@ function Navbar({ is_admin = false, is_user = false }) {
                                             : ''}
                                 </p>
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* Logout only if fully logged in */}
                         {isLoggedIn && (
