@@ -44,7 +44,7 @@ function Navbar({ is_admin = false, is_user = false }) {
                             <User className="w-5 h-5 text-gray-500" />
                             <div className="hidden sm:block">
                                 <p className="text-sm font-medium text-gray-900">
-                                    {admin_info?.name || (is_user ? 'User' : 'Admin')}
+                                    {admin_info?.name || 'Admin'}
                                 </p>
                                 <p className="text-xs text-gray-500">
                                     {isLoggedIn

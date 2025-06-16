@@ -690,46 +690,161 @@ const { total: totalPrice, isMinimumPriceApplied, minimumPrice } = calculateTota
     {/* Tab Content */}
     {activeTab === "recouring" && (
       <div className="space-y-4">
-        <h4 className="text-lg font-semibold">Recouring Service Terms and Conditions</h4>
-        <p className="text-gray-600 text-sm">
-          All recurring services require a minimum 3-month commitment and may be canceled with 30 days notice after the initial period.
-        </p>
-      </div>
-    )}
+        <h4 className="text-lg font-semibold">Recurring Service Agreement (Window Cleaning & Gutter Cleaning)</h4>
+        <div className="text-gray-600 text-sm space-y-2">
+          <p>This Recurring Service Agreement outlines the terms and conditions for ongoing window cleaning and/or gutter cleaning services provided by TruShine Window Cleaning.</p>
+          
+          <h5 className="font-semibold">1. Scope of Services</h5>
+          <ul className="list-disc ml-5">
+            <li><strong>Window Cleaning:</strong>
+              <ul className="list-disc ml-5">
+                <li>Exterior window cleaning for all accessible glass</li>
+                <li>Optional interior window cleaning if included in service scope</li>
+                <li>Add-ons such as screen cleaning, track detailing, or hard water stain removal are available for an additional fee</li>
+              </ul>
+            </li>
+            <li><strong>Gutter Cleaning:</strong>
+              <ul className="list-disc ml-5">
+                <li>Removal of leaves, debris, and blockages from gutters</li>
+                <li>Flushing of downspouts to ensure proper drainage</li>
+                <li>Light roof debris removal near gutter lines when safely accessible</li>
+              </ul>
+            </li>
+            <li>Service frequency (monthly, bi-monthly, quarterly, semi-annual, or annual) is selected at the time of onboarding and remains ongoing until canceled under the terms listed below.</li>
+          </ul>
 
-    {activeTab === "terms" && (
-      <div className="space-y-4">
-        <h4 className="text-lg font-semibold">Terms and Conditions</h4>
-        <div className="text-xs text-gray-600 space-y-3">
-          <div>
-            <p>"We" or "our" or "TWC" refers to Trushine Window Cleaning Ltd. "You", "your" or "the client" refers to
-            the customer receiving the service(s) detailed.</p>
-          </div>
+          <h5 className="font-semibold">2. Pricing & Payment Terms</h5>
+          <ul className="list-disc ml-5">
+            <li>Service pricing is quoted per visit and may vary based on property size, service scope, and accessibility</li>
+            <li>Clients enrolled in recurring service receive discounted pricing compared to one-time services</li>
+            <li>Payment is due upon completion of each visit unless prepaid or otherwise agreed in writing</li>
+            <li>A valid credit card must be kept on file for automated billing. Receipts are emailed after each charge</li>
+          </ul>
 
-          <p>
-            – Any special accommodation has to be reviewed and accepted by management staff prior accepting the
-            proposal.
-          </p>
-          <p>
-            – Quotations are valid for 30 days, and accepted only in writing by signature and will subject to the
-            Terms and Conditions herein on the day of services.
-          </p>
-          <p>
-            – All work shall be completed in workmanship like manner, and if applicable, in compliance with all
-            building codes and other applicable laws.
-          </p>
-          <p>
-            – TWC warrants that it is adequately insured for injury to its employees and other incurring loss of
-            injury as a result of the acts of its employees.
-          </p>
-          <p>
-            – TWC reserves the right to change these terms and conditions at any time without prior notice. In the
-            event that any changes are made, the revised terms and conditions shall be posted on the website
-            immediately.
-          </p>
+          <h5 className="font-semibold">3. Term, Renewal & Cancellation</h5>
+          <ul className="list-disc ml-5">
+            <li>This agreement begins on the date of the first scheduled service and continues on a recurring basis until canceled in accordance with the terms below:</li>
+            <li><strong>Minimum Commitment Requirements</strong>
+              <ul className="list-disc ml-5">
+                <li><span className="font-bold">Quarterly Service:</span> Minimum of <span className="font-bold">4 services</span> required before cancellation</li>
+                <li><span className="font-bold">Semi-Annual Service:</span> Minimum of <span className="font-bold">2 services</span> required before cancellation</li>
+                <li><span className="font-bold">Annual Service:</span> Minimum of <span className="font-bold">2 services</span> required before cancellation</li>
+                <li><span className="font-bold">Monthly or Bi-Monthly:</span> May be canceled at any time with 14 days’ notice</li>
+              </ul>
+            </li>
+            <li><strong>Early Cancellation Policy</strong>
+              <ul className="list-disc ml-5">
+                <li>If a client cancels <span className="font-bold">before completing the required number of services</span> under their selected frequency, they will be charged the <span className="font-bold">difference between the discounted recurring rate and the standard one-time service rate</span> for any services already performed.</li>
+                <li>This ensures the client is not unfairly benefiting from a recurring discount without fulfilling the agreed term.</li>
+                <li>Cancellations require <span className="font-bold">14 days' written notice</span></li>
+                <li>Appointments canceled within <span className="font-bold">24 hours</span> may incur a <span className="font-bold">$45 trip fee</span></li>
+                <li>TruShine reserves the right to cancel or reschedule service due to weather, safety concerns, or access issues</li>
+              </ul>
+            </li>
+          </ul>
+
+          <h5 className="font-semibold">4. Client Responsibilities</h5>
+          <ul className="list-disc ml-5">
+            <li>Ensure all service areas are accessible on the scheduled date (e.g., gates unlocked, pets secured)</li>
+            <li>Notify TruShine of any sensitive areas, pre-existing damage, or concerns prior to service</li>
+            <li>Maintain clear and timely communication regarding schedule changes or access issues</li>
+          </ul>
+
+          <h5 className="font-semibold">5. Adjustments & Modifications</h5>
+          <ul className="list-disc ml-5">
+            <li>Pricing is subject to adjustment if property conditions or scope of work changes</li>
+            <li>Clients may request service upgrades, frequency changes, or add-on services at any time</li>
+            <li>TruShine will provide notice of any rate updates prior to the next scheduled visit</li>
+          </ul>
+
+          <h5 className="font-semibold">6. Insurance & Liability</h5>
+          <ul className="list-disc ml-5">
+            <li>TruShine is fully insured and exercises care while working on client property</li>
+            <li>TruShine is not responsible for pre-existing conditions such as aged gutters, cracked windows, or hidden water damage</li>
+            <li>Any concerns must be reported within <span className="font-bold">48 hours</span> of service for review or resolution</li>
+          </ul>
         </div>
       </div>
     )}
+
+
+    {activeTab === "terms" && (
+      <div className="space-y-4 pr-2">
+        <h4 className="text-lg font-semibold">Terms and Conditions</h4>
+        <div className="text-xs text-gray-600 space-y-3">
+          <p>“We” or “our” or “TWC” refers to Trushine Window Cleaning Ltd. “You”, “your” or “the client” refers to the customer receiving the service(s) detailed.</p>
+          
+          <p>– Any special accommodation has to be reviewed and accepted by management staff prior accepting the proposal.</p>
+          <p>– Quotations are valid for 30 days, and accepted only in writing by signature and will subject to the Terms and Conditions herein on the day of services.</p>
+          <p>– All work shall be completed in workmanship like manner, and if applicable, in compliance with all building codes and other applicable laws.</p>
+          <p>– TWC warrants that it is adequately insured for injury to its employees and other incurring loss of injury as a result of the acts of its employees.</p>
+          <p>– TWC reserves the right to change these terms and conditions at any time without prior notice. In the event that any changes are made, the revised terms and conditions shall be posted on the website immediately.</p>
+
+          <h5 className="font-semibold">WINDOWS:</h5>
+          <ul className="list-disc ml-5 space-y-1">
+            <li>All windows must be closed on day of service. Any open windows which cannot be closed will not be washed.</li>
+            <li>You must ensure that all items to be cleaned are structurally sound prior to cleaning; Trushine Window Cleaning LTD reserves the right to photograph and/or notate any areas not structurally sound, and will notify the client prior to services being performed.</li>
+            <li>Full access is required on the day of the clean/repair. We are unable to move any obstacles which may inhibit cleaning or repair. Should partial access on the scheduled day reduce the extent of the clean/repair, we reserve the right to charge for a percentage of the windows/repair completed. If no access is available the day of the scheduled clean/repair, a $100 trip fee charge will be incurred.</li>
+            <li>We will not clean any windows we consider to be inaccessible or unsafe on the day of the clean.</li>
+            <li>External glass surfaces will usually be washed with pure water from water fed poles, and will be left to dry naturally.</li>
+            <li>A window or door is defined as any part which consists of frame, sill, sash and glass, made of wood, aluminium, steel or UVPC.</li>
+            <li>Sills made of brick, tile, stone, or any material other than listed above may damage our brushes, and will not be washed.</li>
+            <li>TWC has 24 Hours Streak FREE Guarantee on all of our window cleaning packages.</li>
+          </ul>
+
+          <h5 className="font-semibold">PRESSURE WASHING:</h5>
+          <ul className="list-disc ml-5 space-y-1">
+            <li>Although pressure washing will remove most stains from patio, paths, and driveways, some marks may not be removed by this process.</li>
+            <li>We require access to an external water supply to complete any pressure washing services.</li>
+            <li>Client is responsible to cover/remove all valuable outdoor furniture or there will be a $150 additional fee to remove furniture (Trushine is not responsible for any damages made by chemicals to any outdoor furniture or appliances).</li>
+            <li>TWC has 3 days guarantee on premium pressure washing package only.</li>
+          </ul>
+
+          <h5 className="font-semibold">GUTTERS:</h5>
+          <ul className="list-disc ml-5 space-y-1">
+            <li>Basic gutter cleaning is restricted to the gutters, and does not include hauling away debris or repair/replacement of any parts unless otherwise agreed. Additional costs may apply.</li>
+            <li>Gutter cleaning entails only the cleaning out of the inside of the gutter by leaf blower during summer/spring or gutter scoop during winter/fall.</li>
+            <li>It does not include the cleaning of any exterior surface of the gutter (available at an additional cost).</li>
+            <li>TWC has 15 days guarantee on all gutter cleaning packages.</li>
+          </ul>
+
+          <h5 className="font-semibold">AWNINGS:</h5>
+          <ul className="list-disc ml-5 space-y-1">
+            <li>We do not accept liability for any unforeseen circumstances or damages caused during the services provided.</li>
+            <li>We reserve the right to decline any awning cleaning service if the substrate is over 5 years old or fails our inspection.</li>
+            <li>TWC has 24 hours guarantee on all awning cleaning services.</li>
+          </ul>
+
+          <h5 className="font-semibold">RESCHEDULING, PAYMENTS, CLIENT RESPONSIBILITY:</h5>
+          <ul className="list-disc ml-5 space-y-1">
+            <li>Postponement of any service requires 48-hour notice. Less notice or same-day cancellations may incur a $100 trip fee.</li>
+            <li>Trushine cannot be held liable for delays due to material shortage, weather, or other uncontrollable events.</li>
+            <li>Payments are due upon receipt. TWC may require credit card information or a $100 deposit to schedule. 50% deposit required for jobs requiring materials.</li>
+            <li>Accepted payment methods: cash, check, credit card (in person, phone, or online).</li>
+            <li>Commercial account payments can be sent to: 10515 Southwest FWY, Ste E-06 Houston, TX 77074.</li>
+            <li>Clients with outstanding balances may be refused service.</li>
+            <li>Disputed payments are the client's responsibility to prove cleared. Late charges and recovery fees may apply.</li>
+            <li>Account termination may occur without notice, and terminated accounts will lose promotional eligibility.</li>
+            <li><strong>Late fee schedule:</strong>
+              <ul className="list-disc ml-5">
+                <li>Residential: 10% after 10 days.</li>
+                <li>Commercial: 10% after 30 days.</li>
+                <li>Unpaid after 60 days: collection process begins (including legal fees).</li>
+              </ul>
+            </li>
+            <li>All sales are final. No refunds except for damaged materials.</li>
+            <li>7 days written notice required for residential contract termination. Less notice incurs full service charge.</li>
+            <li>All services are subject to applicable Texas state tax.</li>
+            <li>Complaints resulting in a service revisit that confirms work was satisfactory will incur a $100 trip fee.</li>
+            <li>Terms may change anytime without notice. Updated copies available upon request.</li>
+          </ul>
+
+          <p><strong>IN WITNESS WHEREOF</strong>, the parties have executed this agreement by accepting this proposal, electronically or in writing.</p>
+          <p className="italic text-right">LAST UPDATED ON 05/11/2022</p>
+        </div>
+      </div>
+    )}
+
 
     {activeTab === "specs" && (
       <div className="space-y-4">
