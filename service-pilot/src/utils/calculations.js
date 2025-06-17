@@ -84,6 +84,23 @@ export const calculateServicePrice = (service, answers) => {
           })
         }
       })
+    } else if (question.type === "extra_choice" && Array.isArray(question.options)) {
+      const selectedOption = answers[question.id]
+      if (selectedOption) {
+        // Find the selected option's price
+        const optionObj = question.options.find(opt => Object.keys(opt)[0] === selectedOption)
+        if (optionObj) {
+          const price = parseFloat(optionObj[selectedOption]) || 0
+          totalPrice += price
+          
+          breakdown.optionPrices.push({
+            optionName: selectedOption,
+            unitPrice: price,
+            quantity: 1,
+            total: price
+          })
+        }
+      }
     } else if (question.type === "boolean") {
       // Handle boolean type questions
       const answer = answers[question.id]

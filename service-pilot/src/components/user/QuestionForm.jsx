@@ -15,6 +15,8 @@ const QuestionForm = ({ questions, serviceId }) => {
           const key = `${question.id}-${label}`
           initialValues[key] = state?.answers?.[key] || ""
         })
+      } else if (question.type === "extra_choice") {
+        initialValues[question.id] = state?.answers?.[question.id] || ""
       } else {
         initialValues[question.id] = state?.answers?.[question.id] || ""
       }
@@ -89,6 +91,30 @@ const QuestionForm = ({ questions, serviceId }) => {
           })}
         </div>
       )
+    } else if (question.type === "extra_choice" && Array.isArray(question.options)) {
+      return (
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-700">
+            {question.text}
+          </label>
+          <select
+            value={values[question.id] || ""}
+            onChange={(e) => handleChange(question.id, question.id, e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select an option</option>
+            {question.options.map((optionObj) => {
+              const label = Object.keys(optionObj)[0]
+              const price = optionObj[label]
+              return (
+                <option key={label} value={label}>
+                  {label} - ${price}
+                </option>
+              )
+            })}
+          </select>
+        </div>
+      )
     } else if (question.type === "boolean") {
       // Parse the unit_price properly
       const unitPriceStr = question.unit_price || "0"
@@ -145,6 +171,8 @@ const QuestionForm = ({ questions, serviceId }) => {
           const value = values[key]
           return value !== "" && value !== undefined && !isNaN(Number(value)) && Number(value) >= 0
         })
+      } else if (question.type === "extra_choice") {
+        return values[question.id] && values[question.id] !== ""
       } else if (question.type === "boolean") {
         return values[question.id] === "Yes" || values[question.id] === "No"
       }

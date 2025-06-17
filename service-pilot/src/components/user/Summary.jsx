@@ -22,37 +22,49 @@ const Summary = () => {
   console.log('selected service details in summary page==', state.selectedServices)
 
 
+// Update the handleFinalize function to handle extra_choice type
 const handleFinalize = async () => {
+
+  
   setIsSubmitting(true);
   try {
     const { adjustedPrice: totalAmount } = calculateTotalPrice();
-    console.log('total amount after minimum price addedddd==',totalAmount);
     
-    // Prepare the data to save in the exact format backend expects
     const quoteData = {
       contact: selectedContact.contact_id,
       services: state.selectedServices.map(service => {
-        // Group answers by question ID
         const answersByQuestion = {};
         
         Object.entries(service.answers).forEach(([key, value]) => {
-          const [questionId, optionLabel] = key.split('-');
+          // Handle extra_choice type (single value per question)
+          const serviceQuestion = service.service.questions.find(q => 
+            q.id.toString() === key || key.startsWith(q.id.toString() + '-')
+          );
           
-          if (!answersByQuestion[questionId]) {
-            answersByQuestion[questionId] = {
-              id: parseInt(questionId),
-              options: {},
-              ans: false
+          if (serviceQuestion?.type === 'extra_choice') {
+            answersByQuestion[key] = {
+              id: parseInt(key),
+              ans: value === 'Yes',
+              selectedOption: value // Store the selected option label
             };
-          }
-          
-          // Handle boolean questions
-          if (value === 'Yes' || value === 'No') {
-            answersByQuestion[questionId].ans = value === 'Yes';
           } 
-          // Handle choice options
-          else if (optionLabel) {
-            answersByQuestion[questionId].options[optionLabel.toLowerCase()] = parseInt(value) || 0;
+          // Rest of the existing logic for other types...
+          else {
+            const [questionId, optionLabel] = key.split('-');
+            
+            if (!answersByQuestion[questionId]) {
+              answersByQuestion[questionId] = {
+                id: parseInt(questionId),
+                options: {},
+                ans: false
+              };
+            }
+            
+            if (value === 'Yes' || value === 'No') {
+              answersByQuestion[questionId].ans = value === 'Yes';
+            } else if (optionLabel) {
+              answersByQuestion[questionId].options[optionLabel.toLowerCase()] = parseInt(value) || 0;
+            }
           }
         });
         
@@ -60,17 +72,21 @@ const handleFinalize = async () => {
           id: service.service.id,
           price_plan: service.selectedPricingOption || 0,
           questions: Object.values(answersByQuestion).map(question => {
-            // Clean up the question object based on its type
             const serviceQuestion = service.service.questions.find(q => q.id === question.id);
             
             if (serviceQuestion?.type === 'boolean') {
-              // For boolean questions, only include ans if true
+              return { id: question.id, ans: question.ans };
+            } 
+            else if (serviceQuestion?.type === 'extra_choice') {
               return {
                 id: question.id,
-                ans: question.ans
+                ans: question.ans,
+                options: {
+                  [question.selectedOption]: 0
+                }
               };
-            } else if (serviceQuestion?.type === 'choice') {
-              // For choice questions, include options and ans
+            }
+            else if (serviceQuestion?.type === 'choice') {
               return {
                 id: question.id,
                 ans: question.ans,
@@ -78,7 +94,6 @@ const handleFinalize = async () => {
               };
             }
             
-            // Fallback (shouldn't happen if all questions are properly typed)
             return question;
           })
         };
@@ -87,15 +102,10 @@ const handleFinalize = async () => {
       price_plan: state.selectedServices[0]?.selectedPricingOption || 0
     };
 
-    // Save to backend
     const response = await axiosInstance.post('/data/purchase/', quoteData);
-    const quoteId = response.data.id;
-
-    // Navigate to review page with quote ID
-     navigate(`/user/review/${quoteId}${locationId ? `?location=${locationId}` : ''}`);
+    navigate(`/user/review/${response.data.id}${locationId ? `?location=${locationId}` : ''}`);
   } catch (error) {
     console.error('Error saving quote:', error);
-    // Handle error (show toast/message)
   } finally {
     setIsSubmitting(false);
   }

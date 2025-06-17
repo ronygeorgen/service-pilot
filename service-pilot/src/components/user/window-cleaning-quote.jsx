@@ -174,6 +174,7 @@
       basePrice: 0,
       booleanPrices: [],
       optionPrices: [],
+      extraChoicePrices: [],
       total: 0
     };
 
@@ -206,7 +207,20 @@
           });
         });
       }
-    });
+      else if (question?.type === 'extra_choice' && question?.selectedOption) {
+      // Extra choice question with selected option
+      const selectedOption = question.options?.find(opt => opt.label === question.selectedOption);
+      if (selectedOption) {
+        const optionPrice = parseFloat(selectedOption.value) || 0;
+        baseTotal += optionPrice;
+        priceBreakdown.extraChoicePrices.push({
+          questionText: question?.text,
+          selectedOption: question.selectedOption,
+          price: optionPrice
+        });
+      }
+    }
+  });
 
     priceBreakdown.basePrice = baseTotal;
     priceBreakdown.total = baseTotal;
@@ -513,10 +527,13 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
                                   )}
                                   
                                   {/* Show price breakdown if needed */}
-                                  {plan.priceBreakdown.booleanPrices.length > 0 && (
+                                  {(plan.priceBreakdown.booleanPrices.length > 0 || plan.priceBreakdown.extraChoicePrices.length > 0) && (
                                     <div className="text-xs text-gray-500 mb-1">
                                       {plan.priceBreakdown.booleanPrices.map((item, idx) => (
                                         <div key={idx}>+ {item.questionText}</div>
+                                      ))}
+                                      {plan.priceBreakdown.extraChoicePrices.map((item, idx) => (
+                                        <div key={idx}>+ {item.questionText}: {item.selectedOption}</div>
                                       ))}
                                     </div>
                                   )}
@@ -846,58 +863,82 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
       )}
 
 
-      {activeTab === "specs" && (
-        <div className="space-y-4">
-          <h4 className="text-lg font-semibold">Selected Services</h4>
-          {quoteData.services?.map((service, index) => (
-            <div key={index} className="mb-6 border p-4 rounded-lg bg-gray-50">
-              <h5 className="font-medium text-lg mb-3">{service.name}</h5>
-              <div className="space-y-3">
-                {service.questions?.map((question) => {
-                  const reaction = question?.reactions?.[0];
-                  
-                  return (
-                    <div key={question?.id} className="border-b pb-2 last:border-b-0">
-                      <div className="flex justify-between">
-                        <span className="text-gray-700 font-medium">{question?.text}</span>
-                        {question?.type === 'boolean' && (
-                          <span className="font-medium">
-                            {question?.bool_ans ? 'Yes' : 'No'}
-                          </span>
-                        )}
-                      </div>
-                      
-                      {question?.type === 'choice' && question?.options && (
-                        <div className="mt-2 pl-4">
-                          {question?.options.map((option, optIndex) => (
-                            <div key={optIndex} className="flex justify-between text-sm">
-                              <span className="text-gray-600">
-                                {option?.label}:
-                              </span>
-                              <span className="font-medium">
-                                {option?.qty} × ${option?.value} = 
-                                <span className="ml-1">
-                                  ${(parseFloat(option?.value) * parseInt(option?.qty)).toFixed(2)}
-                                </span>
-                              </span>
-                            </div>
-                          ))}
-                        </div>
+{activeTab === "specs" && (
+  <div className="space-y-4">
+    <h4 className="text-lg font-semibold">Selected Services</h4>
+    {quoteData.services?.map((service, index) => (
+      <div key={index} className="mb-6 border p-4 rounded-lg bg-gray-50">
+        <h5 className="font-medium text-lg mb-3">{service.name}</h5>
+        <div className="space-y-3">
+          {service.questions?.map((question) => {
+            const reaction = question?.reactions?.[0];
+            
+            return (
+              <div key={question?.id} className="border-b pb-2 last:border-b-0">
+                {/* Boolean Question Display */}
+                {question?.type === 'boolean' && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-700 font-medium">{question?.text}</span>
+                    <span className="font-medium">
+                      {question?.bool_ans ? 'Yes' : 'No'}
+                      {question?.bool_ans && question.unit_price !== '0.00' && (
+                        <span className="ml-1 text-gray-500 text-sm">
+                          (+${parseFloat(question.unit_price || 0).toFixed(2)})
+                        </span>
                       )}
-                      
-                      {question?.type === 'boolean' && question?.bool_ans && question.unit_price !== '0.00' && (
-                        <div className="text-right text-sm text-gray-500 mt-1">
-                                  +${parseFloat(question.unit_price).toFixed(2)}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
+                    </span>
+                  </div>
+                )}
+
+                {/* Choice Question Display */}
+                {question?.type === 'choice' && question?.options && (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-gray-700 font-medium">{question?.text}</span>
                     </div>
-                  ))}
-                </div>
-              )}
+                    <div className="mt-2 pl-4">
+                      {question?.options.map((option, optIndex) => (
+                        <div key={optIndex} className="flex justify-between text-sm">
+                          <span className="text-gray-600">
+                            {option?.label}:
+                          </span>
+                          <span className="font-medium">
+                            {option?.qty} × ${option?.value} = 
+                            <span className="ml-1">
+                              ${(parseFloat(option?.value) * parseInt(option?.qty || 0)).toFixed(2)}
+                            </span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {/* Extra Choice Question Display */}
+                {question?.type === 'extra_choice' && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-700 font-medium">{question?.text}</span>
+                    <span className="font-medium flex flex-col">
+                     
+                        <span className="ml-1 text-gray-500 text-sm">
+                          {question?.options[0]?.label
+                            ? question.options[0].label.charAt(0).toUpperCase() + question.options[0].label.slice(1)
+                            : 0}
+                        </span>
+                        <span className="ml-1 text-gray-500 text-sm">
+                           $ {question?.options[0]?.value || 0}
+                        </span>
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    ))}
+  </div>
+)}
             </div>
           </div>
 

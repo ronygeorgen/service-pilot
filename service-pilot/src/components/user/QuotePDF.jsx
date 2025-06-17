@@ -269,7 +269,8 @@ const calculatePlanPrice = (pricingOption, service) => {
   const priceBreakdown = {
     basePrice: 0,
     booleanPrices: [],
-    optionPrices: []
+    optionPrices: [],
+    extraChoicePrices: []
   };
 
   service.questions?.forEach(question => {
@@ -294,6 +295,18 @@ const calculatePlanPrice = (pricingOption, service) => {
           total: optionTotal
         });
       });
+    }
+    else if (question.type === 'extra_choice') {
+      // Handle extra_choice type
+      
+        const price = question?.options[0]?.value
+        baseTotal += price;
+        priceBreakdown.extraChoicePrices.push({
+          questionText: question.text,
+          optionName:  question?.options[0]?.label,
+          price: price
+        });
+      
     }
   });
 
