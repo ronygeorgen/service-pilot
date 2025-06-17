@@ -206,6 +206,7 @@ function UpdateService({errors, setErrors}) {
                            }`}
                         >
                            <option value="choice">Number</option>
+                           <option value="extra_choice">Dropdown</option>
                            <option value="boolean">Yes/No</option>
                         </select>
                         {errors?.[`question_${question.id}_type`] && (
@@ -217,6 +218,31 @@ function UpdateService({errors, setErrors}) {
                      <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                         Options (comma separated)
+                        </label>
+                        <input
+                        type="text"
+                        value={question.options?.map(opt => Object.keys(opt)[0]).join(', ') || ''}
+                        onChange={(e) => handleUpdateQuestion(
+                              question.id,
+                              { options: e.target.value.split(',').map(label => ({
+                                [label.trim()]: 0
+                              })) }
+                        )}
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          errors?.[`question_${question.id}_options`] ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                        placeholder={question.type === 'choice' ? "Small, Medium, Large" : "Option 1, Option 2"}
+                        />
+                        {errors?.[`question_${question.id}_options`] && (
+                          <p className="text-sm text-red-600 mt-1">{errors[`question_${question.id}_options`]}</p>
+                        )}
+                     </div>
+                     )}
+
+                     {(question.type === 'extra_choice' || question.type === 'select') && (
+                     <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Dropdown names (comma separated)
                         </label>
                         <input
                         type="text"
@@ -325,6 +351,43 @@ function UpdateService({errors, setErrors}) {
                         </p>
                      </div>
                      )}
+
+                     {(question.type === 'extra_choice') && (
+                     <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                        Dropdown values
+                        </label>
+                        <div className="space-y-3">
+                        {(question.options || []).map((opt, index) => {
+                           const key = Object.keys(opt)[0];
+                           const value = opt[key];
+                           return (
+                              <div key={index} className="flex items-center gap-3">
+                                 <span className="text-sm text-gray-600 w-1/3">{key}</span>
+                                 <div className="flex-1">
+                                 <input
+                                    type="number"
+                                    min="0"
+                                    value={value}
+                                    onChange={(e) => handleUpdateOptionPrice(
+                                       question.id,
+                                       key,
+                                       Number(e.target.value)
+                                    )}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="0"
+                                 />
+                                 </div>
+                              </div>
+                           );
+                        })}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                        Set individual prices for each option
+                        </p>
+                     </div>
+                     )}
+
                   </div>
                </div>
             ))}
