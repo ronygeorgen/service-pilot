@@ -120,6 +120,12 @@ const quoteReducer = (state, action) => {
         showSummary: false,
         currentService: null,
       }
+    case "ADD_CUSTOM_SERVICE":
+      return {
+        ...state,
+        selectedServices: [...state.selectedServices, action.payload],
+        showSummary: true,
+      }
     case "RESET":
       return initialState
     default:

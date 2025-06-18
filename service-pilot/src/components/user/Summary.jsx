@@ -6,6 +6,7 @@ import { formatCurrency, applyPricingOption, calculateSavings } from "../../util
 import { useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux' 
 import { axiosInstance } from "../../services/api"
+import CreateCustomServiceModal from "./CreateCustomServiceModal"
 
 const Summary = () => {
   const { state, settings, dispatch } = useQuote()
@@ -14,12 +15,13 @@ const Summary = () => {
   const { selectedContact } = useSelector((state) => state.contacts)
   const queryParams = new URLSearchParams(window.location.search);
   const locationId = queryParams.get('location');
+  const [showCustomServiceModal, setShowCustomServiceModal] = useState(false);
 
   const handleAddMoreServices = () => {
     dispatch({ type: "ADD_MORE_SERVICES" })
   }
 
-  console.log('selected service details in summary page==', state.selectedServices)
+  // console.log('selected service details in summary page==', state.selectedServices)
 
 
 // Update the handleFinalize function to handle extra_choice type
@@ -32,7 +34,26 @@ const handleFinalize = async () => {
     
     const quoteData = {
       contact: selectedContact.contact_id,
+      custom_product: state.selectedServices
+        .filter(service => service.service.is_custom)
+        .map(service => ({
+          product_name: service.service.name,
+          description: service.service.description,
+          price: service.calculatedPrice,
+          is_custom: true,
+        })),
       services: state.selectedServices.map(service => {
+
+        // if (service.service.is_custom) {
+        //   return {
+        //     // id: service.service.id,
+        //     product_name: service.service.name,
+        //     description: service.service.description,
+        //     price: service.calculatedPrice,
+        //     is_custom: true,
+        //   };
+        // }
+
         const answersByQuestion = {};
         
         Object.entries(service.answers).forEach(([key, value]) => {
@@ -155,6 +176,9 @@ const calculateTotalPrice = () => {
 };
 
   const getServiceBasePrice = (serviceItem) => {
+    if (serviceItem.service.is_custom) {
+      return serviceItem.calculatedPrice;
+    }
     return typeof serviceItem.calculatedPrice === 'object'
       ? serviceItem.calculatedPrice.total
       : serviceItem.calculatedPrice
@@ -177,22 +201,31 @@ const { adjustedPrice: totalPrice, isMinimumPriceApplied } = calculateTotalPrice
       <div className="space-y-4">
         <h4 className="font-semibold text-gray-700">Selected Services:</h4>
         {state.selectedServices.map((item, index) => {
-          const pricingOption = getPricingOptionForService(item.service, item.selectedPricingOption)
+          const isCustom = item.service.is_custom;
+          const pricingOption = isCustom ? null : getPricingOptionForService(item.service, item.selectedPricingOption);
           const serviceBasePrice = getServiceBasePrice(item)
-          const servicePrice = pricingOption && pricingOption.discount > 0 
-            ? applyPricingOption(serviceBasePrice, pricingOption.discount)
-            : serviceBasePrice
-          const serviceSavings = serviceBasePrice - servicePrice
-          const priceBreakdown = item.calculatedPrice?.breakdown
+          const servicePrice = isCustom ? serviceBasePrice : 
+            (pricingOption && pricingOption.discount > 0 
+              ? applyPricingOption(serviceBasePrice, pricingOption.discount)
+              : serviceBasePrice);
+          const serviceSavings = isCustom ? 0 : serviceBasePrice - servicePrice;
+          const priceBreakdown = isCustom ? null : item.calculatedPrice?.breakdown;
 
           return (
             <div key={index} className="border p-4 rounded-lg bg-gray-50">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <p className="font-semibold text-gray-700">{item.service.name}</p>
+                  {isCustom && <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Custom</span>}
                   <p className="text-sm text-gray-600">{item.service.description}</p>
                   
                   {/* Show selected pricing plan for this service */}
+                  {isCustom ? (
+                    <div className="mt-3 border-t pt-2 text-sm">
+                      <p className="font-medium text-gray-700">Price: {formatCurrency(servicePrice)}</p>
+                    </div>
+                  ) : (
+                    <>
                   {pricingOption && (
                     <div className="mt-2 p-2 bg-blue-100 rounded text-sm">
                       <p className="font-medium text-blue-800">Plan: {pricingOption.name}</p>
@@ -239,6 +272,7 @@ const { adjustedPrice: totalPrice, isMinimumPriceApplied } = calculateTotalPrice
                           </>
                         )}
                         
+                        
                         <div className="border-t pt-1 mt-2">
                           <div className="flex justify-between font-medium text-gray-700">
                             <span>Subtotal (before discount):</span>
@@ -254,13 +288,18 @@ const { adjustedPrice: totalPrice, isMinimumPriceApplied } = calculateTotalPrice
                       </div>
                     </div>
                   )}
+                  </>
+                  )}
                 </div>
                 <div className="text-right ml-4">
                   {pricingOption && pricingOption.discount > 0 ? (
                     <div>
                       <p className="font-medium text-gray-700">{formatCurrency(servicePrice)}</p>
                       <div className="text-gray-500 text-xs mb-3">Plus Tax</div>
-                      <p className="text-sm text-gray-500 line-through">{formatCurrency(serviceBasePrice)}</p>
+                      {/* <p className="text-sm text-gray-500 line-through">{formatCurrency(serviceBasePrice)}</p> */}
+                      {!isCustom && pricingOption && pricingOption.discount > 0 && (
+                        <p className="text-sm text-gray-500 line-through">{formatCurrency(serviceBasePrice)}</p>
+                      )}
                     </div>
                   ) : (
                     <div>
@@ -319,12 +358,20 @@ const { adjustedPrice: totalPrice, isMinimumPriceApplied } = calculateTotalPrice
 
       {/* Action Buttons */}
       <div className="flex justify-between pt-6 space-x-4">
-        <button
-          onClick={handleAddMoreServices}
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
-        >
-          Add More Services
-        </button>
+        <div className="space-x-4">
+          <button
+            onClick={() => setShowCustomServiceModal(true)}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+          >
+            +Create a Custom Service
+          </button>
+          <button
+            onClick={handleAddMoreServices}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+          >
+            Add More Services
+          </button>
+        </div>
         <button
           onClick={handleFinalize}
           disabled={isSubmitting}
@@ -335,6 +382,9 @@ const { adjustedPrice: totalPrice, isMinimumPriceApplied } = calculateTotalPrice
           {isSubmitting ? 'Saving...' : 'Finalize Quote'}
         </button>
       </div>
+      {showCustomServiceModal && (
+        <CreateCustomServiceModal onClose={() => setShowCustomServiceModal(false)} />
+      )}
     </div>
   )
 }
