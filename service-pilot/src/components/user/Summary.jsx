@@ -34,7 +34,7 @@ const handleFinalize = async () => {
     
     const quoteData = {
       contact: selectedContact.contact_id,
-      custom_product: state.selectedServices
+      custom_products: state.selectedServices
         .filter(service => service.service.is_custom)
         .map(service => ({
           product_name: service.service.name,
@@ -42,7 +42,7 @@ const handleFinalize = async () => {
           price: service.calculatedPrice,
           is_custom: true,
         })),
-      services: state.selectedServices.map(service => {
+      services: state.selectedServices.filter(service => !service.service.is_custom).map(service => {
 
         // if (service.service.is_custom) {
         //   return {
@@ -53,71 +53,75 @@ const handleFinalize = async () => {
         //     is_custom: true,
         //   };
         // }
+        if (!service.service.is_custom){
 
-        const answersByQuestion = {};
-        
-        Object.entries(service.answers).forEach(([key, value]) => {
-          // Handle extra_choice type (single value per question)
-          const serviceQuestion = service.service.questions.find(q => 
-            q.id.toString() === key || key.startsWith(q.id.toString() + '-')
-          );
+          const answersByQuestion = {};
           
-          if (serviceQuestion?.type === 'extra_choice') {
-            answersByQuestion[key] = {
-              id: parseInt(key),
-              ans: value === 'Yes',
-              selectedOption: value // Store the selected option label
-            };
-          } 
-          // Rest of the existing logic for other types...
-          else {
-            const [questionId, optionLabel] = key.split('-');
+          Object.entries(service.answers).forEach(([key, value]) => {
+            // Handle extra_choice type (single value per question)
+            const serviceQuestion = service.service.questions.find(q => 
+              q.id.toString() === key || key.startsWith(q.id.toString() + '-')
+            );
             
-            if (!answersByQuestion[questionId]) {
-              answersByQuestion[questionId] = {
-                id: parseInt(questionId),
-                options: {},
-                ans: false
+            if (serviceQuestion?.type === 'extra_choice') {
+              answersByQuestion[key] = {
+                id: parseInt(key),
+                ans: value === 'Yes',
+                selectedOption: value // Store the selected option label
               };
-            }
-            
-            if (value === 'Yes' || value === 'No') {
-              answersByQuestion[questionId].ans = value === 'Yes';
-            } else if (optionLabel) {
-              answersByQuestion[questionId].options[optionLabel.toLowerCase()] = parseInt(value) || 0;
-            }
-          }
-        });
-        
-        return {
-          id: service.service.id,
-          price_plan: service.selectedPricingOption || 0,
-          questions: Object.values(answersByQuestion).map(question => {
-            const serviceQuestion = service.service.questions.find(q => q.id === question.id);
-            
-            if (serviceQuestion?.type === 'boolean') {
-              return { id: question.id, ans: question.ans };
             } 
-            else if (serviceQuestion?.type === 'extra_choice') {
-              return {
-                id: question.id,
-                ans: question.ans,
-                options: {
-                  [question.selectedOption]: 0
-                }
-              };
+            // Rest of the existing logic for other types...
+            else {
+              const [questionId, optionLabel] = key.split('-');
+              
+              if (!answersByQuestion[questionId]) {
+                answersByQuestion[questionId] = {
+                  id: parseInt(questionId),
+                  options: {},
+                  ans: false
+                };
+              }
+              
+              if (value === 'Yes' || value === 'No') {
+                answersByQuestion[questionId].ans = value === 'Yes';
+              } else if (optionLabel) {
+                answersByQuestion[questionId].options[optionLabel.toLowerCase()] = parseInt(value) || 0;
+              }
             }
-            else if (serviceQuestion?.type === 'choice') {
-              return {
-                id: question.id,
-                ans: question.ans,
-                options: question.options
-              };
-            }
-            
-            return question;
-          })
-        };
+  
+          });
+          
+          return {
+            id: service.service.id,
+            price_plan: service.selectedPricingOption || 0,
+            questions: Object.values(answersByQuestion).map(question => {
+              const serviceQuestion = service.service.questions.find(q => q.id === question.id);
+              
+              if (serviceQuestion?.type === 'boolean') {
+                return { id: question.id, ans: question.ans };
+              } 
+              else if (serviceQuestion?.type === 'extra_choice') {
+                return {
+                  id: question.id,
+                  ans: question.ans,
+                  options: {
+                    [question.selectedOption]: 0
+                  }
+                };
+              }
+              else if (serviceQuestion?.type === 'choice') {
+                return {
+                  id: question.id,
+                  ans: question.ans,
+                  options: question.options
+                };
+              }
+              
+              return question;
+            })
+          };
+
+        }
       }),
       total_amount: totalAmount.toFixed(2),
       price_plan: state.selectedServices[0]?.selectedPricingOption || 0
