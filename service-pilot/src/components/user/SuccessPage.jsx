@@ -48,20 +48,28 @@ export default function SuccessPage() {
         </div>
         
         <div className="bg-gray-50 rounded-lg p-4 mb-6">
-          <h2 className="font-semibold text-gray-800 mb-3">Order Summary</h2>
-          <div className="space-y-2">
-            {state?.services?.map((service, index) => (
-              <div key={index} className="flex justify-between">
-                <span>{service.name} ({service.plan})</span>
-                <span>${service.price}</span>
+        <h2 className="font-semibold text-gray-800 mb-3">Order Summary</h2>
+        <div className="space-y-2">
+          {state?.services?.map((item, index) => (
+            <div key={index} className="flex justify-between">
+              <div>
+                <span>{item.name}</span>
+                {item.plan && !item.isCustomProduct && (
+                  <span className="text-gray-500 text-sm ml-2">({item.plan})</span>
+                )}
+                {item.description && (
+                  <p className="text-gray-500 text-xs">{item.description}</p>
+                )}
               </div>
-            ))}
-          </div>
-          <div className="border-t mt-3 pt-3 flex justify-between font-semibold">
-            <span>Total</span>
-            <span>${state?.totalAmount?.toFixed(2) || '0.00'}</span>
-          </div>
+              <span>${item.price}</span>
+            </div>
+          ))}
         </div>
+        <div className="border-t mt-3 pt-3 flex justify-between font-semibold">
+          <span>Total</span>
+          <span>${state?.totalAmount?.toFixed(2) || '0.00'}</span>
+        </div>
+      </div>
 
         
       </div>

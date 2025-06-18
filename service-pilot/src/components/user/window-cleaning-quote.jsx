@@ -10,11 +10,13 @@
   import QuotePDF from './QuotePDF';
   import { axiosInstance } from "../../services/api"
   import { useParams } from 'react-router-dom';
+  import { ErrorBoundary } from 'react-error-boundary';
 
   export default function WindowCleaningQuote() {
     const { quoteId } = useParams();
     const [quoteData, setQuoteData] = useState(null);
     const [selectedServicePlans, setSelectedServicePlans] = useState([]);
+    
     
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -23,6 +25,7 @@
     const [activeTab, setActiveTab] = useState("recouring")
     const [termsAccepted, setTermsAccepted] = useState(false);
     const { state } = useQuote()
+    const [pdfError, setPdfError] = useState(false);
     
     const ALLOWED_LOCATION_ID = 'b8qvo7VooP3JD3dIZU42';
     const location = useLocation()
@@ -42,6 +45,11 @@
     const isSpecialLocation = locationId === 'b8qvo7VooP3JD3dIZU42';
     
     console.log("isSpecialLoction == ",isSpecialLocation);
+
+    const handleRetry = () => {
+      setPdfError(false);
+      window.location.reload(); // OR simply trigger re-render if you have a better retry strategy
+    };
     
 
     const [expandedSections, setExpandedSections] = useState({
@@ -117,44 +125,52 @@
     }, [quoteId]);
 
     const handleSubmitPurchase = async () => {
-      
-      
-      setIsSubmitting(true);
-      setSubmitError(null);
+  setIsSubmitting(true);
+  setSubmitError(null);
 
-      const payload = {
-        purchase_id: quoteData.id,
-        total_amount: Number(quoteData.total_amount).toFixed(2),
-        signature: signature || "Digital Acceptance",
-        services: selectedServicePlans
-      };
+  const payload = {
+    purchase_id: quoteData.id,
+    total_amount: Number(quoteData.total_amount).toFixed(2),
+    signature: signature || "Digital Acceptance",
+    services: selectedServicePlans
+  };
 
-      try {
-        // Submit the quote with selected plan
-        const response = await axiosInstance.post(`data/quotes/${quoteId}/submit/`, payload);
-        console.log('Submission success:', response.data, quoteData);
+  try {
+    const response = await axiosInstance.post(`data/quotes/${quoteId}/submit/`, payload);
+    
+    // Prepare services data for success page
+    const servicesData = quoteData.services.map(service => ({
+      name: service.name,
+      plan: service.pricingOptions.find(
+        plan => plan.id === selectedServicePlans?.find(item => item.service_id === service.id)?.price_plan
+      ).name,
+      price: selectedServicePlans.find(item => item.service_id === service.id)?.total_amount 
+    }));
 
-        // Navigate to success page after successful submission
-        navigate(`/success?first_name=${quoteData.contact.first_name}&last_name=${quoteData.contact.last_name}&email=${quoteData.contact.email}&phone=${quoteData.contact.phone}`, {
-          state: {
-            contactName: `${quoteData.contact.first_name} ${quoteData.contact.last_name}`,
-            totalAmount: totalPrice,
-            services: quoteData.services.map(service => ({
-              name: service.name,
-              plan: service.pricingOptions.find(
-                plan => plan.id === selectedServicePlans?.find(item => item.service_id === service.id)?.price_plan
-              ).name,
-              price: selectedServicePlans.find(item => item.service_id === service.id)?.total_amount 
-            }))
-          }
-        });
-      } catch (error) {
-        console.error('Purchase submission failed:', error);
-        setSubmitError(error.response?.data?.message || 'Failed to submit purchase. Please try again.');
-      } finally {
-        setIsSubmitting(false);
+    // Prepare custom products data for success page
+    const customProductsData = quoteData.custom_products?.map(product => ({
+      name: product.product_name,
+      description: product.description,
+      price: product.price.toFixed(2),
+      isCustomProduct: true // Add flag to identify custom products
+    })) || [];
+
+    // Navigate to success page with all data
+    navigate(`/success?first_name=${quoteData.contact.first_name}&last_name=${quoteData.contact.last_name}&email=${quoteData.contact.email}&phone=${quoteData.contact.phone}`, {
+      state: {
+        contactName: `${quoteData.contact.first_name} ${quoteData.contact.last_name}`,
+        totalAmount: totalPrice,
+        services: [...servicesData, ...customProductsData], // Combine both services and custom products
+        customProducts: quoteData.custom_products // Also pass separately if needed
       }
-    };
+    });
+  } catch (error) {
+    console.error('Purchase submission failed:', error);
+    setSubmitError(error.response?.data?.message || 'Failed to submit purchase. Please try again.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
 
     console.log(selectedServicePlans, 'seeddddddqwee  e');
@@ -281,26 +297,35 @@
 
   // Calculate total price across all services
   const calculateTotalPrice = () => {
-    if (!quoteData?.services) return { total: 0, isMinimumPriceApplied: false };
+    if (!quoteData?.services && !quoteData?.custom_products ) return { total: 0, isMinimumPriceApplied: false };
     
-    const calculatedTotal = quoteData.services.reduce((total, service) => {
+    const servicesTotal  = quoteData.services.reduce((total, service) => {
       const plans = generatePlans(service);
       const selectedPlanId = selectedServicePlans?.find(item => item.service_id === service.id)?.price_plan;
       const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
       return total + (selectedPlan?.price || 0);
     }, 0);
 
+    // Calculate custom products total
+    const customProductsTotal = quoteData.custom_products?.reduce((total, product) => {
+      return total + (product.price || 0);
+    }, 0) || 0;
+
+    const calculatedTotal = servicesTotal + customProductsTotal;
+
     // Get minimum price from response
     const minimumPrice = parseFloat(quoteData.minimum_price) || 0;
     
     return {
-      total: Math.max(calculatedTotal, minimumPrice),
-      isMinimumPriceApplied: minimumPrice > 0 && calculatedTotal < minimumPrice,
-      minimumPrice
-    };
+    total: Math.max(calculatedTotal, minimumPrice),
+    isMinimumPriceApplied: minimumPrice > 0 && calculatedTotal < minimumPrice,
+    minimumPrice,
+    servicesTotal,
+    customProductsTotal
   };
+};
 
-  const { total: totalPrice, isMinimumPriceApplied, minimumPrice } = calculateTotalPrice();
+  const { total: totalPrice, isMinimumPriceApplied, minimumPrice, servicesTotal, customProductsTotal } = calculateTotalPrice();
 
 const isScheduleButtonDisabled = !signature || !termsAccepted;
 
@@ -638,6 +663,34 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
           );
         })}
 
+
+        {/* Custom Products Section */}
+          {quoteData.custom_products?.length > 0 && (
+            <div className="mb-8">
+              <div className="bg-white mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12 py-6">
+                <div className="px-4">
+                  <h3 className="text-xl font-semibold text-center mb-4">Additional Products</h3>
+                  
+                  {quoteData.custom_products.map((product, index) => (
+                    <div key={index} className="mb-4 border-b pb-4 last:border-b-0">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h4 className="font-medium">{product.product_name}</h4>
+                          {product.description && (
+                            <p className="text-gray-600 text-sm mt-1">{product.description}</p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <span className="font-bold">${product.price.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
         {/* Learn More Section */}
         {/* Learn More Section */}
   <div className="bg-white mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12 py-6">
@@ -649,28 +702,39 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
           the quoting process.
         </p>
         <div className="flex justify-center mt-6">
-          <PDFDownloadLink 
-            document={
-              <QuotePDF 
-                selectedContact={quoteData.contact}
-                selectedServices={quoteData.services}
-                selectedPlans={selectedPlans}
-                totalPrice={totalPrice}
-                signature={quoteData?.is_submited ? quoteData.signature : signature}
-                minimumPrice={quoteData.minimum_price}
-                isMinimumPriceApplied={parseInt(totalPrice) > 0 && parseInt(quoteData.minimum_price) >= parseInt(totalPrice)}
-              />
-            } 
-            fileName={`quote_${quoteData.contact?.first_name || 'customer'}.pdf`}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
-          >
-            {({ loading }) => (
-              <div className="flex items-center space-x-2">
-                <FileText className="w-5 h-5" />
-                <span>{loading ? 'Generating PDF...' : 'Download PDF Quote'}</span>
-              </div>
-            )}
-          </PDFDownloadLink>
+          <ErrorBoundary fallback={<div className="text-center text-red-600">
+              <p>Failed to generate PDF.</p>
+              <button
+                onClick={handleRetry}
+                className="mt-2 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md shadow"
+              >
+               Click to Re-generate PDF
+              </button>
+            </div>}>
+            <PDFDownloadLink 
+              document={
+                <QuotePDF 
+                  selectedContact={quoteData.contact}
+                  selectedServices={quoteData.services}
+                  selectedPlans={selectedPlans}
+                  totalPrice={totalPrice}
+                  signature={quoteData?.is_submited ? quoteData.signature : signature}
+                  minimumPrice={quoteData.minimum_price}
+                  isMinimumPriceApplied={parseInt(totalPrice) > 0 && parseInt(quoteData.minimum_price) >= parseInt(totalPrice)}
+                  customProducts={quoteData.custom_products}
+                />
+              } 
+              fileName={`quote_${quoteData.contact?.first_name || 'customer'}.pdf`}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+            >
+              {({ loading }) => (
+                <div className="flex items-center space-x-2">
+                  <FileText className="w-5 h-5" />
+                  <span>{loading ? 'Generating PDF...' : 'Download PDF Quote'}</span>
+                </div>
+              )}
+            </PDFDownloadLink>
+          </ErrorBoundary>
         </div>
       </div>
 
@@ -937,6 +1001,28 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
         </div>
       </div>
     ))}
+
+    {/* Custom Products Section */}
+    {quoteData.custom_products?.length > 0 && (
+      <div className="mb-6 border p-4 rounded-lg bg-gray-50">
+        <h5 className="font-medium text-lg mb-3">Additional Products</h5>
+        <div className="space-y-3">
+          {quoteData.custom_products.map((product, index) => (
+            <div key={index} className="border-b pb-2 last:border-b-0">
+              <div className="flex justify-between">
+                <span className="text-gray-700 font-medium">{product.product_name}</span>
+                <span className="font-medium">
+                  ${product.price.toFixed(2)}
+                </span>
+              </div>
+              {product.description && (
+                <p className="text-gray-600 text-sm mt-1">{product.description}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
   </div>
 )}
             </div>
@@ -978,6 +1064,20 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
                     </div>
                   );
                 })}
+
+                {quoteData.custom_products?.map((product, index) => (
+                  <div key={`custom-${index}`} className="flex justify-between items-center py-3 border-b">
+                    <div className="text-left">
+                      <span className="text-blue-500 font-medium text-sm">
+                        {product.product_name?.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-lg font-bold">${product.price.toFixed(2)}</span>
+                      <div className="text-gray-500 text-sm">Plus Tax</div>
+                    </div>
+                  </div>
+                ))}
 
                 {isMinimumPriceApplied && (
                   <div className="text-sm text-gray-600 mb-2 text-center">

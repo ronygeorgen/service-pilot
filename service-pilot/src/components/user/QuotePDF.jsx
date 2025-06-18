@@ -96,6 +96,26 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 20
+  },
+  questionItem: {
+    marginBottom: 10,
+    paddingBottom: 10,
+    borderBottom: '1px solid #eee'
+  },
+  questionText: {
+    fontWeight: 'bold',
+    marginBottom: 5
+  },
+  optionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 3
+  },
+  customProductItem: {
+    marginBottom: 15,
+    padding: 10,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 5
   }
 });
 
@@ -106,13 +126,64 @@ const QuotePDF = ({
   totalPrice, 
   signature,
   minimumPrice,
-  isMinimumPriceApplied 
+  isMinimumPriceApplied,
+  customProducts = []
 }) => {
   const getSelectedPlan = (service) => {
     const serviceId = service.id;
     const planId = selectedPlans[serviceId];
     const plans = generatePlans(service);
     return plans.find(plan => String(plan.id) === String(planId));
+  };
+
+  const renderQuestionDetails = (question) => {
+    if (question.type === 'boolean') {
+      return (
+        <View style={styles.questionItem}>
+          <Text style={styles.questionText}>{question.text}</Text>
+          <Text>
+            {question.bool_ans ? 'Yes' : 'No'}
+            {question.bool_ans && question.unit_price !== '0.00' && (
+              <Text> (+${parseFloat(question.unit_price || 0).toFixed(2)})</Text>
+            )}
+          </Text>
+        </View>
+      );
+    }
+
+    if (question.type === 'choice' && question.options) {
+      return (
+        <View style={styles.questionItem}>
+          <Text style={styles.questionText}>{question.text}</Text>
+          {question.options.map((option, optIndex) => (
+            <View key={optIndex} style={styles.optionRow}>
+              <Text>{option.label}:</Text>
+              <Text>
+                {option.qty} × ${option.value} = ${(parseFloat(option.value) * parseInt(option.qty || 0)).toFixed(2)}
+              </Text>
+            </View>
+          ))}
+        </View>
+      );
+    }
+
+    if (question.type === 'extra_choice') {
+      return (
+        <View style={styles.questionItem}>
+          <Text style={styles.questionText}>{question.text}</Text>
+          <View style={styles.optionRow}>
+            <Text>
+              {question.options[0]?.label 
+                ? question.options[0].label.charAt(0).toUpperCase() + question.options[0].label.slice(1)
+                : 'Not specified'}
+            </Text>
+            <Text>${question.options[0]?.value || 0}</Text>
+          </View>
+        </View>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -140,7 +211,6 @@ const QuotePDF = ({
               <Text style={styles.text}>
                 {selectedContact.first_name} {selectedContact.last_name}
               </Text>
-              {selectedContact.address && <Text style={styles.text}>{selectedContact.address}</Text>}
               {selectedContact.phone && <Text style={styles.text}>Phone: {selectedContact.phone}</Text>}
               {selectedContact.email && <Text style={styles.text}>Email: {selectedContact.email}</Text>}
             </>
@@ -165,12 +235,12 @@ const QuotePDF = ({
               
               <Text style={styles.text}>{service.description}</Text>
               
-              <View style={{ marginTop: 10 }}>
-                <Text style={{ fontWeight: 'bold', marginBottom: 5 }}>Includes:</Text>
-                {selectedPlan?.features?.map((feature, idx) => (
-                  <View key={idx} style={styles.featureItem}>
-                    <Text style={{ marginRight: 5 }}>{feature.included ? '✓' : '✗'}</Text>
-                    <Text>{feature.name}</Text>
+              {/* Service Questions */}
+              <View style={{ marginTop: 15 }}>
+                <Text style={{ fontWeight: 'bold', marginBottom: 10 }}>Service Specifications:</Text>
+                {service.questions?.map((question, qIndex) => (
+                  <View key={qIndex}>
+                    {renderQuestionDetails(question)}
                   </View>
                 ))}
               </View>
@@ -193,6 +263,22 @@ const QuotePDF = ({
             </View>
           );
         })}
+
+        {/* Custom Products Section */}
+        {customProducts?.length > 0 && (
+          <View style={styles.serviceContainer}>
+            <Text style={styles.subheader}>Additional Products</Text>
+            {customProducts.map((product, index) => (
+              <View key={`product-${index}`} style={styles.customProductItem}>
+                <Text style={{ fontWeight: 'bold', marginBottom: 5 }}>{product.product_name}</Text>
+                {product.description && (
+                  <Text style={{ marginBottom: 5 }}>{product.description}</Text>
+                )}
+                <Text>Price: ${product.price.toFixed(2)}</Text>
+              </View>
+            ))}
+          </View>
+        )}
 
         <View style={styles.totalPrice}>
           <Text>Total: ${totalPrice.toFixed(2)}</Text>
@@ -254,12 +340,12 @@ const generatePlans = (service) => {
       price: priceInfo.discountedPrice,
       savings: priceInfo.savings,
       discount: option.discount,
-      features: option.selectedFeatures.map(feature => ({
+      features: option.selectedFeatures?.map(feature => ({
         id: feature.id,
         name: feature.name,
         description: feature.description || '',
         included: feature.is_included
-      }))
+      })) || []
     };
   });
 };
@@ -297,16 +383,13 @@ const calculatePlanPrice = (pricingOption, service) => {
       });
     }
     else if (question.type === 'extra_choice') {
-      // Handle extra_choice type
-      
-        const price = question?.options[0]?.value
-        baseTotal += price;
-        priceBreakdown.extraChoicePrices.push({
-          questionText: question.text,
-          optionName:  question?.options[0]?.label,
-          price: price
-        });
-      
+      const price = parseFloat(question.options[0]?.value) || 0;
+      baseTotal += price;
+      priceBreakdown.extraChoicePrices.push({
+        questionText: question.text,
+        optionName: question.options[0]?.label,
+        price: price
+      });
     }
   });
 
