@@ -152,8 +152,12 @@ const handleFinalize = async () => {
 
   // Calculate total price with all service pricing options applied
 const calculateTotalPrice = () => {
-  // Calculate the raw total
-  const rawTotal = state.selectedServices.reduce((total, serviceItem) => {
+  // Separate regular services and custom products
+  const regularServices = state.selectedServices.filter(service => !service.service.is_custom);
+  const customProducts = state.selectedServices.filter(service => service.service.is_custom);
+
+  // Calculate regular services total (minimum price applies here)
+  const regularServicesTotal = regularServices.reduce((total, serviceItem) => {
     const pricingOption = getPricingOptionForService(serviceItem.service, serviceItem.selectedPricingOption);
     const serviceBasePrice = typeof serviceItem.calculatedPrice === 'object' 
       ? serviceItem.calculatedPrice.total 
@@ -162,20 +166,29 @@ const calculateTotalPrice = () => {
     if (pricingOption && pricingOption.discount > 0) {
       return total + applyPricingOption(serviceBasePrice, pricingOption.discount);
     }
-    
     return total + serviceBasePrice;
   }, 0);
 
-  // Find the highest minimum price among selected services
-  const highestMinimumPrice = state.selectedServices.reduce((max, serviceItem) => {
+  // Calculate custom products total (no minimum price applies)
+  const customProductsTotal = customProducts.reduce((total, productItem) => {
+    return total + (productItem.calculatedPrice || 0);
+  }, 0);
+
+  // Find highest minimum price among regular services only
+  const highestMinimumPrice = regularServices.reduce((max, serviceItem) => {
     const serviceMinPrice = serviceItem.service.minimum_price || 0;
     return Math.max(max, serviceMinPrice);
   }, 0);
 
-  // Return both the adjusted price and whether minimum price was applied
+  // Apply minimum price only to regular services portion
+  const adjustedRegularServicesTotal = Math.max(regularServicesTotal, highestMinimumPrice);
+  
+  // Combine with custom products (no minimum applies)
+  const total = adjustedRegularServicesTotal + customProductsTotal;
+
   return {
-    adjustedPrice: Math.max(rawTotal, highestMinimumPrice),
-    isMinimumPriceApplied: rawTotal < highestMinimumPrice
+    adjustedPrice: total,
+    isMinimumPriceApplied: regularServicesTotal < highestMinimumPrice
   };
 };
 
@@ -352,7 +365,7 @@ const { adjustedPrice: totalPrice, isMinimumPriceApplied } = calculateTotalPrice
     </div>
     <div className="text-right">
       <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalPrice)}</p>
-      <div className="text-gray-500 text-md mb-3">Plus Tax</div>
+      <div className="text-gray-500 text-md mb-3">Plus Tax (8.25%)</div>
       {totalSavings > 0 && (
         <p className="text-sm text-green-600">You save {formatCurrency(totalSavings)}</p>
       )}

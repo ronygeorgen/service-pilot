@@ -124,7 +124,9 @@ const quoteReducer = (state, action) => {
       return {
         ...state,
         selectedServices: [...state.selectedServices, action.payload],
-        showSummary: true,
+        showSummary: true, // This ensures we go to summary after adding
+        currentService: null,
+        showPricing: false,
       }
     case "RESET":
       return initialState

@@ -128,9 +128,11 @@
   setIsSubmitting(true);
   setSubmitError(null);
 
+  const { total: totalWithTax } = calculateTotalPrice();
+
   const payload = {
     purchase_id: quoteData.id,
-    total_amount: Number(quoteData.total_amount).toFixed(2),
+    total_amount: Number(totalWithTax).toFixed(2),
     signature: signature || "Digital Acceptance",
     services: selectedServicePlans
   };
@@ -296,32 +298,73 @@
 
 
   // Calculate total price across all services
-  const calculateTotalPrice = () => {
-    if (!quoteData?.services && !quoteData?.custom_products ) return { total: 0, isMinimumPriceApplied: false };
+//   const calculateTotalPrice = () => {
+//     if (!quoteData?.services && !quoteData?.custom_products ) return { total: 0, isMinimumPriceApplied: false };
     
-    const servicesTotal  = quoteData.services.reduce((total, service) => {
-      const plans = generatePlans(service);
-      const selectedPlanId = selectedServicePlans?.find(item => item.service_id === service.id)?.price_plan;
-      const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
-      return total + (selectedPlan?.price || 0);
-    }, 0);
+//     const servicesTotal  = quoteData.services.reduce((total, service) => {
+//       const plans = generatePlans(service);
+//       const selectedPlanId = selectedServicePlans?.find(item => item.service_id === service.id)?.price_plan;
+//       const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
+//       return total + (selectedPlan?.price || 0);
+//     }, 0);
 
-    // Calculate custom products total
-    const customProductsTotal = quoteData.custom_products?.reduce((total, product) => {
-      return total + (product.price || 0);
-    }, 0) || 0;
+//     // Calculate custom products total
+//     const customProductsTotal = quoteData.custom_products?.reduce((total, product) => {
+//       return total + (product.price || 0);
+//     }, 0) || 0;
 
-    const calculatedTotal = servicesTotal + customProductsTotal;
+//     const calculatedTotal = servicesTotal + customProductsTotal;
 
-    // Get minimum price from response
-    const minimumPrice = parseFloat(quoteData.minimum_price) || 0;
+//     // Get minimum price from response
+//     const minimumPrice = parseFloat(quoteData.minimum_price) || 0;
     
-    return {
-    total: Math.max(calculatedTotal, minimumPrice),
-    isMinimumPriceApplied: minimumPrice > 0 && calculatedTotal < minimumPrice,
-    minimumPrice,
+//     return {
+//     total: Math.max(calculatedTotal, minimumPrice),
+//     isMinimumPriceApplied: minimumPrice > 0 && calculatedTotal < minimumPrice,
+//     minimumPrice,
+//     servicesTotal,
+//     customProductsTotal
+//   };
+// };
+
+const calculateTotalPrice = () => {
+  if (!quoteData?.services && !quoteData?.custom_products) return { total: 0, isMinimumPriceApplied: false };
+
+  const servicesTotal = quoteData.services.reduce((total, service) => {
+    const plans = generatePlans(service);
+    const selectedPlanId = selectedServicePlans?.find(item => item.service_id === service.id)?.price_plan;
+    const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
+    return total + (selectedPlan?.price || 0);
+  }, 0);
+
+  const customProductsTotal = quoteData.custom_products?.reduce((total, product) => {
+    return total + (product.price || 0);
+  }, 0) || 0;
+
+  const calculatedTotal = servicesTotal + customProductsTotal;
+  
+  // Only apply minimum price if there are regular services (not just custom products)
+  const hasRegularServices = quoteData.services?.length > 0;
+  const absoluteMinimum = 125; // $125 minimum requirement
+  const responseMinimum = parseFloat(quoteData.minimum_price) || 0;
+  
+  // Apply minimum only if there are regular services
+  const effectiveMinimum = hasRegularServices ? Math.max(responseMinimum, absoluteMinimum) : 0;
+  
+  const isBelowMinimum = hasRegularServices && calculatedTotal < effectiveMinimum;
+  const subtotal = isBelowMinimum ? effectiveMinimum : calculatedTotal;
+  const tax = subtotal * 0.0825; // 8.25% tax
+  const totalWithTax = subtotal + tax;
+  
+  return {
+    subtotal, // Price before tax
+    tax,
+    total: totalWithTax, // Final amount including tax
+    isMinimumPriceApplied: isBelowMinimum,
+    minimumPrice: effectiveMinimum,
     servicesTotal,
-    customProductsTotal
+    customProductsTotal,
+    hasRegularServices
   };
 };
 
@@ -408,7 +451,19 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
                   </p>
                   <p className="text-gray-600 mt-3 text-sm text-right">- Arman K</p>
                 </div>
+                
               </div>
+              <p className="text-center text-gray-600 text-sm mb-4">Watch on YouTube</p>
+                  <div className="aspect-video bg-black rounded-lg overflow-hidden max-w-2xl mx-auto">
+                    <iframe
+                      className="w-full h-full"
+                      src="https://www.youtube.com/embed/kANi_aj5Aqc"
+                      title="YouTube video player"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    ></iframe>
+                  </div>
             </div>
 
             <div className="mb-4">
@@ -460,17 +515,7 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
               <div className="bg-white mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12 py-6">
                 <div className="px-4">
                   <h3 className="text-xl font-semibold text-center mb-2">{service.name || "Service"}</h3>
-                  <p className="text-center text-gray-600 text-sm mb-4">Watch on YouTube</p>
-                  <div className="aspect-video bg-black rounded-lg overflow-hidden max-w-2xl mx-auto">
-                    <iframe
-                      className="w-full h-full"
-                      src="https://www.youtube.com/embed/kANi_aj5Aqc"
-                      title="YouTube video player"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    ></iframe>
-                  </div>
+                  
                 </div>
               </div>
 
@@ -1074,7 +1119,7 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
                     </div>
                     <div className="text-right">
                       <span className="text-lg font-bold">${product.price.toFixed(2)}</span>
-                      <div className="text-gray-500 text-sm">Plus Tax</div>
+                      <div className="text-gray-500 text-sm">Plus Tax(8.25%)</div>
                     </div>
                   </div>
                 ))}
@@ -1082,17 +1127,22 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
                 {isMinimumPriceApplied && (
                   <div className="text-sm text-gray-600 mb-2 text-center">
                     <p>
-                      <span className="font-medium">Note:</span> The total reflects our minimum service price of ${minimumPrice.toFixed(2)}.
+                      <span className="font-medium">Note:</span> The total reflects our minimum service price of <span className="font-bold text-lg text-blue-500"> ${minimumPrice.toFixed(2)}</span>.
                     </p>
                     <p>This ensures we can deliver the quality service you expect.</p>
                   </div>
                 )}
 
+                
+
                 <div className="flex justify-between items-center py-3 font-bold text-base">
-                  <span className="text-2xl">TOTAL</span>
-                  <span className="text-2xl" >${totalPrice.toFixed(2)}</span>
+                  <span className="text-2xl">TOTAL (inclusive of tax)</span>
+                  <span className="text-2xl">${(totalPrice).toFixed(2)}</span>
                 </div>
-                <div className="text-right text-gray-500 text-base">Plus Tax</div>
+                {/* <div className="flex justify-end gap-2 text-sm text-gray-700">
+                  <span>Tax (8.25%)</span>
+                  <span>${(totalPrice * 0.0825).toFixed(2)}</span>
+                </div> */}
               </div>
 
               {/* Signature Section */}
@@ -1132,9 +1182,9 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
 
                 <button
                   onClick={handleSubmitPurchase}
-                  disabled={!signature.trim() || !termsAccepted }
+                  disabled={ !termsAccepted }
                   className={`px-6 py-3 rounded transition-colors font-medium text-sm ${
-                    !signature.trim() || !termsAccepted
+                     !termsAccepted
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-blue-500 text-white hover:bg-blue-600"
                   }`}

@@ -248,17 +248,17 @@ const QuotePDF = ({
               <View style={styles.priceContainer}>
                 <Text style={styles.text}>
                   <Text style={{ fontWeight: 'bold' }}>Price:</Text> ${selectedPlan?.price?.toFixed(2)}
-                  {selectedPlan?.discount > 0 && (
+                  {/* {selectedPlan?.discount > 0 && (
                     <Text style={{ color: '#27ae60' }}>
                       {' '}(Save {selectedPlan.discount}%)
                     </Text>
-                  )}
+                  )} */}
                 </Text>
-                {selectedPlan?.discount > 0 && (
+                {/* {selectedPlan?.discount > 0 && (
                   <Text style={[styles.text, { color: '#7f8c8d', textDecoration: 'line-through' }]}>
                     Original price: ${selectedPlan?.basePrice?.toFixed(2)}
                   </Text>
-                )}
+                )} */}
               </View>
             </View>
           );
@@ -281,11 +281,16 @@ const QuotePDF = ({
         )}
 
         <View style={styles.totalPrice}>
-          <Text>Total: ${totalPrice.toFixed(2)}</Text>
-          <Text style={styles.minimumPriceNote}>Plus Tax</Text>
+          <Text>Subtotal: ${(totalPrice/ 1.0825).toFixed(2)}</Text>
+          <Text>Tax (8.25%)</Text>
+          <Text style={{ fontSize: 16, fontWeight: 'bold', marginTop: 5 }}>
+            Total: ${(isMinimumPriceApplied 
+              ? minimumPrice * 1.0825 
+              : totalPrice ).toFixed(2)} (inclusive of tax)
+          </Text>
           {isMinimumPriceApplied && (
             <Text style={styles.minimumPriceNote}>
-              Note: The total reflects our minimum service price of ${minimumPrice.toFixed(2)} to ensure quality service.
+              Note: The total reflects our minimum service price of ${minimumPrice.toFixed(2)} + tax of ${(minimumPrice * 0.0825).toFixed(2)}
             </Text>
           )}
         </View>

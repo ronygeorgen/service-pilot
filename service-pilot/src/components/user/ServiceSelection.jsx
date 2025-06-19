@@ -1,9 +1,14 @@
 "use client"
 
 import { useQuote } from "../../context/QuoteContext"
+import { useSelector } from "react-redux"
+import { useState } from "react"
+import CreateCustomServiceModal from "./CreateCustomServiceModal"
 
 const ServiceSelection = ({ services = [] }) => {
   const { dispatch } = useQuote()
+  const [showCustomServiceModal, setShowCustomServiceModal] = useState(false)
+  const { selectedServices } = useSelector((state) => state.services)
 
   const handleServiceSelect = (service) => {
     dispatch({ type: "SELECT_SERVICE", payload: service })
@@ -33,6 +38,22 @@ const ServiceSelection = ({ services = [] }) => {
         <h3 className="text-xl font-semibold text-gray-800 mb-2">Select a Service</h3>
         <p className="text-gray-600">Choose the service you'd like to get a quote for</p>
       </div>
+
+      {/* Add Custom Service Button */}
+      <button
+        onClick={() => setShowCustomServiceModal(true)}
+        className="w-full p-4 text-left border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all duration-200"
+      >
+        <div className="flex items-start space-x-4">
+          <div className="text-2xl">✏️</div>
+          <div className="flex-1">
+            <h4 className="font-medium text-gray-900">Create Custom Service</h4>
+            <p className="text-sm text-gray-600 mb-2">
+              Add a service that's not in our standard offerings
+            </p>
+          </div>
+        </div>
+      </button>
       
       <div className="space-y-3">
         {services.map((service) => (
@@ -86,6 +107,13 @@ const ServiceSelection = ({ services = [] }) => {
           </button>
         ))}
       </div>
+
+      {/* Custom Service Modal */}
+      {showCustomServiceModal && (
+        <CreateCustomServiceModal 
+          onClose={() => setShowCustomServiceModal(false)} 
+        />
+      )}
     </div>
   )
 }

@@ -65,10 +65,23 @@ export default function SuccessPage() {
             </div>
           ))}
         </div>
-        <div className="border-t mt-3 pt-3 flex justify-between font-semibold">
-          <span>Total</span>
-          <span>${state?.totalAmount?.toFixed(2) || '0.00'}</span>
-        </div>
+<div className="border-t mt-3 pt-3 space-y-1 text-right">
+  <div className="flex justify-between">
+    <span>Subtotal</span>
+    <span>${(state?.totalAmount ? (state.totalAmount / 1.0825).toFixed(2) : '0.00')}</span>
+  </div>
+  <div className="flex justify-between">
+    <span>Tax (8.25%)</span>
+    <span>${(state?.totalAmount ? (state.totalAmount - state.totalAmount / 1.0825).toFixed(2) : '0.00')}</span>
+  </div>
+  <div className="flex justify-between font-semibold">
+    <span>Total (incl. tax)</span>
+    <span>${(state?.totalAmount)?.toFixed(2) || '0.00'}</span>
+  </div>
+</div>
+
+
+
       </div>
 
         
