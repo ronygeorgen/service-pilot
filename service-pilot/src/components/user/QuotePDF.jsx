@@ -136,6 +136,17 @@ const QuotePDF = ({
     return plans.find(plan => String(plan.id) === String(planId));
   };
 
+  function customRound(number) {
+    const decimal = number % 1;  // Get the decimal part
+    const integer = Math.floor(number);  // Get the integer part
+    
+    if (decimal >= 0.5) {
+      return integer + 1;
+    } else {
+      return integer;
+    }
+  }
+
   const renderQuestionDetails = (question) => {
     if (question.type === 'boolean') {
       return (
@@ -285,8 +296,8 @@ const QuotePDF = ({
           <Text>Tax (8.25%)</Text>
           <Text style={{ fontSize: 16, fontWeight: 'bold', marginTop: 5 }}>
             Total: ${(isMinimumPriceApplied 
-              ? minimumPrice * 1.0825 
-              : totalPrice ).toFixed(2)} (inclusive of tax)
+              ? customRound(minimumPrice * 1.0825)
+              : customRound(totalPrice) ).toFixed(2)} (inclusive of tax)
           </Text>
           {isMinimumPriceApplied && (
             <Text style={styles.minimumPriceNote}>

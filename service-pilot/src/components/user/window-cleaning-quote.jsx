@@ -36,6 +36,17 @@
     // const pathSegments = location.pathname.split('/');
 
     // console.log("path segments ==", pathSegments);
+
+    function customRound(number) {
+      const decimal = number % 1;  // Get the decimal part
+      const integer = Math.floor(number);  // Get the integer part
+      
+      if (decimal >= 0.5) {
+        return integer + 1;
+      } else {
+        return integer;
+      }
+    }
     
 
     const queryParams = new URLSearchParams(window.location.search);
@@ -153,7 +164,7 @@
     const customProductsData = quoteData.custom_products?.map(product => ({
       name: product.product_name,
       description: product.description,
-      price: product.price.toFixed(2),
+      price: customRound(product.price).toFixed(2),
       isCustomProduct: true // Add flag to identify custom products
     })) || [];
 
@@ -161,7 +172,7 @@
     navigate(`/success?first_name=${quoteData.contact.first_name}&last_name=${quoteData.contact.last_name}&email=${quoteData.contact.email}&phone=${quoteData.contact.phone}`, {
       state: {
         contactName: `${quoteData.contact.first_name} ${quoteData.contact.last_name}`,
-        totalAmount: totalPrice,
+        totalAmount: customRound(totalPrice),
         services: [...servicesData, ...customProductsData], // Combine both services and custom products
         customProducts: quoteData.custom_products // Also pass separately if needed
       }
@@ -338,7 +349,7 @@ const calculateTotalPrice = () => {
   }, 0);
 
   const customProductsTotal = quoteData.custom_products?.reduce((total, product) => {
-    return total + (product.price || 0);
+    return total + (customRound(product.price) || 0);
   }, 0) || 0;
 
   const calculatedTotal = servicesTotal + customProductsTotal;
@@ -609,7 +620,7 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
                                   )}
                                   
                                   <div className="text-xl font-bold mb-1">
-                                    ${plan.price.toFixed(2)}
+                                    ${customRound(plan.price).toFixed(2)}
                                   </div>
                                   
                                   {plan.discount > 0 && (
@@ -624,7 +635,7 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
                                       setSelectedServicePlans(prev =>
                                         prev.map(item =>
                                           item.service_id === service.id
-                                            ? { ...item, price_plan: plan.id, total_amount:plan.price.toFixed(2) }
+                                            ? { ...item, price_plan: plan.id, total_amount:customRound(plan.price).toFixed(2) }
                                             : item
                                         )
                                       );
@@ -691,7 +702,7 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
                               {selectedPlanData.discount > 0 && (
                                 <div className="text-gray-500 text-sm line-through mb-1">${selectedPlanData.basePrice.toFixed(2)}</div>
                               )}
-                              <div className="text-xl font-bold mb-1">${selectedPlanData?.price?.toFixed(2)}</div>
+                              <div className="text-xl font-bold mb-1">${customRound(selectedPlanData?.price)?.toFixed(2)}</div>
                               {selectedPlanData.discount > 0 && (
                                 <div className="text-green-500 text-xs mb-1">Save ${selectedPlanData.savings.toFixed(2)}</div>
                               )}
@@ -726,7 +737,7 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
                           )}
                         </div>
                         <div className="text-right">
-                          <span className="font-bold">${product.price.toFixed(2)}</span>
+                          <span className="font-bold">${customRound(product.price).toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
@@ -762,7 +773,7 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
                   selectedContact={quoteData.contact}
                   selectedServices={quoteData.services}
                   selectedPlans={selectedPlans}
-                  totalPrice={totalPrice}
+                  totalPrice={(totalPrice)}
                   signature={quoteData?.is_submited ? quoteData.signature : signature}
                   minimumPrice={quoteData.minimum_price}
                   isMinimumPriceApplied={parseInt(totalPrice) > 0 && parseInt(quoteData.minimum_price) >= parseInt(totalPrice)}
@@ -1057,7 +1068,7 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
               <div className="flex justify-between">
                 <span className="text-gray-700 font-medium">{product.product_name}</span>
                 <span className="font-medium">
-                  ${product.price.toFixed(2)}
+                  ${customRound(product.price).toFixed(2)}
                 </span>
               </div>
               {product.description && (
@@ -1118,7 +1129,7 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
                       </span>
                     </div>
                     <div className="text-right">
-                      <span className="text-lg font-bold">${product.price.toFixed(2)}</span>
+                      <span className="text-lg font-bold">${customRound(product.price).toFixed(2)}</span>
                       <div className="text-gray-500 text-sm">Plus Tax(8.25%)</div>
                     </div>
                   </div>
@@ -1137,7 +1148,7 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
 
                 <div className="flex justify-between items-center py-3 font-bold text-base">
                   <span className="text-2xl">TOTAL (inclusive of tax)</span>
-                  <span className="text-2xl">${(totalPrice).toFixed(2)}</span>
+                  <span className="text-2xl">${customRound(totalPrice).toFixed(2)}</span>
                 </div>
                 {/* <div className="flex justify-end gap-2 text-sm text-gray-700">
                   <span>Tax (8.25%)</span>
