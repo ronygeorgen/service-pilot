@@ -566,14 +566,15 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
 
                   {/* Pricing Plans */}
                   {!isSubmitted ? (
-                    <div className="relative mb-6">
+                    <div className="relative mb-6 pl-4"> {/* Added pl-4 for left padding */}
                       <div 
                         ref={scrollRef}
-                        className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 px-4"
+                        className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 pr-4" /* Added pr-4 */
                         style={{ 
                           scrollbarWidth: 'none', 
                           msOverflowStyle: 'none',
-                          justifyContent: 'center'
+                          scrollSnapType: 'x mandatory',
+                          scrollPadding: '0 16px'
                         }}
                       >
                         {plans.map((plan) => {
@@ -588,7 +589,7 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
                           }) || [];
 
                           return (
-                            <div key={plan.id} className="bg-white border rounded-lg overflow-hidden flex-shrink-0 w-72">
+                            <div key={plan.id} className="bg-white border rounded-lg overflow-hidden flex-shrink-0 w-72 snap-start">
                               <div className={`${selectedPlanId === plan.id ? "bg-green-500" : "bg-blue-400"} text-white text-center py-3`}>
                                 <h4 className="text-base font-semibold">{plan.name}</h4>
                                 {plan.discount > 0 && (
