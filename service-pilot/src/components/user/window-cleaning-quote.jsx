@@ -339,45 +339,57 @@
 // };
 
 const calculateTotalPrice = () => {
-  if (!quoteData?.services && !quoteData?.custom_products) return { total: 0, isMinimumPriceApplied: false };
+  if (!quoteData?.services && !quoteData?.custom_products) {
+    return { total: 0, isMinimumPriceApplied: false };
+  }
 
-  const servicesTotal = quoteData.services.reduce((total, service) => {
+  const servicesTotal = quoteData.services?.reduce((total, service) => {
     const plans = generatePlans(service);
     const selectedPlanId = selectedServicePlans?.find(item => item.service_id === service.id)?.price_plan;
     const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
     return total + (selectedPlan?.price || 0);
-  }, 0);
+  }, 0) || 0;
 
   const customProductsTotal = quoteData.custom_products?.reduce((total, product) => {
     return total + (customRound(product.price) || 0);
   }, 0) || 0;
 
-  const calculatedTotal = servicesTotal + customProductsTotal;
-  
-  // Only apply minimum price if there are regular services (not just custom products)
-  const hasRegularServices = quoteData.services?.length > 0;
-  const absoluteMinimum = 125; // $125 minimum requirement
-  const responseMinimum = parseFloat(quoteData.minimum_price) || 0;
-  
-  // Apply minimum only if there are regular services
-  const effectiveMinimum = hasRegularServices ? Math.max(responseMinimum, absoluteMinimum) : 0;
-  
-  const isBelowMinimum = hasRegularServices && calculatedTotal < effectiveMinimum;
-  const subtotal = isBelowMinimum ? effectiveMinimum : calculatedTotal;
-  const tax = subtotal * 0.0825; // 8.25% tax
+  const hasServices = quoteData.services?.length > 0;
+  const hasCustomProducts = quoteData.custom_products?.length > 0;
+
+  const minimumPrice = parseFloat(quoteData.minimum_price) || 0;
+
+  let subtotal = 0;
+  let isMinimumPriceApplied = false;
+
+  if (hasCustomProducts && !hasServices) {
+    // Case 1: Only custom products
+    subtotal = customProductsTotal;
+  } else if (hasServices) {
+    // Case 2 & 3: Services with or without custom products
+    const effectiveServicesTotal = servicesTotal < minimumPrice ? minimumPrice : servicesTotal;
+    isMinimumPriceApplied = servicesTotal < minimumPrice;
+    subtotal = effectiveServicesTotal + customProductsTotal;
+  } else {
+    // Case 4: Only services
+    subtotal = servicesTotal;
+  }
+
+  const tax = subtotal * 0.0825;
   const totalWithTax = subtotal + tax;
-  
+
   return {
     subtotal, // Price before tax
     tax,
-    total: totalWithTax, // Final amount including tax
-    isMinimumPriceApplied: isBelowMinimum,
-    minimumPrice: effectiveMinimum,
+    total: totalWithTax,
+    isMinimumPriceApplied,
+    minimumPrice,
     servicesTotal,
     customProductsTotal,
-    hasRegularServices
+    hasRegularServices: hasServices
   };
 };
+
 
   const { total: totalPrice, isMinimumPriceApplied, minimumPrice, servicesTotal, customProductsTotal } = calculateTotalPrice();
 
