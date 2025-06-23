@@ -143,7 +143,7 @@
 
   const payload = {
     purchase_id: quoteData.id,
-    total_amount: Number(totalWithTax).toFixed(2),
+    total_amount: Number(customRound(totalWithTax)).toFixed(2),
     signature: signature || "Digital Acceptance",
     services: selectedServicePlans
   };
@@ -1159,7 +1159,7 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
                 
 
                 <div className="flex justify-between items-center py-3 font-bold text-base">
-                  <span className="text-2xl">TOTAL (inclusive of tax)</span>
+                  <span className="text-2xl">TOTAL (inclusive of tax 8.25%)</span>
                   <span className="text-2xl">${customRound(totalPrice).toFixed(2)}</span>
                 </div>
                 {/* <div className="flex justify-end gap-2 text-sm text-gray-700">

@@ -16,12 +16,25 @@ const Summary = () => {
   const queryParams = new URLSearchParams(window.location.search);
   const locationId = queryParams.get('location');
   const [showCustomServiceModal, setShowCustomServiceModal] = useState(false);
+  
+
+  function customRound(number) {
+      const decimal = number % 1;  // Get the decimal part
+      const integer = Math.floor(number);  // Get the integer part
+      
+      if (decimal >= 0.5) {
+        return integer + 1;
+      } else {
+        return integer;
+      }
+    }
 
   const handleAddMoreServices = () => {
     dispatch({ type: "ADD_MORE_SERVICES" })
   }
 
   // console.log('selected service details in summary page==', state.selectedServices)
+  
 
 
 // Update the handleFinalize function to handle extra_choice type
@@ -364,7 +377,7 @@ const { adjustedPrice: totalPrice, isMinimumPriceApplied } = calculateTotalPrice
       )}
     </div>
     <div className="text-right">
-      <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalPrice)}</p>
+      <p className="text-2xl font-bold text-gray-900">{formatCurrency(customRound(totalPrice))}</p>
       <div className="text-gray-500 text-md mb-3">Plus Tax (8.25%)</div>
       {totalSavings > 0 && (
         <p className="text-sm text-green-600">You save {formatCurrency(totalSavings)}</p>
