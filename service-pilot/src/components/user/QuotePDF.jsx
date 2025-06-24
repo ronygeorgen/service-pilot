@@ -312,17 +312,17 @@ const QuotePDF = ({
         <Text style={styles.header}>Terms and Conditions</Text>
         
         <View style={{ marginBottom: 20 }}>
-          <Text style={styles.text}>
-            1. This proposal is valid for 30 days from the date of issue.
+          <Text style={[styles.text, { marginBottom: 10 }]}> 
+            <Text style={{ fontWeight: 'bold' }}>1. Estimate Validity:</Text> This estimate is valid for 30 calendar days from the date issued. After that period, pricing and availability are subject to change.
           </Text>
           <Text style={styles.text}>
-            2. Payment terms are net 15 days from date of invoice.
+            <Text style={{ fontWeight: 'bold' }}>2. Payment Terms:</Text> By signing below, I acknowledge that payment is due at the time of service for residential projects and within 30 days (Net 30) for commercial projects.
           </Text>
           <Text style={styles.text}>
-            3. Any changes to the scope of work may result in additional charges.
+            <Text style={{ fontWeight: 'bold' }}>3. Acceptance of Terms & Conditions:</Text> My signature confirms that I have read, understood, and agree to all TruShine Window Cleaning Terms and Conditions.
           </Text>
           <Text style={styles.text}>
-            4. We reserve the right to modify these terms with prior written notice.
+            <Text style={{ fontWeight: 'bold' }}>4. Recurring Service Agreement (if applicable):</Text> If I have elected to enroll in a recurring service plan, my signature also indicates acceptance of the TruShine Recurring Service Agreement and its associated terms.
           </Text>
         </View>
 

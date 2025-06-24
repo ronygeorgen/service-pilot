@@ -22,7 +22,7 @@
     const [error, setError] = useState(null);
     const { selectedContact } = useSelector((state) => state.contacts)
     const [currentStep, setCurrentStep] = useState(0)
-    const [activeTab, setActiveTab] = useState("recouring")
+    const [activeTab, setActiveTab] = useState("recurring")
     const [termsAccepted, setTermsAccepted] = useState(false);
     const { state } = useQuote()
     const [pdfError, setPdfError] = useState(false);
@@ -947,12 +947,12 @@ const DeleteConfirmationDialog = ({ isOpen, onClose, onConfirm, serviceName, err
       <div className="flex justify-center mb-6">
         <div className="flex border-b">
           <button
-            onClick={() => setActiveTab("recouring")}
+            onClick={() => setActiveTab("recurring")}
             className={`px-4 py-2 font-medium text-sm ${
-              activeTab === "recouring" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-600 hover:text-gray-800"
+              activeTab === "recurring" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-600 hover:text-gray-800"
             }`}
           >
-            Recouring Service Terms
+            Recurring Service Terms
           </button>
           <button
             onClick={() => setActiveTab("terms")}
@@ -973,92 +973,105 @@ const DeleteConfirmationDialog = ({ isOpen, onClose, onConfirm, serviceName, err
         </div>
       </div>
 
-      {/* Tab Content */}
-      {activeTab === "recouring" && (
-        <div className="space-y-4">
-          <h4 className="text-lg font-semibold">Recurring Service Agreement (Window Cleaning & Gutter Cleaning)</h4>
-          <div className="text-gray-600 text-sm space-y-2">
-            <p>This Recurring Service Agreement outlines the terms and conditions for ongoing window cleaning and/or gutter cleaning services provided by TruShine Window Cleaning.</p>
-            
-            <h5 className="font-semibold">1. Scope of Services</h5>
-            <ul className="list-disc ml-5">
-              <li><strong>Window Cleaning:</strong>
-                <ul className="list-disc ml-5">
-                  <li>Exterior window cleaning for all accessible glass</li>
-                  <li>Optional interior window cleaning if included in service scope</li>
-                  <li>Add-ons such as screen cleaning, track detailing, or hard water stain removal are available for an additional fee</li>
-                </ul>
-              </li>
-              <li><strong>Gutter Cleaning:</strong>
-                <ul className="list-disc ml-5">
-                  <li>Removal of leaves, debris, and blockages from gutters</li>
-                  <li>Flushing of downspouts to ensure proper drainage</li>
-                  <li>Light roof debris removal near gutter lines when safely accessible</li>
-                </ul>
-              </li>
-              <li>Service frequency (monthly, bi-monthly, quarterly, semi-annual, or annual) is selected at the time of onboarding and remains ongoing until canceled under the terms listed below.</li>
-            </ul>
 
-            <h5 className="font-semibold">2. Pricing & Payment Terms</h5>
-            <ul className="list-disc ml-5">
-              <li>Service pricing is quoted per visit and may vary based on property size, service scope, and accessibility</li>
-              <li>Clients enrolled in recurring service receive discounted pricing compared to one-time services</li>
-              <li>Payment is due upon completion of each visit unless prepaid or otherwise agreed in writing</li>
-              <li>A valid credit card must be kept on file for automated billing. Receipts are emailed after each charge</li>
-            </ul>
+{activeTab === "recurring" && (
+  <div className="space-y-4">
+    <h4 className="text-lg font-semibold">Recurring Service Agreement (Window Cleaning & Gutter Cleaning)</h4>
+    <div className="text-gray-600 text-sm space-y-2">
+      <p>This Recurring Service Agreement outlines the terms and conditions for ongoing window cleaning and/or gutter cleaning services provided by TruShine Window Cleaning.</p>
 
-            <h5 className="font-semibold">3. Term, Renewal & Cancellation</h5>
-            <ul className="list-disc ml-5">
-              <li>This agreement begins on the date of the first scheduled service and continues on a recurring basis until canceled in accordance with the terms below:</li>
-              <li><strong>Minimum Commitment Requirements</strong>
-                <ul className="list-disc ml-5">
-                  <li><span className="font-bold">Quarterly Service:</span> Minimum of <span className="font-bold">4 services</span> required before cancellation</li>
-                  <li><span className="font-bold">Semi-Annual Service:</span> Minimum of <span className="font-bold">2 services</span> required before cancellation</li>
-                  <li><span className="font-bold">Annual Service:</span> Minimum of <span className="font-bold">2 services</span> required before cancellation</li>
-                  <li><span className="font-bold">Monthly or Bi-Monthly:</span> May be canceled at any time with 14 days’ notice</li>
-                </ul>
-              </li>
-              <li><strong>Early Cancellation Policy</strong>
-                <ul className="list-disc ml-5">
-                  <li>If a client cancels <span className="font-bold">before completing the required number of services</span> under their selected frequency, they will be charged the <span className="font-bold">difference between the discounted recurring rate and the standard one-time service rate</span> for any services already performed.</li>
-                  <li>This ensures the client is not unfairly benefiting from a recurring discount without fulfilling the agreed term.</li>
-                  <li>Cancellations require <span className="font-bold">14 days' written notice</span></li>
-                  <li>Appointments canceled within <span className="font-bold">24 hours</span> may incur a <span className="font-bold">$45 trip fee</span></li>
-                  <li>TruShine reserves the right to cancel or reschedule service due to weather, safety concerns, or access issues</li>
-                </ul>
-              </li>
-            </ul>
+      <h5 className="font-semibold">1. Scope of Services</h5>
+      <p>TruShine agrees to perform recurring services, which may include:</p>
+      <ul className="list-disc ml-5">
+        <li><strong>Window Cleaning:</strong>
+          <ul className="list-disc ml-5">
+            <li>Exterior window cleaning for all accessible glass</li>
+            <li>Optional interior window cleaning if included</li>
+            <li>Add-on services such as screen cleaning, track detailing, and hard water removal are available for an additional fee</li>
+          </ul>
+        </li>
+        <li><strong>Gutter Cleaning:</strong>
+          <ul className="list-disc ml-5">
+            <li>Removal of leaves and debris from gutters</li>
+            <li>Flushing of downspouts to ensure proper water flow</li>
+            <li>Light roof debris removal near gutter lines when safely accessible</li>
+          </ul>
+        </li>
+        <li>Services will be performed on a recurring basis according to the selected frequency (monthly, bi-monthly, quarterly, semi-annual, or annual) and will continue until canceled per the terms below.</li>
+      </ul>
 
-            <h5 className="font-semibold">4. Client Responsibilities</h5>
-            <ul className="list-disc ml-5">
-              <li>Ensure all service areas are accessible on the scheduled date (e.g., gates unlocked, pets secured)</li>
-              <li>Notify TruShine of any sensitive areas, pre-existing damage, or concerns prior to service</li>
-              <li>Maintain clear and timely communication regarding schedule changes or access issues</li>
-            </ul>
+      <h5 className="font-semibold">2. Pricing & Payment Terms</h5>
+      <ul className="list-disc ml-5">
+        <li>Clients on recurring service receive <strong>discounted pricing</strong> compared to one-time service rates</li>
+        <li>Pricing is based on property size, service scope, and access conditions</li>
+        <li>Payment is due upon completion of each service unless prepaid or otherwise agreed</li>
+        <li>A valid credit card must be kept on file for automated billing; receipts are sent via email after each charge</li>
+      </ul>
 
-            <h5 className="font-semibold">5. Adjustments & Modifications</h5>
-            <ul className="list-disc ml-5">
-              <li>Pricing is subject to adjustment if property conditions or scope of work changes</li>
-              <li>Clients may request service upgrades, frequency changes, or add-on services at any time</li>
-              <li>TruShine will provide notice of any rate updates prior to the next scheduled visit</li>
-            </ul>
+      <h5 className="font-semibold">3. Term, Renewal & Cancellation</h5>
+      <ul className="list-disc ml-5">
+        <li><strong>Agreement Terms by Frequency:</strong>
+          <ul className="list-disc ml-5">
+            <li><strong>Monthly, Bi-Monthly, Quarterly, and Semi-Annual Services:</strong> Require a <strong>minimum commitment of one full year</strong></li>
+            <li><strong>Quarterly Services:</strong> Minimum of <strong>4 scheduled services</strong></li>
+            <li><strong>Semi-Annual Services:</strong> Minimum of <strong>2 scheduled services</strong></li>
+            <li><strong>Annual Services:</strong> Require a <strong>minimum 2-year commitment with at least 2 scheduled services per year</strong></li>
+          </ul>
+        </li>
+        <li><strong>Termination Rights:</strong>
+          <ul className="list-disc ml-5">
+            <li>Either party may terminate this agreement <strong>after the minimum service commitment is met</strong> by providing at least <strong>14 days' written notice</strong></li>
+            <li>TruShine reserves the right to cancel or reschedule service due to weather, safety concerns, or access limitations</li>
+          </ul>
+        </li>
+        <li><strong>Early Cancellation Policy:</strong>
+          <ul className="list-disc ml-5">
+            <li>If the client cancels <strong>before fulfilling their minimum service term</strong>, a cancellation fee will apply</li>
+            <li>This fee equals the <strong>difference between the discounted recurring rate and the standard one-time service rate</strong> (plus tax) for all completed services</li>
+            <li>The cancellation fee will be <strong>charged to the card on file</strong> on the day of cancellation</li>
+          </ul>
+        </li>
+        <li><strong>Post-Term Continuation:</strong>
+          <ul className="list-disc ml-5">
+            <li>Once the initial contract term is met, services will continue at the same recurring rate unless the client provides written notice to cancel</li>
+            <li>No price increases will apply without client approval or advance written notice</li>
+          </ul>
+        </li>
+      </ul>
 
-            <h5 className="font-semibold">6. Insurance & Liability</h5>
-            <ul className="list-disc ml-5">
-              <li>TruShine is fully insured and exercises care while working on client property</li>
-              <li>TruShine is not responsible for pre-existing conditions such as aged gutters, cracked windows, or hidden water damage</li>
-              <li>Any concerns must be reported within <span className="font-bold">48 hours</span> of service for review or resolution</li>
-            </ul>
-          </div>
-        </div>
-      )}
+      <h5 className="font-semibold">4. Client Responsibilities</h5>
+      <ul className="list-disc ml-5">
+        <li>Ensure all service areas are accessible on scheduled service dates (e.g., gates unlocked, pets secured)</li>
+        <li>Notify TruShine of any pre-existing issues, fragile items, or safety concerns prior to service</li>
+        <li>Communicate promptly about scheduling changes or property access restrictions</li>
+      </ul>
+
+      <h5 className="font-semibold">5. Service Adjustments</h5>
+      <ul className="list-disc ml-5">
+        <li>Service pricing may be updated if property conditions change or if the service scope is modified</li>
+        <li>Clients may request upgrades, frequency changes, or add-on services with written notice</li>
+        <li>TruShine will always provide advance notice of any pricing updates</li>
+      </ul>
+
+      <h5 className="font-semibold">6. Insurance & Liability</h5>
+      <ul className="list-disc ml-5">
+        <li>TruShine is fully insured and exercises care during all services</li>
+        <li>TruShine is not responsible for pre-existing damage such as aged gutters, broken seals, or cracked panes</li>
+        <li>Any service concerns must be reported within <strong>48 hours</strong> of completion for review and resolution</li>
+      </ul>
+
+      <p>By continuing recurring services with TruShine Window Cleaning, the client acknowledges and agrees to all terms outlined in this agreement.</p>
+    </div>
+  </div>
+)}
+
 
 
       {activeTab === "terms" && (
         <div className="space-y-4 pr-2">
           <h4 className="text-lg font-semibold">Terms and Conditions</h4>
           <div className="text-xs text-gray-600 space-y-3">
-            <p>“We” or “our” or “TWC” refers to Trushine Window Cleaning Ltd. “You”, “your” or “the client” refers to the customer receiving the service(s) detailed.</p>
+            <p>"We" or "our" or "TWC" refers to Trushine Window Cleaning Ltd. "You", "your" or "the client" refers to the customer receiving the service(s) detailed.</p>
             
             <p>– Any special accommodation has to be reviewed and accepted by management staff prior accepting the proposal.</p>
             <p>– Quotations are valid for 30 days, and accepted only in writing by signature and will subject to the Terms and Conditions herein on the day of services.</p>
@@ -1126,7 +1139,7 @@ const DeleteConfirmationDialog = ({ isOpen, onClose, onConfirm, serviceName, err
             </ul>
 
             <p><strong>IN WITNESS WHEREOF</strong>, the parties have executed this agreement by accepting this proposal, electronically or in writing.</p>
-            <p className="italic text-right">LAST UPDATED ON 05/11/2022</p>
+            <p className="italic text-right">LAST UPDATED ON 06/25/2025</p>
           </div>
         </div>
       )}
@@ -1296,7 +1309,7 @@ const DeleteConfirmationDialog = ({ isOpen, onClose, onConfirm, serviceName, err
                 
 
                 <div className="flex justify-between items-center py-3 font-bold text-base">
-                  <span className="text-2xl">TOTAL (inclusive of tax 8.25%)</span>
+                  <span className="text-2xl">TOTAL (including 8.25% tax)</span>
                   <span className="text-2xl">${customRound(totalPrice).toFixed(2)}</span>
                 </div>
                 {/* <div className="flex justify-end gap-2 text-sm text-gray-700">
