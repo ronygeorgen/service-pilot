@@ -659,17 +659,17 @@ const DeleteConfirmationDialog = ({ isOpen, onClose, onConfirm, serviceName, err
                       <button
                         onClick={() => handleDeleteClick(service.id, service.name)}
                         disabled={deletingServiceId === service.id}
-                        className={`rounded-full p-1 ${
+                        className={`rounded-full p-2 ${
                           deletingServiceId === service.id 
                             ? "bg-gray-400 cursor-not-allowed" 
                             : "bg-red-500 hover:bg-red-600 text-white"
                         }`}
-                        title={deletingServiceId === service.id ? "Deleting..." : "Remove service"}
+                        
                       >
                         {deletingServiceId === service.id ? (
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                         ) : (
-                          <X className="w-4 h-4" />
+                          <span className="text-sm">Deselect {service.name}</span>
                         )}
                       </button>
                     )}
