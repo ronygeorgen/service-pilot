@@ -903,6 +903,13 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
         </li>
       </ul>
 
+      <h5 className="font-semibold">4. Client Responsibilities</h5>
+      <ul className="list-disc ml-5">
+        <li>Ensure all service areas are accessible on scheduled service dates (e.g., gates unlocked, pets secured)</li>
+        <li>Notify TruShine of any pre-existing issues, fragile items, or safety concerns prior to service</li>
+        <li>Communicate promptly about scheduling changes or property access restrictions</li>
+      </ul>
+
       <h5 className="font-semibold">5. Service Adjustments</h5>
       <ul className="list-disc ml-5">
         <li>Service pricing may be updated if property conditions change or if the service scope is modified</li>
