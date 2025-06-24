@@ -1003,7 +1003,7 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
             </ul>
 
             <p><strong>IN WITNESS WHEREOF</strong>, the parties have executed this agreement by accepting this proposal, electronically or in writing.</p>
-            <p className="italic text-right">LAST UPDATED ON 05/11/2022</p>
+            <p className="italic text-right">LAST UPDATED ON 06/25/2025</p>
           </div>
         </div>
       )}
