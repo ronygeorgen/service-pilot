@@ -22,7 +22,7 @@
     const [error, setError] = useState(null);
     const { selectedContact } = useSelector((state) => state.contacts)
     const [currentStep, setCurrentStep] = useState(0)
-    const [activeTab, setActiveTab] = useState("recouring")
+    const [activeTab, setActiveTab] = useState("recurring")
     const [termsAccepted, setTermsAccepted] = useState(false);
     const { state } = useQuote()
     const [pdfError, setPdfError] = useState(false);
@@ -811,12 +811,12 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
       <div className="flex justify-center mb-6">
         <div className="flex border-b">
           <button
-            onClick={() => setActiveTab("recouring")}
+            onClick={() => setActiveTab("recurring")}
             className={`px-4 py-2 font-medium text-sm ${
-              activeTab === "recouring" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-600 hover:text-gray-800"
+              activeTab === "recurring" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-600 hover:text-gray-800"
             }`}
           >
-            Recouring Service Terms
+            Recurring Service Terms
           </button>
           <button
             onClick={() => setActiveTab("terms")}
@@ -838,7 +838,7 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
       </div>
 
       {/* Tab Content */}
-      {activeTab === "recouring" && (
+      {activeTab === "recurring" && (
         <div className="space-y-4">
           <h4 className="text-lg font-semibold">Recurring Service Agreement (Window Cleaning & Gutter Cleaning)</h4>
           <div className="text-gray-600 text-sm space-y-2">
@@ -879,7 +879,7 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
                   <li><span className="font-bold">Quarterly Service:</span> Minimum of <span className="font-bold">4 services</span> required before cancellation</li>
                   <li><span className="font-bold">Semi-Annual Service:</span> Minimum of <span className="font-bold">2 services</span> required before cancellation</li>
                   <li><span className="font-bold">Annual Service:</span> Minimum of <span className="font-bold">2 services</span> required before cancellation</li>
-                  <li><span className="font-bold">Monthly or Bi-Monthly:</span> May be canceled at any time with 14 days’ notice</li>
+                  <li><span className="font-bold">Monthly or Bi-Monthly:</span> May be canceled at any time with 14 days' notice</li>
                 </ul>
               </li>
               <li><strong>Early Cancellation Policy</strong>
@@ -1160,7 +1160,7 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
                 
 
                 <div className="flex justify-between items-center py-3 font-bold text-base">
-                  <span className="text-2xl">TOTAL (inclusive of tax 8.25%)</span>
+                  <span className="text-2xl">TOTAL (includes 8.25% tax)</span>
                   <span className="text-2xl">${customRound(totalPrice).toFixed(2)}</span>
                 </div>
                 {/* <div className="flex justify-end gap-2 text-sm text-gray-700">
