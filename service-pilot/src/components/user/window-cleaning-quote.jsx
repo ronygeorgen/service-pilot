@@ -31,6 +31,73 @@
     const location = useLocation()
     const { totalPrice: tt, totalSavings, selectedServices } = location.state || {}
 
+    const [deleteConfirmation, setDeleteConfirmation] = useState({
+      isOpen: false,
+      serviceId: null,
+      serviceName: ''
+    });
+
+    const [deletingServiceId, setDeletingServiceId] = useState(null);
+
+
+    const handleDeleteClick = (serviceId, serviceName) => {
+      console.log("service id when we delete a service is ==", serviceId);
+      
+      setDeleteConfirmation({
+        isOpen: true,
+        serviceId,
+        serviceName
+      });
+    };
+
+    const handleDeleteService = async () => {
+      try {
+
+        setDeletingServiceId(deleteConfirmation.serviceId);
+
+        const response = await axiosInstance.delete(
+          `/data/purchased-service/delete/${deleteConfirmation.serviceId}/`
+        );
+        
+        // Update state with the response data
+        setQuoteData(response.data);
+        
+        // Update selectedServicePlans to remove the deleted service
+        setSelectedServicePlans(prev => 
+          prev.filter(item => item.service_id !== deleteConfirmation.serviceId)
+        );
+        
+        // Update selectedPlans to remove the deleted service
+        setSelectedPlans(prev => {
+          const newPlans = {...prev};
+          delete newPlans[deleteConfirmation.serviceId];
+          return newPlans;
+        });
+        
+        // Close the confirmation dialog
+        setDeleteConfirmation({
+          isOpen: false,
+          serviceId: null,
+          serviceName: ''
+        });
+        
+      } catch (error) {
+        console.error('Failed to delete service:', error);
+        setDeleteConfirmation(prev => ({
+          ...prev,
+          error: 'Failed to delete service. Please try again.'
+        }));
+      }finally {
+        setDeletingServiceId(null);
+        setDeleteConfirmation(prev => ({
+          ...prev,
+          isOpen: false,
+          serviceId: null,
+          serviceName: ''
+        }));
+      }
+    };
+
     // console.log("Location.pathname ===", location.pathname.split('/'));
     
     // const pathSegments = location.pathname.split('/');
@@ -391,9 +458,58 @@ const calculateTotalPrice = () => {
 };
 
 
-  const { total: totalPrice, isMinimumPriceApplied, minimumPrice, servicesTotal, customProductsTotal } = calculateTotalPrice();
+const { total: totalPrice, isMinimumPriceApplied, minimumPrice, servicesTotal, customProductsTotal } = calculateTotalPrice();
 
 const isScheduleButtonDisabled = !signature || !termsAccepted;
+
+const DeleteConfirmationDialog = ({ isOpen, onClose, onConfirm, serviceName, error }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg max-w-md w-full">
+        <h3 className="text-lg font-semibold mb-4">Confirm Deletion</h3>
+        <p className="mb-4">
+          Are you sure you want to delete <strong>{serviceName}</strong>? This action cannot be undone.
+        </p>
+        {error && (
+          <p className="text-red-500 text-sm mb-4">{error}</p>
+        )}
+        <div className="flex justify-end space-x-3">
+          <button
+            onClick={onClose}
+            disabled={deletingServiceId === deleteConfirmation.serviceId}
+            className={`px-4 py-2 border rounded-md ${
+              deletingServiceId === deleteConfirmation.serviceId
+                ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                : "border-gray-300 text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleDeleteService}
+            disabled={deletingServiceId === deleteConfirmation.serviceId}
+            className={`px-4 py-2 rounded-md ${
+              deletingServiceId === deleteConfirmation.serviceId
+                ? "bg-red-400 cursor-not-allowed"
+                : "bg-red-500 hover:bg-red-600 text-white"
+            }`}
+          >
+            {deletingServiceId === deleteConfirmation.serviceId ? (
+              <div className="flex items-center justify-center">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                Deleting...
+              </div>
+            ) : (
+              "Delete"
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
     if (loading) {
       return (
@@ -537,7 +653,27 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
               {/* Service Video Section */}
               <div className="bg-white mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12 py-6">
                 <div className="px-4">
-                  <h3 className="text-xl font-semibold text-center mb-2">{service.name || "Service"}</h3>
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-xl font-semibold mb-2">{service.name || "Service"}</h3>
+                    {!isSubmitted && (
+                      <button
+                        onClick={() => handleDeleteClick(service.id, service.name)}
+                        disabled={deletingServiceId === service.id}
+                        className={`rounded-full p-1 ${
+                          deletingServiceId === service.id 
+                            ? "bg-gray-400 cursor-not-allowed" 
+                            : "bg-red-500 hover:bg-red-600 text-white"
+                        }`}
+                        title={deletingServiceId === service.id ? "Deleting..." : "Remove service"}
+                      >
+                        {deletingServiceId === service.id ? (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          <X className="w-4 h-4" />
+                        )}
+                      </button>
+                    )}
+                  </div>
                   
                 </div>
               </div>
@@ -1239,6 +1375,18 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
             </button>
           </div>
         )}
+        <DeleteConfirmationDialog
+          isOpen={deleteConfirmation.isOpen}
+          onClose={() => setDeleteConfirmation({
+            isOpen: false,
+            serviceId: null,
+            serviceName: '',
+            error: null
+          })}
+          onConfirm={handleDeleteService}
+          serviceName={deleteConfirmation.serviceName}
+          error={deleteConfirmation.error}
+        />
       </div>
     );
   }
