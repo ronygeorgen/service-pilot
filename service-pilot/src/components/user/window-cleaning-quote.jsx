@@ -866,7 +866,7 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
 
       <h5 className="font-semibold">2. Pricing & Payment Terms</h5>
       <ul className="list-disc ml-5">
-        <li>Clients on recurring service receive discounted pricing compared to one-time service rates</li>
+        <li>Clients on recurring service receive <strong>discounted pricing</strong> compared to one-time service rates</li>
         <li>Pricing is based on property size, service scope, and access conditions</li>
         <li>Payment is due upon completion of each service unless prepaid or otherwise agreed</li>
         <li>A valid credit card must be kept on file for automated billing; receipts are sent via email after each charge</li>
@@ -876,23 +876,23 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
       <ul className="list-disc ml-5">
         <li><strong>Agreement Terms by Frequency:</strong>
           <ul className="list-disc ml-5">
-            <li>Monthly, Bi-Monthly, Quarterly, and Semi-Annual Services: Require a minimum commitment of one full year</li>
-            <li>Quarterly Services: Minimum of 4 scheduled services</li>
-            <li>Semi-Annual Services: Minimum of 2 scheduled services</li>
-            <li>Annual Services: Require a minimum 2-year commitment with at least 2 scheduled services per year</li>
+            <li><strong>Monthly, Bi-Monthly, Quarterly, and Semi-Annual Services:</strong> Require a <strong>minimum commitment of one full year</strong></li>
+            <li><strong>Quarterly Services:</strong> Minimum of <strong>4 scheduled services</strong></li>
+            <li><strong>Semi-Annual Services:</strong> Minimum of <strong>2 scheduled services</strong></li>
+            <li><strong>Annual Services:</strong> Require a <strong>minimum 2-year commitment with at least 2 scheduled services per year</strong></li>
           </ul>
         </li>
         <li><strong>Termination Rights:</strong>
           <ul className="list-disc ml-5">
-            <li>Either party may terminate this agreement after the minimum service commitment is met by providing at least 14 days’ written notice</li>
+            <li>Either party may terminate this agreement <strong>after the minimum service commitment is met</strong> by providing at least <strong>14 days' written notice</strong></li>
             <li>TruShine reserves the right to cancel or reschedule service due to weather, safety concerns, or access limitations</li>
           </ul>
         </li>
         <li><strong>Early Cancellation Policy:</strong>
           <ul className="list-disc ml-5">
-            <li>If the client cancels before fulfilling their minimum service term, a cancellation fee will apply</li>
-            <li>This fee equals the difference between the discounted recurring rate and the standard one-time service rate (plus tax) for all completed services</li>
-            <li>The cancellation fee will be charged to the card on file on the day of cancellation</li>
+            <li>If the client cancels <strong>before fulfilling their minimum service term</strong>, a cancellation fee will apply</li>
+            <li>This fee equals the <strong>difference between the discounted recurring rate and the standard one-time service rate</strong> (plus tax) for all completed services</li>
+            <li>The cancellation fee will be <strong>charged to the card on file</strong> on the day of cancellation</li>
           </ul>
         </li>
         <li><strong>Post-Term Continuation:</strong>
@@ -921,7 +921,7 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
       <ul className="list-disc ml-5">
         <li>TruShine is fully insured and exercises care during all services</li>
         <li>TruShine is not responsible for pre-existing damage such as aged gutters, broken seals, or cracked panes</li>
-        <li>Any service concerns must be reported within 48 hours of completion for review and resolution</li>
+        <li>Any service concerns must be reported within <strong>48 hours</strong> of completion for review and resolution</li>
       </ul>
 
       <p>By continuing recurring services with TruShine Window Cleaning, the client acknowledges and agrees to all terms outlined in this agreement.</p>
@@ -935,7 +935,7 @@ const isScheduleButtonDisabled = !signature || !termsAccepted;
         <div className="space-y-4 pr-2">
           <h4 className="text-lg font-semibold">Terms and Conditions</h4>
           <div className="text-xs text-gray-600 space-y-3">
-            <p>“We” or “our” or “TWC” refers to Trushine Window Cleaning Ltd. “You”, “your” or “the client” refers to the customer receiving the service(s) detailed.</p>
+            <p>"We" or "our" or "TWC" refers to Trushine Window Cleaning Ltd. "You", "your" or "the client" refers to the customer receiving the service(s) detailed.</p>
             
             <p>– Any special accommodation has to be reviewed and accepted by management staff prior accepting the proposal.</p>
             <p>– Quotations are valid for 30 days, and accepted only in writing by signature and will subject to the Terms and Conditions herein on the day of services.</p>
