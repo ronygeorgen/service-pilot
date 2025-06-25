@@ -2,7 +2,7 @@
 
   import { useState, useRef, useEffect, useMemo } from "react"
   import { Check, X, ChevronRight, ChevronUp, ChevronDown, FileText } from "lucide-react"
-  import { useQuote } from "../../context/QuoteContext"
+  import { QuoteProvider, useQuote } from "../../context/QuoteContext"
   import { useNavigate } from 'react-router-dom'
   import { useLocation } from 'react-router-dom'
   import { useSelector } from 'react-redux' 
@@ -11,6 +11,7 @@
   import { axiosInstance } from "../../services/api"
   import { useParams } from 'react-router-dom';
   import { ErrorBoundary } from 'react-error-boundary';
+import QuoteModal from "./QuoteModal"
 
   export default function WindowCleaningQuote() {
     const { quoteId } = useParams();
@@ -38,6 +39,16 @@
     });
 
     const [deletingServiceId, setDeletingServiceId] = useState(null);
+
+    const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+  }
 
 
     const handleDeleteClick = (serviceId, serviceName) => {
@@ -613,27 +624,40 @@ const DeleteConfirmationDialog = ({ isOpen, onClose, onConfirm, serviceName, err
             </div>
           </div>
 
+              <QuoteProvider>
+                <QuoteModal isOpen={isModalOpen} onClose={handleCloseModal} primaryColor={'#2563EB'} from={'review'} contact={quoteData?.contact} Selectedservices={quoteData?.services} purchase_id={quoteData?.id} total_amount={quoteData?.total_amount}/>
+              </QuoteProvider>
+
+
           {/* Return to Home Button - Conditionally Rendered */}
           {isSpecialLocation && (
-            <div className="text-center my-4">
-              <button
-                onClick={() => {
-                  if (!quoteData.is_submited) {
-                    const confirmLeave = window.confirm(
-                      "Are you sure you want to leave?"
-                    );
-                    if (confirmLeave) {
+            <>
+              <div className="text-center my-4">
+                <button
+                  onClick={() => {
+                    if (!quoteData.is_submited) {
+                      const confirmLeave = window.confirm(
+                        "Are you sure you want to leave?"
+                      );
+                      if (confirmLeave) {
+                        navigate(`/${locationId ? `?location=${locationId}` : ''}`);
+                      }
+                    } else {
                       navigate(`/${locationId ? `?location=${locationId}` : ''}`);
                     }
-                  } else {
-                    navigate(`/${locationId ? `?location=${locationId}` : ''}`);
-                  }
-                }}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg shadow-md transition duration-300"
-              >
-                Return to Home
-              </button>
-            </div>
+                  }}
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg shadow-md transition duration-300"
+                >
+                  Return to Home
+                </button>
+              </div>
+              <div className="text-center">
+                <button className=" text-blue-500 hover:text-blue-600 font-medium py-2 px-4 rounded-lg underline transition duration-300"
+                  onClick={()=>{setIsModalOpen(true)}}>
+                  Add a new service
+                </button>
+              </div>
+            </>
           )}
         </div>
 

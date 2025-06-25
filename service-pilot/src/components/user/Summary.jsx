@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux'
 import { axiosInstance } from "../../services/api"
 import CreateCustomServiceModal from "./CreateCustomServiceModal"
 
-const Summary = () => {
+const Summary = ({purchase_id, total_amount}) => {
   const { state, settings, dispatch } = useQuote()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const navigate = useNavigate()
@@ -140,8 +140,12 @@ const handleFinalize = async () => {
       price_plan: state.selectedServices[0]?.selectedPricingOption || 0
     };
 
-    const response = await axiosInstance.post('/data/purchase/', quoteData);
-    navigate(`/user/review/${response.data.id}${locationId ? `?location=${locationId}` : ''}`);
+
+    const method = purchase_id ? 'put' : 'post';
+    const payload = purchase_id ? { ...quoteData, purchase_id: purchase_id } : quoteData;
+
+    const response = await axiosInstance[method]('/data/purchase/', payload);
+    purchase_id? window.location.reload() : navigate(`/user/review/${response.data.id}${locationId ? `?location=${locationId}` : ''}`);
   } catch (error) {
     console.error('Error saving quote:', error);
   } finally {
@@ -194,7 +198,13 @@ const calculateTotalPrice = () => {
   }, 0);
 
   // Apply minimum price only to regular services portion
-  const adjustedRegularServicesTotal = Math.max(regularServicesTotal, highestMinimumPrice);
+  let adjustedRegularServicesTotal;
+  if(purchase_id){
+    adjustedRegularServicesTotal = regularServicesTotal
+  }
+  else{
+    adjustedRegularServicesTotal = Math.max(regularServicesTotal, highestMinimumPrice);
+  }
   
   // Combine with custom products (no minimum applies)
   const total = adjustedRegularServicesTotal + customProductsTotal;
@@ -370,14 +380,14 @@ const { adjustedPrice: totalPrice, isMinimumPriceApplied } = calculateTotalPrice
         </p>
       )}
       {/* Add note when minimum price is applied */}
-      {isMinimumPriceApplied && (
+      {isMinimumPriceApplied && !purchase_id && (
         <p className="text-sm text-blue-600 mt-1">
           Note: The total has been adjusted to meet the minimum price requirement of {formatCurrency(totalPrice)} for the selected services.
         </p>
       )}
     </div>
     <div className="text-right">
-      <p className="text-2xl font-bold text-gray-900">{formatCurrency(customRound(totalPrice))}</p>
+      <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalPrice)}</p>
       <div className="text-gray-500 text-md mb-3">Plus Tax (8.25%)</div>
       {totalSavings > 0 && (
         <p className="text-sm text-green-600">You save {formatCurrency(totalSavings)}</p>
@@ -409,7 +419,7 @@ const { adjustedPrice: totalPrice, isMinimumPriceApplied } = calculateTotalPrice
             isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
           }`}
         >
-          {isSubmitting ? 'Saving...' : 'Finalize Quote'}
+          {isSubmitting ? 'Saving...' : purchase_id? 'Add services':'Finalize Quote'}
         </button>
       </div>
       {showCustomServiceModal && (

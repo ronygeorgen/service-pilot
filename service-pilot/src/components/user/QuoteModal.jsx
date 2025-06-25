@@ -2,8 +2,8 @@
 
 import { useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { fetchServices } from "../../features/user/servicesSlice"
-import { clearSearchResults, clearSelectedContact } from "../../features/user/contactsSlice"
+import { fetchServices, selectService } from "../../features/user/servicesSlice"
+import { clearSearchResults, clearSelectedContact, selectContact } from "../../features/user/contactsSlice"
 import { X } from "lucide-react"
 import ContactSelectionModal from "./ContactSelectionModal"
 import { useQuote } from "../../context/QuoteContext"
@@ -13,7 +13,7 @@ import PricingOptions from "./PricingOptions"
 import Summary from "./Summary"
 
 
-const QuoteModal = ({ isOpen, onClose, primaryColor = "#2563EB" }) => {
+const QuoteModal = ({ isOpen, onClose, primaryColor = "#2563EB" ,from, contact, Selectedservices, purchase_id, total_amount}) => {
   const dispatch = useDispatch()
   const { services } = useSelector((state) => state.services)
   const { selectedContact } = useSelector((state) => state.contacts)
@@ -24,8 +24,30 @@ const QuoteModal = ({ isOpen, onClose, primaryColor = "#2563EB" }) => {
       dispatch(fetchServices())
     }
   }, [isOpen, services.length, dispatch])
+  
+  useEffect(() => {
+    if (from === 'review') {
+      if (contact) {
+        dispatch(selectContact(contact));
+      }
+    }
+  }, [from, contact, Selectedservices, dispatch, quoteDispatch]);
+
 
   if (!isOpen) return null
+
+  console.log(selectedContact, 'selectedContact', Selectedservices);
+
+  console.log(state.selectedServices, 'sele', total_amount);
+
+  const selectedServiceNames = Selectedservices?.map(service => service.name) || [];
+
+  const availableServices = services.filter(
+    service => !selectedServiceNames.includes(service.name)
+  );
+  
+  
+
 
   const handleClose = () => {
     quoteDispatch({ type: "RESET" })
@@ -46,7 +68,7 @@ const QuoteModal = ({ isOpen, onClose, primaryColor = "#2563EB" }) => {
     }
 
     if (state.showSummary) {
-      return <Summary />
+      return <Summary purchase_id={purchase_id} total_amount={total_amount}/>
     }
 
     // Step 2: Show Pricing (after answering questions)
@@ -62,6 +84,9 @@ const QuoteModal = ({ isOpen, onClose, primaryColor = "#2563EB" }) => {
     
 
     // Step 4: Service Selection (after selecting contact)
+    if(from=='review'){
+      return <ServiceSelection services={availableServices} />
+    }
     return <ServiceSelection services={services} />
   }
 
