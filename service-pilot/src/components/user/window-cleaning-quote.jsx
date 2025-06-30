@@ -1454,7 +1454,7 @@ const DeleteProductConfirmationDialog = ({ isOpen, onClose, onConfirm, productNa
 
                 <div className="flex justify-between items-center py-3 font-bold text-base">
                   <span className="text-2xl">TOTAL (including 8.25% tax)</span>
-                  <span className="text-2xl">${customRound(totalPrice).toFixed(2)}</span>
+                  <span className="text-2xl">${(totalPrice).toFixed(2)}</span>
                 </div>
                 {/* <div className="flex justify-end gap-2 text-sm text-gray-700">
                   <span>Tax (8.25%)</span>
