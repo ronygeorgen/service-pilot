@@ -771,17 +771,17 @@ const DeleteProductConfirmationDialog = ({ isOpen, onClose, onConfirm, productNa
           const isSubmitted = quoteData.is_submited;
 
           return (
-            <div key={serviceIndex} className="mb-8">
+            <div key={serviceIndex} className="mb-8 text-center">
               {/* Service Video Section */}
               <div className="bg-white mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12 py-6">
                 <div className="px-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-xl font-semibold mb-2">{service.name || "Service"}</h3>
+                  <div className="flex justify-center gap-5 items-center">
+                    <h3 className="text-xl font-semibold">{service.name || "Service"}</h3>
                     {!isSubmitted && (
                       <button
                         onClick={() => handleDeleteClick(service.id, service.name)}
                         disabled={deletingServiceId === service.id}
-                        className={`rounded-lg p-2 ${
+                        className={`rounded-lg px-4 py-1 ${
                           deletingServiceId === service.id 
                             ? "bg-gray-400 cursor-not-allowed" 
                             : "bg-red-500 hover:bg-red-600 text-white"
@@ -827,7 +827,7 @@ const DeleteProductConfirmationDialog = ({ isOpen, onClose, onConfirm, productNa
                     <div className="relative mb-6 pl-4"> {/* Added pl-4 for left padding */}
                       <div 
                         ref={scrollRef}
-                        className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 pr-4" /* Added pr-4 */
+                        className="flex justify-center gap-4 overflow-x-auto scrollbar-hide pb-4 pr-4" /* Added pr-4 */
                         style={{ 
                           scrollbarWidth: 'none', 
                           msOverflowStyle: 'none',
@@ -996,39 +996,42 @@ const DeleteProductConfirmationDialog = ({ isOpen, onClose, onConfirm, productNa
             <div className="mb-8">
               <div className="bg-white mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12 py-6">
                 <div className="px-4">
-                  <h3 className="text-xl font-semibold text-center mb-4">Additional Products</h3>
+                  <h3 className="text-xl font-semibold text-center mb-6">Additional Products</h3>
                   
                   {quoteData.custom_products?.map((product, index) => (
                     <div key={index} className="mb-4 border-b pb-4 last:border-b-0">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h4 className="font-medium">{product.product_name}</h4>
+                      <div className="flex flex-col justify-between items-center gap-6">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-3">
+                            <h4 className="font-medium text-xl">{product.product_name}</h4>
+                            {!quoteData.is_submited && (
+                              <button
+                                onClick={() => handleDeleteProductClick(product.id, product.product_name)}
+                                disabled={deletingProductId === product.id}
+                                className={`rounded-lg px-4 py-1 ${
+                                  deletingProductId === product.id 
+                                    ? "bg-gray-400 cursor-not-allowed" 
+                                    : "bg-red-500 hover:bg-red-600 text-white"
+                                }`}
+                              >
+                                {deletingProductId === product.id ? (
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-lg animate-spin"></div>
+                                ) : (
+                                  <span className="w-4 h-4" > Deselect </span>
+
+                                )}
+                              </button>
+                            )}
+                          </div>
                           {product.description && (
                             <p className="text-gray-600 text-sm mt-1">{product.description}</p>
                           )}
                         </div>
-                        <div className="flex items-center">
-                          <div className="text-right mr-4">
+                        <div className="flex items-center text-2xl bg-green-500 rounded py-2 px-4">
+                          <div className="text-right">
                             <span className="font-bold">${customRound(product.price).toFixed(2)}</span>
                           </div>
-                          {!quoteData.is_submited && (
-                            <button
-                              onClick={() => handleDeleteProductClick(product.id, product.product_name)}
-                              disabled={deletingProductId === product.id}
-                              className={`rounded-lg p-2 ${
-                                deletingProductId === product.id 
-                                  ? "bg-gray-400 cursor-not-allowed" 
-                                  : "bg-red-500 hover:bg-red-600 text-white"
-                              }`}
-                            >
-                              {deletingProductId === product.id ? (
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-lg animate-spin"></div>
-                              ) : (
-                                <span className="w-4 h-4" > Deselect </span>
-
-                              )}
-                            </button>
-                          )}
+                          
                         </div>
                       </div>
                     </div>
