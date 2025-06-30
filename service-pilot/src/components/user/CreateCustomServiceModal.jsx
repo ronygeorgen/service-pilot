@@ -1,20 +1,43 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuote } from "../../context/QuoteContext";
 
-const CreateCustomServiceModal = ({ onClose }) => {
+const CreateCustomServiceModal = ({ onClose, editingService  }) => {
   const { dispatch } = useQuote();
   const [serviceName, setServiceName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editIndex, setEditIndex] = useState(null);
+
+
+  useEffect(() => {
+    if (editingService) {
+      setServiceName(editingService.service.name);
+      setDescription(editingService.service.description);
+      setPrice(editingService.calculatedPrice.toString());
+      setIsEditing(true);
+    } else {
+      resetForm();
+    }
+  }, [editingService]);
+
+  const resetForm = () => {
+    setServiceName("");
+    setDescription("");
+    setPrice("");
+    setIsEditing(false);
+    setEditIndex(null);
+  };
+
 
   const handleAddService = () => {
     if (!serviceName || !price) return;
 
     const customService = {
       service: {
-        id: `custom-${Date.now()}`,
+        id: isEditing ? editingService.service.id : `custom-${Date.now()}`,
         name: serviceName,
         description: description,
         is_custom: true,
@@ -24,14 +47,19 @@ const CreateCustomServiceModal = ({ onClose }) => {
       selectedPricingOption: null,
     };
 
+    if (isEditing) {
+      // For edit, we need to replace the existing service
+      dispatch({ type: "REMOVE_SERVICE", payload: editingService.index });
+    }
     dispatch({ type: "ADD_CUSTOM_SERVICE", payload: customService });
     onClose();
+    resetForm();
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h3 className="text-xl font-bold mb-4">Create Custom Service</h3>
+        {isEditing ? "Edit Custom Service" : "Create Custom Service"}
         
         <div className="space-y-4">
           <div>

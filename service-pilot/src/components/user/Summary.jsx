@@ -16,6 +16,7 @@ const Summary = ({purchase_id, total_amount}) => {
   const queryParams = new URLSearchParams(window.location.search);
   const locationId = queryParams.get('location');
   const [showCustomServiceModal, setShowCustomServiceModal] = useState(false);
+  const [editingCustomService, setEditingCustomService] = useState(null);
   
 
   function customRound(number) {
@@ -347,6 +348,40 @@ const { adjustedPrice: totalPrice, isMinimumPriceApplied } = calculateTotalPrice
                     <div className="text-gray-500 text-xs mb-3">Plus Tax</div>
                     </div>
                   )}
+                  {/* Edit and Delete buttons */}
+                    <div className="flex space-x-2 mt-2">
+                      <button
+                        onClick={() => {
+                          if (item.service.is_custom) {
+                            // For custom services, open the modal with existing values
+                            setEditingCustomService({
+                              ...item,
+                              index: index
+                            });
+                            setShowCustomServiceModal(true);
+                          } else {
+                            // For regular services, use the existing edit flow
+                            dispatch({
+                              type: "EDIT_SERVICE",
+                              payload: {
+                                service: item.service,
+                                answers: item.answers,
+                                selectedPricingOption: item.selectedPricingOption
+                              }
+                            });
+                          }
+                        }}
+                        className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => dispatch({ type: "REMOVE_SERVICE", payload: index })}
+                        className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
+                      >
+                        Delete
+                      </button>
+                    </div>
                 </div>
               </div>
             </div>
@@ -423,7 +458,13 @@ const { adjustedPrice: totalPrice, isMinimumPriceApplied } = calculateTotalPrice
         </button>
       </div>
       {showCustomServiceModal && (
-        <CreateCustomServiceModal onClose={() => setShowCustomServiceModal(false)} />
+        <CreateCustomServiceModal 
+          onClose={() => {
+            setShowCustomServiceModal(false);
+            setEditingCustomService(null);
+          }}
+          editingService={editingCustomService}
+        />
       )}
     </div>
   )
