@@ -128,6 +128,21 @@ const quoteReducer = (state, action) => {
         currentService: null,
         showPricing: false,
       }
+    case "EDIT_SERVICE":
+      return {
+        ...state,
+        currentService: action.payload.service,
+        answers: action.payload.answers,
+        showPricing: false,
+        showSummary: false,
+        selectedPricingOption: action.payload.selectedPricingOption || null,
+      };
+
+    case "REMOVE_SERVICE":
+      return {
+        ...state,
+        selectedServices: state.selectedServices.filter((_, index) => index !== action.payload),
+      };
     case "RESET":
       return initialState
     default:
