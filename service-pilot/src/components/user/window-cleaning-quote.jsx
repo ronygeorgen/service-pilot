@@ -266,11 +266,11 @@ import QuoteModal from "./QuoteModal"
   setIsSubmitting(true);
   setSubmitError(null);
 
-  const { total: totalWithTax } = calculateTotalPrice();
+  const { total: totalWithTax, subtotal } = calculateTotalPrice();
 
   const payload = {
     purchase_id: quoteData.id,
-    total_amount: Number(customRound(totalWithTax)).toFixed(2),
+    total_amount: Number(customRound(subtotal)).toFixed(2),
     signature: signature || "Digital Acceptance",
     services: selectedServicePlans
   };
@@ -518,7 +518,7 @@ const calculateTotalPrice = () => {
 };
 
 
-const { total: totalPrice, isMinimumPriceApplied, minimumPrice, servicesTotal, customProductsTotal } = calculateTotalPrice();
+const { total: totalPrice, subtotal, isMinimumPriceApplied, minimumPrice, servicesTotal, customProductsTotal } = calculateTotalPrice();
 
 const isScheduleButtonDisabled = !signature || !termsAccepted;
 
@@ -1440,6 +1440,14 @@ const DeleteProductConfirmationDialog = ({ isOpen, onClose, onConfirm, productNa
                     </div>
                   </div>
                 ))}
+
+                {/* here I want to add subtotal */}
+                <div className="flex justify-between items-center py-3 font-bold text-base">
+                  <span className="text-xl">Subtotal</span>
+                  <span className="text-xl">${customRound(subtotal).toFixed(2)}</span>
+                </div>
+                  <div className="text-gray-500 text-right text-sm">Plus Tax</div>
+
 
                 {isMinimumPriceApplied && (
                   <div className="text-sm text-gray-600 mb-2 text-center">
