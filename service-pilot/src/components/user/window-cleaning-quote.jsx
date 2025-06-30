@@ -16,8 +16,7 @@ import QuoteModal from "./QuoteModal"
   export default function WindowCleaningQuote() {
     const { quoteId } = useParams();
     const [quoteData, setQuoteData] = useState(null);
-    const [selectedServicePlans, setSelectedServicePlans] = useState([]);
-    
+    const [selectedServicePlans, setSelectedServicePlans] = useState([]);    
     
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -39,6 +38,14 @@ import QuoteModal from "./QuoteModal"
     });
 
     const [deletingServiceId, setDeletingServiceId] = useState(null);
+
+    const [deleteProductConfirmation, setDeleteProductConfirmation] = useState({
+      isOpen: false,
+      productId: null,
+      productName: ''
+    });
+
+    const [deletingProductId, setDeletingProductId] = useState(null);
 
     const [isModalOpen, setIsModalOpen] = useState(false)
 
@@ -69,7 +76,7 @@ import QuoteModal from "./QuoteModal"
         const response = await axiosInstance.delete(
           `/data/purchased-service/delete/${deleteConfirmation.serviceId}/`
         );
-        
+       
         // Update state with the response data
         setQuoteData(response.data);
         
@@ -106,6 +113,48 @@ import QuoteModal from "./QuoteModal"
           serviceId: null,
           serviceName: ''
         }));
+      }
+    };
+
+    const handleDeleteProductClick = (productId, productName) => {
+      setDeleteProductConfirmation({
+        isOpen: true,
+        productId,
+        productName
+      });
+    };
+
+    const handleDeleteProduct = async () => {
+      try {
+        setDeletingProductId(deleteProductConfirmation.productId);
+
+        const response = await axiosInstance.delete(
+          `/data/custom-product/delete/${deleteProductConfirmation.productId}/`
+        );
+        
+        // Update state to remove the deleted product
+        setQuoteData(prev => ({
+          ...prev,
+          custom_products: prev.custom_products.filter(
+            product => product.id !== deleteProductConfirmation.productId
+          )
+        }));
+
+        // Close the confirmation dialog
+        setDeleteProductConfirmation({
+          isOpen: false,
+          productId: null,
+          productName: ''
+        });
+        
+      } catch (error) {
+        console.error('Failed to delete product:', error);
+        setDeleteProductConfirmation(prev => ({
+          ...prev,
+          error: 'Failed to delete product. Please try again.'
+        }));
+      } finally {
+        setDeletingProductId(null);
       }
     };
 
@@ -522,6 +571,55 @@ const DeleteConfirmationDialog = ({ isOpen, onClose, onConfirm, serviceName, err
   );
 };
 
+const DeleteProductConfirmationDialog = ({ isOpen, onClose, onConfirm, productName, error }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg max-w-md w-full">
+        <h3 className="text-lg font-semibold mb-4">Confirm Product Deletion</h3>
+        <p className="mb-4">
+          Are you sure you want to remove <strong>{productName}</strong>? This action cannot be undone.
+        </p>
+        {error && (
+          <p className="text-red-500 text-sm mb-4">{error}</p>
+        )}
+        <div className="flex justify-end space-x-3">
+          <button
+            onClick={onClose}
+            disabled={deletingProductId === deleteProductConfirmation.productId}
+            className={`px-4 py-2 border rounded-md ${
+              deletingProductId === deleteProductConfirmation.productId
+                ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                : "border-gray-300 text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleDeleteProduct}
+            disabled={deletingProductId === deleteProductConfirmation.productId}
+            className={`px-4 py-2 rounded-md ${
+              deletingProductId === deleteProductConfirmation.productId
+                ? "bg-red-400 cursor-not-allowed"
+                : "bg-red-500 hover:bg-red-600 text-white"
+            }`}
+          >
+            {deletingProductId === deleteProductConfirmation.productId ? (
+              <div className="flex items-center justify-center">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                Removing...
+              </div>
+            ) : (
+              "Remove"
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
     if (loading) {
       return (
         <div className="min-h-screen bg-gray-200 flex items-center justify-center">
@@ -683,7 +781,7 @@ const DeleteConfirmationDialog = ({ isOpen, onClose, onConfirm, serviceName, err
                       <button
                         onClick={() => handleDeleteClick(service.id, service.name)}
                         disabled={deletingServiceId === service.id}
-                        className={`rounded-full p-2 ${
+                        className={`rounded-lg p-2 ${
                           deletingServiceId === service.id 
                             ? "bg-gray-400 cursor-not-allowed" 
                             : "bg-red-500 hover:bg-red-600 text-white"
@@ -691,7 +789,7 @@ const DeleteConfirmationDialog = ({ isOpen, onClose, onConfirm, serviceName, err
                         
                       >
                         {deletingServiceId === service.id ? (
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-lg animate-spin"></div>
                         ) : (
                           <span className="text-sm">Deselect {service.name}</span>
                         )}
@@ -900,7 +998,7 @@ const DeleteConfirmationDialog = ({ isOpen, onClose, onConfirm, serviceName, err
                 <div className="px-4">
                   <h3 className="text-xl font-semibold text-center mb-4">Additional Products</h3>
                   
-                  {quoteData.custom_products.map((product, index) => (
+                  {quoteData.custom_products?.map((product, index) => (
                     <div key={index} className="mb-4 border-b pb-4 last:border-b-0">
                       <div className="flex justify-between items-center">
                         <div>
@@ -909,8 +1007,28 @@ const DeleteConfirmationDialog = ({ isOpen, onClose, onConfirm, serviceName, err
                             <p className="text-gray-600 text-sm mt-1">{product.description}</p>
                           )}
                         </div>
-                        <div className="text-right">
-                          <span className="font-bold">${customRound(product.price).toFixed(2)}</span>
+                        <div className="flex items-center">
+                          <div className="text-right mr-4">
+                            <span className="font-bold">${customRound(product.price).toFixed(2)}</span>
+                          </div>
+                          {!quoteData.is_submited && (
+                            <button
+                              onClick={() => handleDeleteProductClick(product.id, product.product_name)}
+                              disabled={deletingProductId === product.id}
+                              className={`rounded-lg p-2 ${
+                                deletingProductId === product.id 
+                                  ? "bg-gray-400 cursor-not-allowed" 
+                                  : "bg-red-500 hover:bg-red-600 text-white"
+                              }`}
+                            >
+                              {deletingProductId === product.id ? (
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-lg animate-spin"></div>
+                              ) : (
+                                <span className="w-4 h-4" > Deselect </span>
+
+                              )}
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1169,104 +1287,106 @@ const DeleteConfirmationDialog = ({ isOpen, onClose, onConfirm, serviceName, err
       )}
 
 
-{activeTab === "specs" && (
-  <div className="space-y-4">
-    <h4 className="text-lg font-semibold">Selected Services</h4>
-    {quoteData.services?.map((service, index) => (
-      <div key={index} className="mb-6 border p-4 rounded-lg bg-gray-50">
-        <h5 className="font-medium text-lg mb-3">{service.name}</h5>
-        <div className="space-y-3">
-          {service.questions?.map((question) => {
-            const reaction = question?.reactions?.[0];
-            
-            return (
-              <div key={question?.id} className="border-b pb-2 last:border-b-0">
-                {/* Boolean Question Display */}
-                {question?.type === 'boolean' && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-700 font-medium">{question?.text}</span>
-                    <span className="font-medium">
-                      {question?.bool_ans ? 'Yes' : 'No'}
-                      {question?.bool_ans && question.unit_price !== '0.00' && (
-                        <span className="ml-1 text-gray-500 text-sm">
-                          (+${parseFloat(question.unit_price || 0).toFixed(2)})
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                )}
+          {activeTab === "specs" && (
+            <div className="space-y-4">
+              <h4 className="text-lg font-semibold">Selected Services</h4>
+              {quoteData.services?.map((service, index) => (
+                <div key={index} className="mb-6 border p-4 rounded-lg bg-gray-50">
+                  <h5 className="font-medium text-lg mb-3">{service.name}</h5>
+                  <div className="space-y-3">
+                    {service.questions?.map((question) => {
+                      const reaction = question?.reactions?.[0];
+                      
+                      return (
+                        <div key={question?.id} className="border-b pb-2 last:border-b-0">
+                          {/* Boolean Question Display */}
+                          {question?.type === 'boolean' && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-700 font-medium">{question?.text}</span>
+                              <span className="font-medium">
+                                {question?.bool_ans ? 'Yes' : 'No'}
+                                {question?.bool_ans && question.unit_price !== '0.00' && (
+                                  <span className="ml-1 text-gray-500 text-sm">
+                                    (+${parseFloat(question.unit_price || 0).toFixed(2)})
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                          )}
 
-                {/* Choice Question Display */}
-                {question?.type === 'choice' && question?.options && (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-gray-700 font-medium">{question?.text}</span>
-                    </div>
-                    <div className="mt-2 pl-4">
-                      {question?.options.map((option, optIndex) => (
-                        <div key={optIndex} className="flex justify-between text-sm">
-                          <span className="text-gray-600">
-                            {option?.label}:
-                          </span>
-                          <span className="font-medium">
-                            {option?.qty} × ${option?.value} = 
-                            <span className="ml-1">
-                              ${(parseFloat(option?.value) * parseInt(option?.qty || 0)).toFixed(2)}
+                          {/* Choice Question Display */}
+                          {question?.type === 'choice' && question?.options && (
+                            <>
+                              <div className="flex justify-between">
+                                <span className="text-gray-700 font-medium">{question?.text}</span>
+                              </div>
+                              <div className="mt-2 pl-4">
+                                {question?.options.map((option, optIndex) => (
+                                  <div key={optIndex} className="flex justify-between text-sm">
+                                    <span className="text-gray-600">
+                                      {option?.label}:
+                                    </span>
+                                    <span className="font-medium">
+                                      {option?.qty} × ${option?.value} = 
+                                      <span className="ml-1">
+                                        ${(parseFloat(option?.value) * parseInt(option?.qty || 0)).toFixed(2)}
+                                      </span>
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </>
+                          )}
+
+                          {/* Extra Choice Question Display */}
+                          {question?.type === 'extra_choice' && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-700 font-medium">{question?.text}</span>
+                              <span className="font-medium flex flex-col">
+                              
+                                  <span className="ml-1 text-gray-500 text-sm">
+                                    {question?.options[0]?.label
+                                      ? question.options[0].label.charAt(0).toUpperCase() + question.options[0].label.slice(1)
+                                      : 0}
+                                  </span>
+                                  <span className="ml-1 text-gray-500 text-sm">
+                                    $ {question?.options[0]?.value || 0}
+                                  </span>
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+
+                {/* Custom Products Section */}
+                {quoteData.custom_products?.length > 0 && (
+                  <div className="mb-6 border p-4 rounded-lg bg-gray-50">
+                    <h5 className="font-medium text-lg mb-3">Additional Products</h5>
+                    <div className="space-y-3">
+                      {quoteData.custom_products.map((product, index) => (
+                        <div key={index} className="border-b pb-2 last:border-b-0">
+                          <div className="flex justify-between">
+                            <span className="text-gray-700 font-medium">{product.product_name}</span>
+                            <span className="font-medium">
+                              ${customRound(product.price).toFixed(2)}
                             </span>
-                          </span>
+                          </div>
+                          {product.description && (
+                            <p className="text-gray-600 text-sm mt-1">{product.description}</p>
+                          )}
                         </div>
                       ))}
                     </div>
-                  </>
-                )}
-
-                {/* Extra Choice Question Display */}
-                {question?.type === 'extra_choice' && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-700 font-medium">{question?.text}</span>
-                    <span className="font-medium flex flex-col">
-                     
-                        <span className="ml-1 text-gray-500 text-sm">
-                          {question?.options[0]?.label
-                            ? question.options[0].label.charAt(0).toUpperCase() + question.options[0].label.slice(1)
-                            : 0}
-                        </span>
-                        <span className="ml-1 text-gray-500 text-sm">
-                           $ {question?.options[0]?.value || 0}
-                        </span>
-                    </span>
                   </div>
                 )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    ))}
 
-    {/* Custom Products Section */}
-    {quoteData.custom_products?.length > 0 && (
-      <div className="mb-6 border p-4 rounded-lg bg-gray-50">
-        <h5 className="font-medium text-lg mb-3">Additional Products</h5>
-        <div className="space-y-3">
-          {quoteData.custom_products.map((product, index) => (
-            <div key={index} className="border-b pb-2 last:border-b-0">
-              <div className="flex justify-between">
-                <span className="text-gray-700 font-medium">{product.product_name}</span>
-                <span className="font-medium">
-                  ${customRound(product.price).toFixed(2)}
-                </span>
+                
               </div>
-              {product.description && (
-                <p className="text-gray-600 text-sm mt-1">{product.description}</p>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    )}
-  </div>
-)}
+            )}
             </div>
           </div>
 
@@ -1423,6 +1543,19 @@ const DeleteConfirmationDialog = ({ isOpen, onClose, onConfirm, serviceName, err
           onConfirm={handleDeleteService}
           serviceName={deleteConfirmation.serviceName}
           error={deleteConfirmation.error}
+        />
+
+        <DeleteProductConfirmationDialog
+          isOpen={deleteProductConfirmation.isOpen}
+          onClose={() => setDeleteProductConfirmation({
+            isOpen: false,
+            productId: null,
+            productName: '',
+            error: null
+          })}
+          onConfirm={handleDeleteProduct}
+          productName={deleteProductConfirmation.productName}
+          error={deleteProductConfirmation.error}
         />
       </div>
     );
