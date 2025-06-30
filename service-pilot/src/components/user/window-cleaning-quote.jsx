@@ -774,9 +774,9 @@ const DeleteProductConfirmationDialog = ({ isOpen, onClose, onConfirm, productNa
             <div key={serviceIndex} className="mb-8 text-center">
               {/* Service Video Section */}
               <div className="bg-white mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12 py-6">
-                <div className="px-4">
-                  <div className="flex justify-center gap-5 items-center">
-                    <h3 className="text-xl font-semibold">{service.name || "Service"}</h3>
+                <div className="px-4 flex justify-center">
+                  <div className="flex flex-col justify-center gap-3 items-center">
+                    <h3 className="text-3xl font-semibold">{service.name || "Service"}</h3>
                     {!isSubmitted && (
                       <button
                         onClick={() => handleDeleteClick(service.id, service.name)}
@@ -827,7 +827,9 @@ const DeleteProductConfirmationDialog = ({ isOpen, onClose, onConfirm, productNa
                     <div className="relative mb-6 pl-4"> {/* Added pl-4 for left padding */}
                       <div 
                         ref={scrollRef}
-                        className="flex justify-center gap-4 overflow-x-auto scrollbar-hide pb-4 pr-4" /* Added pr-4 */
+                        className={`flex gap-4 overflow-x-auto pb-4 pr-4 pl-1 snap-x snap-mandatory scroll-smooth ${
+                          plans.length <= 3 ? "justify-center" : ""
+                        }`}
                         style={{ 
                           scrollbarWidth: 'none', 
                           msOverflowStyle: 'none',
@@ -939,10 +941,10 @@ const DeleteProductConfirmationDialog = ({ isOpen, onClose, onConfirm, productNa
                       </div>
                     </div>
                   ) : (
-                    <div className="mb-6 bg-gray-100 p-4 rounded-lg">
+                    <div className="mb-6 bg-gray-100 p-4 rounded-lg flex flex-col items-center">
                       <h4 className="text-lg font-semibold mb-3">Selected Plan</h4>
                       {selectedPlanData && (
-                        <div className="bg-white border rounded-lg overflow-hidden">
+                        <div className="max-w-sm bg-white border rounded-lg overflow-hidden">
                           <div className="bg-green-500 text-white text-center py-3">
                             <h4 className="text-base font-semibold">{selectedPlanData?.name}</h4>
                             {selectedPlanData?.discount > 0 && (
@@ -1002,8 +1004,8 @@ const DeleteProductConfirmationDialog = ({ isOpen, onClose, onConfirm, productNa
                     <div key={index} className="mb-4 border-b pb-4 last:border-b-0">
                       <div className="flex flex-col justify-between items-center gap-6">
                         <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-3">
-                            <h4 className="font-medium text-xl">{product.product_name}</h4>
+                          <div className="flex flex-col justify-center gap-3 items-center">
+                            <h4 className="font-medium text-3xl">{product.product_name}</h4>
                             {!quoteData.is_submited && (
                               <button
                                 onClick={() => handleDeleteProductClick(product.id, product.product_name)}
@@ -1468,12 +1470,13 @@ const DeleteProductConfirmationDialog = ({ isOpen, onClose, onConfirm, productNa
               {/* Signature Section */}
               <div className="mb-6">
                 <h4 className="text-base font-semibold mb-3">Please leave your signature below</h4>
-                <div className="border-b-2 border-gray-300 pb-2 mb-4">
+                <div className="border-b pb-2 mb-4">
                   <input
                     type="text"
                     value={signature}
                     onChange={(e) => setSignature(e.target.value)}
                     placeholder="Your signature"
+                    className="border-2 border-gray-500 py-2"
                     style={{ 
                       width: '100%',
                       textAlign: 'center',
@@ -1502,9 +1505,9 @@ const DeleteProductConfirmationDialog = ({ isOpen, onClose, onConfirm, productNa
 
                 <button
                   onClick={handleSubmitPurchase}
-                  disabled={ !termsAccepted }
+                  disabled={ !signature || !termsAccepted }
                   className={`px-6 py-3 rounded transition-colors font-medium text-sm ${
-                     !termsAccepted
+                     !signature || !termsAccepted
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-blue-500 text-white hover:bg-blue-600"
                   }`}
