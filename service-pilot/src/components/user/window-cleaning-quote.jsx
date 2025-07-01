@@ -1484,7 +1484,7 @@ const DeleteProductConfirmationDialog = ({ isOpen, onClose, onConfirm, productNa
                     value={signature}
                     onChange={(e) => setSignature(e.target.value)}
                     placeholder="Your signature"
-                    className="border-2 border-gray-500 py-2"
+                    className="border-2 border-gray-500 py-2 bg-gray-400 placeholder-gray-600 font-bold"
                     style={{ 
                       width: '100%',
                       textAlign: 'center',
