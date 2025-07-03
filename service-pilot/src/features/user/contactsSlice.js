@@ -16,9 +16,25 @@ export const searchContacts = createAsyncThunk(
   }
 );
 
+export const getAddresses = createAsyncThunk(
+  'contacts/getAddresses',
+  async (contact_id, { rejectWithValue }) => {
+    try {
+      const url = `/data/address/by-contact/${contact_id}/`;
+      const response = await axiosInstance.get(url);
+      return response.data;
+    } catch (error) {
+      const message = error.response?.data?.message || error.message || 'Failed to search contacts';
+      return rejectWithValue(message);
+    }
+  }
+);
+
+
 const initialState = {
   contacts: [],
   selectedContact: null,
+  selectedContactsAddresses:[],
   searchResults: {
     count: 0,
     next: null,
@@ -36,6 +52,8 @@ const contactsSlice = createSlice({
   initialState,
   reducers: {
     selectContact: (state, action) => {
+      console.log(action.payload, 'payload');
+      
       state.selectedContact = action.payload;
     },
     clearSelectedContact: (state) => {
@@ -72,6 +90,19 @@ const contactsSlice = createSlice({
         state.searchResults = action.payload;
       })
       .addCase(searchContacts.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(getAddresses.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getAddresses.fulfilled, (state, action) => {
+        state.loading = false;
+        state.selectedContactsAddresses = action.payload;
+      })
+      .addCase(getAddresses.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

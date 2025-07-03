@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux'
 import { axiosInstance } from "../../services/api"
 import CreateCustomServiceModal from "./CreateCustomServiceModal"
 
-const Summary = ({purchase_id, total_amount}) => {
+const Summary = ({purchase_id, total_amount, selectedAddress}) => {
   const { state, settings, dispatch } = useQuote()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const navigate = useNavigate()
@@ -29,6 +29,8 @@ const Summary = ({purchase_id, total_amount}) => {
         return integer;
       }
     }
+  console.log(selectedAddress, 'address');
+  
 
   const handleAddMoreServices = () => {
     dispatch({ type: "ADD_MORE_SERVICES" })
@@ -47,6 +49,7 @@ const handleFinalize = async () => {
     const { adjustedPrice: totalAmount } = calculateTotalPrice();
     
     const quoteData = {
+      address : selectedAddress==='not'? null: selectedAddress?.id,
       contact: selectedContact.contact_id,
       custom_products: state.selectedServices
         .filter(service => service.service.is_custom)

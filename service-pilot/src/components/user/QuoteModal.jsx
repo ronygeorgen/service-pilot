@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { fetchServices, selectService } from "../../features/user/servicesSlice"
 import { clearSearchResults, clearSelectedContact, selectContact } from "../../features/user/contactsSlice"
@@ -11,12 +11,14 @@ import ServiceSelection from "./ServiceSelection"
 import QuestionForm from "./QuestionForm"
 import PricingOptions from "./PricingOptions"
 import Summary from "./Summary"
+import ContactAddressSelectionModal from "./ContactAddressSelectionModal"
 
 
 const QuoteModal = ({ isOpen, onClose, primaryColor = "#2563EB" ,from, contact, Selectedservices, purchase_id, total_amount}) => {
   const dispatch = useDispatch()
   const { services } = useSelector((state) => state.services)
-  const { selectedContact } = useSelector((state) => state.contacts)
+  const { selectedContact } = useSelector(state => state.contacts)
+  const[selectedAddress, setSelectedAddress] = useState('');
   const { state, dispatch: quoteDispatch } = useQuote()
 
   useEffect(() => {
@@ -46,19 +48,22 @@ const QuoteModal = ({ isOpen, onClose, primaryColor = "#2563EB" ,from, contact, 
     service => !selectedServiceNames.includes(service.name)
   );
   
-  
+  const handleBackToContactSelection = () => {
+  dispatch(selectContact(contact)) // Clear the selected contact
+}
 
 
   const handleClose = () => {
     quoteDispatch({ type: "RESET" })
     dispatch(clearSearchResults())
     dispatch(clearSelectedContact())
+    setSelectedAddress(null)
     onClose()
   }
 
   const handleContactSelected = (contact) => {
     // Contact is already set in Redux, we can proceed to service selection
-    console.log("Contact selected:", contact)
+    console.log("Contact selected:", contact, selectedContact)
   }
 
   const renderContent = () => {
@@ -67,8 +72,18 @@ const QuoteModal = ({ isOpen, onClose, primaryColor = "#2563EB" ,from, contact, 
       return <ContactSelectionModal onContactSelected={handleContactSelected} />
     }
 
+    if (!selectedAddress) {
+      return (
+    <ContactAddressSelectionModal
+      contact={selectedContact}
+      onAddressSelected={setSelectedAddress}
+      onBack={handleBackToContactSelection}
+    />
+  )
+    }
+
     if (state.showSummary) {
-      return <Summary purchase_id={purchase_id} total_amount={total_amount}/>
+      return <Summary purchase_id={purchase_id} total_amount={total_amount} selectedAddress={selectedAddress}/>
     }
 
     // Step 2: Show Pricing (after answering questions)
