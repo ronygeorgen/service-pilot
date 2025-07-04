@@ -1215,81 +1215,91 @@ const DeleteProductConfirmationDialog = ({ isOpen, onClose, onConfirm, productNa
 
 
       {activeTab === "terms" && (
-        <div className="space-y-4 pr-2">
-          <h4 className="text-lg font-semibold">Terms and Conditions</h4>
-          <div className="text-xs text-gray-600 space-y-3">
-            <p>"We" or "our" or "TWC" refers to Trushine Window Cleaning Ltd. "You", "your" or "the client" refers to the customer receiving the service(s) detailed.</p>
-            
-            <p>– Any special accommodation has to be reviewed and accepted by management staff prior accepting the proposal.</p>
-            <p>– Quotations are valid for 30 days, and accepted only in writing by signature and will subject to the Terms and Conditions herein on the day of services.</p>
-            <p>– All work shall be completed in workmanship like manner, and if applicable, in compliance with all building codes and other applicable laws.</p>
-            <p>– TWC warrants that it is adequately insured for injury to its employees and other incurring loss of injury as a result of the acts of its employees.</p>
-            <p>– TWC reserves the right to change these terms and conditions at any time without prior notice. In the event that any changes are made, the revised terms and conditions shall be posted on the website immediately.</p>
+  <div className="space-y-4 pr-2">
+    <h4 className="text-lg font-semibold">Terms and Conditions</h4>
+    <div className="text-xs text-gray-600 space-y-3">
+      <h5 className="font-semibold">GENERAL TERMS</h5>
+      <ul className="list-disc ml-5 space-y-1">
+        <li>Any special accommodations must be reviewed and approved by TWC management before accepting the proposal.</li>
+        <li>Quotations are valid for 30 days and must be accepted in writing (signature or electronic acceptance). Acceptance is subject to the Terms and Conditions in effect on the date of service.</li>
+        <li>All work will be completed in a professional, workmanlike manner, and where applicable, in compliance with local codes and regulations.</li>
+        <li>TWC confirms that it is properly insured against injury to its employees and any losses resulting from employee actions.</li>
+        <li>TWC reserves the right to update these Terms and Conditions at any time without prior notice. Revised versions will be posted on our website.</li>
+      </ul>
 
-            <h5 className="font-semibold">WINDOWS:</h5>
-            <ul className="list-disc ml-5 space-y-1">
-              <li>All windows must be closed on day of service. Any open windows which cannot be closed will not be washed.</li>
-              <li>You must ensure that all items to be cleaned are structurally sound prior to cleaning; Trushine Window Cleaning LTD reserves the right to photograph and/or notate any areas not structurally sound, and will notify the client prior to services being performed.</li>
-              <li>Full access is required on the day of the clean/repair. We are unable to move any obstacles which may inhibit cleaning or repair. Should partial access on the scheduled day reduce the extent of the clean/repair, we reserve the right to charge for a percentage of the windows/repair completed. If no access is available the day of the scheduled clean/repair, a $100 trip fee charge will be incurred.</li>
-              <li>We will not clean any windows we consider to be inaccessible or unsafe on the day of the clean.</li>
-              <li>External glass surfaces will usually be washed with pure water from water fed poles, and will be left to dry naturally.</li>
-              <li>A window or door is defined as any part which consists of frame, sill, sash and glass, made of wood, aluminium, steel or UVPC.</li>
-              <li>Sills made of brick, tile, stone, or any material other than listed above may damage our brushes, and will not be washed.</li>
-              <li>TWC has 24 Hours Streak FREE Guarantee on all of our window cleaning packages.</li>
-            </ul>
+      <h5 className="font-semibold">WINDOW CLEANING</h5>
+      <ul className="list-disc ml-5 space-y-1">
+        <li>All windows must be securely closed on the day of service. Any open windows that cannot be closed will not be cleaned.</li>
+        <li>The client is responsible for ensuring all items to be cleaned are structurally sound. TWC reserves the right to document and/or refuse service on any questionable items.</li>
+        <li>Full access must be available on the scheduled service day. We do not move obstacles. If limited access reduces the scope of work, a proportional charge will apply. If no access is available, a $75 trip fee will be charged.</li>
+        <li>Windows deemed unsafe or inaccessible on the day of service will not be cleaned.</li>
+        <li>External glass is typically cleaned with a water-fed pole system using pure water and left to dry naturally.</li>
+        <li>A “window” includes frame, sill, sash, and glass, made of wood, aluminum, steel, or UPVC. Sills made of brick, tile, or stone will not be cleaned due to brush damage risk.</li>
+        <li>TWC provides a 36-hour Streak-Free Guarantee on all window cleaning packages.</li>
+      </ul>
 
-            <h5 className="font-semibold">PRESSURE WASHING:</h5>
-            <ul className="list-disc ml-5 space-y-1">
-              <li>Although pressure washing will remove most stains from patio, paths, and driveways, some marks may not be removed by this process.</li>
-              <li>We require access to an external water supply to complete any pressure washing services.</li>
-              <li>Client is responsible to cover/remove all valuable outdoor furniture or there will be a $150 additional fee to remove furniture (Trushine is not responsible for any damages made by chemicals to any outdoor furniture or appliances).</li>
-              <li>TWC has 3 days guarantee on premium pressure washing package only.</li>
-            </ul>
+      <h5 className="font-semibold">PRESSURE WASHING</h5>
+      <ul className="list-disc ml-5 space-y-1">
+        <li>Pressure washing removes most stains; however, some marks may remain.</li>
+        <li>External water access is required.</li>
+        <li>Client is responsible for covering or removing all outdoor furniture. A $150 fee will be charged if we must do it. TWC is not liable for chemical damage to outdoor items.</li>
+        <li>TWC offers a 3-day satisfaction guarantee on premium pressure washing packages only.</li>
+      </ul>
 
-            <h5 className="font-semibold">GUTTERS:</h5>
-            <ul className="list-disc ml-5 space-y-1">
-              <li>Basic gutter cleaning is restricted to the gutters, and does not include hauling away debris or repair/replacement of any parts unless otherwise agreed. Additional costs may apply.</li>
-              <li>Gutter cleaning entails only the cleaning out of the inside of the gutter by leaf blower during summer/spring or gutter scoop during winter/fall.</li>
-              <li>It does not include the cleaning of any exterior surface of the gutter (available at an additional cost).</li>
-              <li>TWC has 15 days guarantee on all gutter cleaning packages.</li>
-            </ul>
+      <h5 className="font-semibold">GUTTER CLEANING</h5>
+      <ul className="list-disc ml-5 space-y-1">
+        <li>Basic gutter cleaning includes clearing internal gutters only. Hauling debris, repairs, or replacements are not included unless otherwise agreed.</li>
+        <li>All cleanings are done via leaf blower; And flushed the Downspouts with water hose.</li>
+        <li>Exterior gutter surface cleaning is not included (available at an additional cost).</li>
+        <li>TWC offers a 15-day guarantee on all gutter cleaning packages.</li>
+      </ul>
 
-            <h5 className="font-semibold">AWNINGS:</h5>
-            <ul className="list-disc ml-5 space-y-1">
-              <li>We do not accept liability for any unforeseen circumstances or damages caused during the services provided.</li>
-              <li>We reserve the right to decline any awning cleaning service if the substrate is over 5 years old or fails our inspection.</li>
-              <li>TWC has 24 hours guarantee on all awning cleaning services.</li>
-            </ul>
+      <h5 className="font-semibold">AWNING CLEANING</h5>
+      <ul className="list-disc ml-5 space-y-1">
+        <li>TWC is not liable for unexpected damage during awning cleaning services.</li>
+        <li>We reserve the right to decline awning cleaning if the material is over 5 years old or fails our inspection.</li>
+        <li>TWC offers a 24-hour guarantee on all awning cleaning services.</li>
+      </ul>
 
-            <h5 className="font-semibold">RESCHEDULING, PAYMENTS, CLIENT RESPONSIBILITY:</h5>
-            <ul className="list-disc ml-5 space-y-1">
-              <li>Postponement of any service requires 48-hour notice. Less notice or same-day cancellations may incur a $100 trip fee.</li>
-              <li>Trushine cannot be held liable for delays due to material shortage, weather, or other uncontrollable events.</li>
-              <li>Payments are due upon receipt. TWC may require credit card information or a $100 deposit to schedule. 50% deposit required for jobs requiring materials.</li>
-              <li>Accepted payment methods: cash, check, credit card (in person, phone, or online).</li>
-              <li>Commercial account payments can be sent to: 10515 Southwest FWY, Ste E-06 Houston, TX 77074.</li>
-              <li>Clients with outstanding balances may be refused service.</li>
-              <li>Disputed payments are the client's responsibility to prove cleared. Late charges and recovery fees may apply.</li>
-              <li>Account termination may occur without notice, and terminated accounts will lose promotional eligibility.</li>
-              <li><strong>Late fee schedule:</strong>
-                <ul className="list-disc ml-5">
-                  <li>Residential: 10% after 10 days.</li>
-                  <li>Commercial: 10% after 30 days.</li>
-                  <li>Unpaid after 60 days: collection process begins (including legal fees).</li>
-                </ul>
-              </li>
-              <li>All sales are final. No refunds except for damaged materials.</li>
-              <li>7 days written notice required for residential contract termination. Less notice incurs full service charge.</li>
-              <li>All services are subject to applicable Texas state tax.</li>
-              <li>Complaints resulting in a service revisit that confirms work was satisfactory will incur a $100 trip fee.</li>
-              <li>Terms may change anytime without notice. Updated copies available upon request.</li>
-            </ul>
+      <h5 className="font-semibold">RESCHEDULING, CANCELLATION & CLIENT RESPONSIBILITIES</h5>
+      <ul className="list-disc ml-5 space-y-1">
+        <li>Each client is allowed to reschedule their appointment up to two times. The new appointment must be scheduled no more than 7 days before or after the original date.</li>
+        <li>Rescheduling or cancellation within 8 hours of the scheduled appointment will result in a $35 fee per occurrence.</li>
+        <li>Rescheduling more than 8 hours in advance is free of charge for the first 2 times.</li>
+        <li>Requests to reschedule beyond the two allowed instances may result in a fee equal to the full service agreement amount.</li>
+        <li>TruShine is not liable for delays due to weather, supply issues, or other uncontrollable circumstances.</li>
+      </ul>
 
-            <p><strong>IN WITNESS WHEREOF</strong>, the parties have executed this agreement by accepting this proposal, electronically or in writing.</p>
-            <p className="italic text-right">LAST UPDATED ON 06/25/2025</p>
-          </div>
-        </div>
-      )}
+      <h5 className="font-semibold">PAYMENTS</h5>
+      <ul className="list-disc ml-5 space-y-1">
+        <li>Payment is due upon completion of service unless otherwise agreed.</li>
+        <li>TWC may require credit card information or a $100 deposit to confirm an appointment. Jobs requiring materials require a 50% deposit.</li>
+        <li>Accepted payment methods: cash, check, credit card (in person, by phone, or online).</li>
+        <li>Commercial account payments can be mailed to: 3525 Murdock ST, Houston, TX 77047</li>
+        <li>Clients with unpaid balances may be denied further service.</li>
+        <li>Disputed payments are the client’s responsibility to resolve. Late and recovery fees may apply.</li>
+      </ul>
+
+      <h5 className="font-semibold">LATE FEES</h5>
+      <ul className="list-disc ml-5 space-y-1">
+        <li>Residential Accounts: 10% late fee applies after 1 days.</li>
+        <li>Commercial Accounts: 10% late fee applies after 30 days.</li>
+        <li>Balances unpaid after 60 days will be sent to collections (including legal fees).</li>
+      </ul>
+
+      <h5 className="font-semibold">OTHER POLICIES</h5>
+      <ul className="list-disc ml-5 space-y-1">
+        <li>All sales are final. Refunds are only issued for unused material during service.</li>
+        <li>A 14-day written notice is required for residential service cancellation. Less notice will result in the full service charge.</li>
+        <li>All services are subject to applicable Texas state TAX.</li>
+        <li>If a service complaint leads to a revisit and the work is found to be satisfactory, a $75 trip fee will apply.</li>
+      </ul>
+
+      <p><strong>By accepting the proposal, electronically or in writing, you agree to all the terms outlined above.</strong></p>
+    </div>
+  </div>
+)}
+
 
 
           {activeTab === "specs" && (
