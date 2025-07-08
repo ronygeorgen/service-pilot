@@ -663,7 +663,7 @@ const DeleteProductConfirmationDialog = ({ isOpen, onClose, onConfirm, productNa
             <div className="mb-6">
               <h2 className="text-lg font-semibold mb-2">PREPARED FOR:</h2>
               {quoteData.contact ? (
-                <>
+                <div className="space-y-1">
                   <p className="text-base font-medium">
                     {quoteData.contact.first_name} {quoteData.contact.last_name}
                   </p>
@@ -677,14 +677,19 @@ const DeleteProductConfirmationDialog = ({ isOpen, onClose, onConfirm, productNa
                       Email: {quoteData.contact.email}
                     </p>
                   )}
-                </>
+                  
+                    <p className="text-gray-600 text-sm">
+                      Address: {quoteData.address? quoteData?.address :'No address selected'}
+                    </p>
+                  
+                </div>
               ) : (
                 <p className="text-base font-medium">No contact selected</p>
               )}
             </div>
 
             {/* Added About Company Section Here */}
-            <div className="mb-6 mt-20">
+            <div className="mb-6 mt-11">
               <h3 className="text-lg font-semibold mb-3 text-center md:text-center">About Our Company</h3>
               <div className="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-6">
                 <div className="flex-shrink-0">
@@ -1066,6 +1071,7 @@ const DeleteProductConfirmationDialog = ({ isOpen, onClose, onConfirm, productNa
             <PDFDownloadLink 
               document={
                 <QuotePDF 
+                  address = {quoteData?.address}
                   selectedContact={quoteData.contact}
                   selectedServices={quoteData.services}
                   selectedPlans={selectedPlans}

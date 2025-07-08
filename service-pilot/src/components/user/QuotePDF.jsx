@@ -120,6 +120,7 @@ const styles = StyleSheet.create({
 });
 
 const QuotePDF = ({ 
+  address,
   selectedContact, 
   selectedServices, 
   selectedPlans, 
@@ -224,6 +225,7 @@ const QuotePDF = ({
               </Text>
               {selectedContact.phone && <Text style={styles.text}>Phone: {selectedContact.phone}</Text>}
               {selectedContact.email && <Text style={styles.text}>Email: {selectedContact.email}</Text>}
+              {address && <Text style={styles.text}>Address: {address}</Text>}
             </>
           ) : (
             <Text style={styles.text}>No contact information provided</Text>
