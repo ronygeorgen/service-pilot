@@ -79,7 +79,7 @@ console.log(contact, selectedContact, 'ji');
                   {address?.name || 'Unnamed Address'}
                 </p>
                 <p className="text-sm text-gray-500">
-                  {address?.street_address}, {address?.city}, {address?.state? address?.state:'state' }, {address?.postal_code}
+                  {address?.street_address}, {address?.city}, {address?.state}, {address?.postal_code}
                 </p>
                 {/* {address?.postal_code && (
                   <p className="text-sm text-gray-400">postal code: {address?.postal_code}</p>
