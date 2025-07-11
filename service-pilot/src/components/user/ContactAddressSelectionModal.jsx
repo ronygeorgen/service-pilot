@@ -1,25 +1,41 @@
 "use client"
 
 import { MapPin, ChevronLeft } from "lucide-react"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { getAddresses } from "../../features/user/contactsSlice"
 
 const ContactAddressSelectionModal = ({ contact, onAddressSelected, onBack }) => {
-
   const dispatch = useDispatch();
   const {selectedContactsAddresses, selectedContact} = useSelector(state=>state.contacts)
-
- 
-  
-console.log(contact, selectedContact, 'ji');
-
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(()=>{
-    console.log(selectedContact, 'ldkd  ');
-    
-    dispatch(getAddresses(selectedContact?.id));
-  },[selectedContact])
+    if (selectedContact?.id) {
+      setIsLoading(true)
+      dispatch(getAddresses(selectedContact.id))
+        .then(() => setIsLoading(false))
+        .catch(() => setIsLoading(false))
+    }
+  },[selectedContact, dispatch])
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-8">
+        <button
+          onClick={onBack}
+          className="text-gray-600 hover:text-blue-600 flex items-center gap-1 text-sm"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back
+        </button>
+        <div className="flex justify-center my-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+        <p className="text-gray-500">Loading addresses...</p>
+      </div>
+    )
+  }
 
   if (!selectedContact || !selectedContactsAddresses || selectedContactsAddresses.length === 0) {
     return (
@@ -81,9 +97,6 @@ console.log(contact, selectedContact, 'ji');
                 <p className="text-sm text-gray-500">
                   {address?.street_address}, {address?.city}, {address?.state}, {address?.postal_code}
                 </p>
-                {/* {address?.postal_code && (
-                  <p className="text-sm text-gray-400">postal code: {address?.postal_code}</p>
-                )} */}
               </div>
             </div>
           </div>
