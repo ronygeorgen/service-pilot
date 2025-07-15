@@ -67,8 +67,15 @@ const QuoteModal = ({ isOpen, onClose, primaryColor = "#2563EB" ,from, contact, 
   }
 
   const renderContent = () => {
+
+    // Step 4: Service Selection (after selecting contact)
+    if(from=='review'){
+      return <ServiceSelection services={availableServices} />
+    }
+
+    
     // Step 1: Contact Selection
-    if (!selectedContact) {
+    if (from!=='review' && !selectedContact) {
       return <ContactSelectionModal onContactSelected={handleContactSelected} />
     }
 
@@ -98,10 +105,7 @@ const QuoteModal = ({ isOpen, onClose, primaryColor = "#2563EB" ,from, contact, 
 
     
 
-    // Step 4: Service Selection (after selecting contact)
-    if(from=='review'){
-      return <ServiceSelection services={availableServices} />
-    }
+    
     return <ServiceSelection services={services} />
   }
 
