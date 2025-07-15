@@ -28,12 +28,11 @@ const QuoteModal = ({ isOpen, onClose, primaryColor = "#2563EB" ,from, contact, 
   }, [isOpen, services.length, dispatch])
   
   useEffect(() => {
-    if (from === 'review') {
-      if (contact) {
-        dispatch(selectContact(contact));
-      }
+    if (isOpen && from === 'review' && contact) {
+      console.log(contact, 'from useEffect');
+      dispatch(selectContact(contact));
     }
-  }, [from, contact, Selectedservices, dispatch, quoteDispatch]);
+  }, [isOpen, from, contact, dispatch]);
 
 
   if (!isOpen) return null
