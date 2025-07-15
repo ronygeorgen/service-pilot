@@ -72,7 +72,7 @@ const QuoteModal = ({ isOpen, onClose, primaryColor = "#2563EB" ,from, contact, 
       return <ContactSelectionModal onContactSelected={handleContactSelected} />
     }
 
-    if (!selectedAddress) {
+    if (from!=='review' && !selectedAddress) {
       return (
     <ContactAddressSelectionModal
       contact={selectedContact}
