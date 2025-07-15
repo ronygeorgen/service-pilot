@@ -754,21 +754,24 @@ const DeleteProductConfirmationDialog = ({ isOpen, onClose, onConfirm, productNa
                   Return to Home
                 </button>
               </div>
-              
+              <div className="text-center">
+                <button className=" text-blue-500 hover:text-blue-600 font-medium py-2 px-4 rounded-lg underline transition duration-300"
+                  onClick={()=>{setIsModalOpen(true)}}>
+                  Add a new service
+                </button>
+              </div>
             </>
           )}
         </div>
 
-        <div className="text-center bg-orange-100 text-orange-800 font-semibold py-2 mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12">
+            {/* <div className="text-center bg-orange-100 text-orange-800 font-semibold py-2 mx-2 sm:mx-4 md:mx-6 lg:mx-8 xl:mx-12">
           <button 
             className="text-blue-500 hover:text-blue-600 font-medium py-2 px-4 rounded-lg underline transition duration-300"
             onClick={() => setIsModalOpen(true)}
           >
             Add a new service
           </button>
-        </div>
-
-
+        </div> */}
 
         {/* Loop through each service */}
         {quoteData.services?.map((service, serviceIndex) => {
