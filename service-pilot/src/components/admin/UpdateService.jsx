@@ -159,7 +159,7 @@ function UpdateService({errors, setErrors}) {
             
          <div className="space-y-6">
             {selectedService.questions?.map((question, index) => (
-               <div key={question.id} className="border border-gray-200 rounded-lg p-4">
+               <div key={question.id} className={`border border-gray-200 rounded-lg p-4 ${question?.isNew&&'bg-[#f5f5f5]'}`}>
                   <div className="flex justify-between items-center mb-3">
                      <h4 className="font-medium">Question {index + 1}</h4>
                      <button
@@ -445,7 +445,7 @@ function UpdateService({errors, setErrors}) {
                {selectedService.pricingOptions?.map((option, index) => (
                   <div
                      key={option.id}
-                     className="border border-gray-200 rounded-lg p-4 space-y-4"
+                     className={`border border-gray-200 rounded-lg p-4 space-y-4 ${option?.isNew&&'bg-[#f5f5f5]'}`}
                   >
                      {/* Option Inputs */}
                      <div className="flex gap-4 items-end">

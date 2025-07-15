@@ -42,7 +42,7 @@ const adminSlice = createSlice({
                 isNew: true,
                 questions: [],
                 };
-            state.services = [...state.services || [], newService]
+            state.services = [newService, ...state.services || []]
             state.selectedService=newService
         },
         updateService:(state, action)=>{
@@ -50,6 +50,8 @@ const adminSlice = createSlice({
             state.isEdited = true;
         },
         deleteService:(state, action)=>{
+            const idToDelete = action.payload;
+            state.services = state.services.filter(service => service.id !== idToDelete);
         },
         addQuestion: (state)=>{
             const newQuestion = {
@@ -57,10 +59,11 @@ const adminSlice = createSlice({
                 text: 'New Question',
                 type: 'choice',
                 unit_price: 0,
+                isNew: true,
             };
             state.selectedService = ({
                 ...state.selectedService,
-                questions:[...(state.selectedService.questions||[]), newQuestion]
+                questions:[newQuestion, ...(state.selectedService.questions||[])]
             })
             state.isEdited=true;
         },
@@ -125,8 +128,9 @@ const adminSlice = createSlice({
                 id: `option-${Date.now()}`,
                 name: 'New Option',
                 discount: 0,
+                isNew: true
             };
-            state.selectedService = {...state.selectedService, pricingOptions: [...(state.selectedService.pricingOptions || []), newOption]}
+            state.selectedService = {...state.selectedService, pricingOptions: [newOption,...(state.selectedService.pricingOptions || [])]}
             state.isEdited=true;
         },
         updatePricing:(state, action)=>{

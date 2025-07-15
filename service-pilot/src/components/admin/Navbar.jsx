@@ -81,7 +81,7 @@ function Navbar({ is_admin = false, is_user = false }) {
                             </button>
                         )}
 
-                        {is_user && (
+                        {is_user && isLocationAuthenticated && (
                             <button
                                 onClick={() =>
                                     navigate(locationId

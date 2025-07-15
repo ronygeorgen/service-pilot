@@ -28,8 +28,11 @@ function Service({service, setErrors}) {
     }
 
     const confirmDelete = () => {
-        dispatch(deleteService({ serviceId: service.id }));
-        dispatch(deleteServiceAction(service.id));
+      if(service?.isNew){
+        dispatch(deleteService(service.id));
+      }else{
+          dispatch(deleteServiceAction(service.id));
+        }
     };
   return (
     <>
