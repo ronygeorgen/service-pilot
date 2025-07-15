@@ -4,6 +4,7 @@ import { useQuote } from "../../context/QuoteContext"
 import { useSelector } from "react-redux"
 import { useState } from "react"
 import CreateCustomServiceModal from "./CreateCustomServiceModal"
+import { getServiceIcon } from "../../utils/serviceIcons" // Import the icon utility
 
 const ServiceSelection = ({ services = [] }) => {
   const { dispatch } = useQuote()
@@ -12,16 +13,6 @@ const ServiceSelection = ({ services = [] }) => {
 
   const handleServiceSelect = (service) => {
     dispatch({ type: "SELECT_SERVICE", payload: service })
-  }
-
-  const getServiceIcon = (serviceName) => {
-    const name = serviceName.toLowerCase()
-    if (name.includes('window')) return '🪟'
-    if (name.includes('gutter')) return '🏠'
-    if (name.includes('pressure') || name.includes('wash')) return '💧'
-    if (name.includes('roof')) return '🏘️'
-    if (name.includes('car')) return '🚗'
-    return '🛠️'
   }
 
   if (services.length === 0) {
@@ -45,7 +36,13 @@ const ServiceSelection = ({ services = [] }) => {
         className="w-full p-4 text-left border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all duration-200"
       >
         <div className="flex items-start space-x-4">
-          <div className="text-2xl">✏️</div>
+          <div className="w-10 h-10 flex items-center justify-center">
+            <img 
+              src="/Icons/Others/Custom item.png" 
+              alt="Custom Service"
+              className="max-w-full max-h-full object-contain"
+            />
+          </div>
           <div className="flex-1">
             <h4 className="font-medium text-gray-900">Create Custom Service</h4>
             <p className="text-sm text-gray-600 mb-2">
@@ -63,7 +60,13 @@ const ServiceSelection = ({ services = [] }) => {
             className="w-full p-4 text-left border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all duration-200"
           >
             <div className="flex items-start space-x-4">
-              <div className="text-2xl">{getServiceIcon(service.name)}</div>
+              <div className="w-10 h-10 flex items-center justify-center">
+                <img 
+                  src={getServiceIcon(service.name)} 
+                  alt={service.name}
+                  className="max-w-full max-h-full object-contain"
+                />
+              </div>
               <div className="flex-1">
                 <div className="flex justify-between items-start mb-2">
                   <h4 className="font-medium text-gray-900">{service.name}</h4>

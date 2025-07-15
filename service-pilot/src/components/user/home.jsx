@@ -7,6 +7,7 @@ import { fetchServices } from "../../features/user/servicesSlice"
 import QuoteWidget from "./QuoteWidget"
 import { useNavigate } from "react-router-dom"
 import { useParams } from 'react-router-dom';
+import { getServiceIcon } from "../../utils/serviceIcons";
 
 
 const Home = () => {
@@ -16,8 +17,6 @@ const Home = () => {
   const navigate = useNavigate()
 
   const queryParams = new URLSearchParams(window.location.search);
-  console.log('the url we are takinggg',window.location.search);
-  console.log('queryParams',queryParams);
   
   const locationId = queryParams.get('location');
   const isSpecialLocation = locationId === 'b8qvo7VooP3JD3dIZU42';
@@ -56,6 +55,47 @@ const Home = () => {
       </div>
     )
   }
+
+  // ServiceCard component (now using the imported getServiceIcon)
+  const ServiceCard = ({ service }) => {
+    return (
+      <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 flex items-center justify-center">
+              <img 
+                src={getServiceIcon(service.name)} // Using the utility function
+                alt={service.name}
+                className="max-w-full max-h-full object-contain"
+              />
+            </div>
+            <span className="text-sm font-medium text-green-600 bg-green-100 px-2 py-1 rounded">
+              Starting at ${service.minimum_price}
+            </span>
+          </div>
+
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">{service.name}</h3>
+          <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+            {service.description || `Get a personalized quote for ${service.name.toLowerCase()}`}
+          </p>
+
+          {service.features && service.features.length > 0 && (
+            <div className="mb-4">
+              <p className="text-xs text-gray-500 mb-2">Features:</p>
+              <ul className="text-xs text-gray-600 space-y-1">
+                {service.features.slice(0, 2).map((feature) => (
+                  <li key={feature.id} className="flex items-center">
+                    <span className="w-1 h-1 bg-blue-600 rounded-full mr-2"></span>
+                    {feature.name}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -97,59 +137,5 @@ const Home = () => {
   )
 }
 
-// Service Card Component
-const ServiceCard = ({ service }) => {
-  const getServiceIcon = (serviceName) => {
-    const name = serviceName.toLowerCase()
-    if (name.includes('window')) return '🪟'
-    if (name.includes('gutter')) return '🏠'
-    if (name.includes('pressure') || name.includes('wash')) return '💧'
-    if (name.includes('roof')) return '🏘️'
-    if (name.includes('car')) return '🚗'
-    return '🛠️'
-  }
-
-  return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-3xl">{getServiceIcon(service.name)}</span>
-          <span className="text-sm font-medium text-green-600 bg-green-100 px-2 py-1 rounded">
-            Starting at ${service.minimum_price}
-          </span>
-        </div>
-
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">{service.name}</h3>
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-          {service.description || `Get a personalized quote for ${service.name.toLowerCase()}`}
-        </p>
-
-        {/* Features */}
-        {service.features && service.features.length > 0 && (
-          <div className="mb-4">
-            <p className="text-xs text-gray-500 mb-2">Features:</p>
-            <ul className="text-xs text-gray-600 space-y-1">
-              {service.features.slice(0, 2).map((feature) => (
-                <li key={feature.id} className="flex items-center">
-                  <span className="w-1 h-1 bg-blue-600 rounded-full mr-2"></span>
-                  {feature.name}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* <div className="flex space-x-2">
-          <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium">
-            Learn More
-          </button>
-          <button className="flex-1 border border-blue-600 text-blue-600 py-2 px-4 rounded-md hover:bg-blue-50 transition-colors text-sm font-medium">
-            Get Quote
-          </button>
-        </div> */}
-      </div>
-    </div>
-  )
-}
 
 export default Home
